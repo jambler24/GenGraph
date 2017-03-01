@@ -26,9 +26,10 @@ path_to_clustal = '/Users/panix/Dropbox/Programs/tools/genome_alignment_graph_to
 
 path_to_mafft = 'mafft'
 
-path_to_gffread = '/Users/panix/Dropbox/Programs/tools/cufflinks-2.2.1.OSX_x86_64/gffread'
+path_to_kalign = '/Users/panix/Dropbox/Programs/tools/kalign2/kalign'
 
 path_to_progressiveMauve = '/Applications/Mauve.app/Contents/MacOS/progressiveMauve'
+
 
 global_aligner = 'progressiveMauve'
 
@@ -1635,7 +1636,7 @@ def create_ungapped_graph(in_graph, seq_fasta_paths_dict):
 
 def local_node_realign_fast(in_graph, node_ID, seq_fasta_paths_dict):
 
-	print 'local node realign: ' + node_ID
+	print 'Fast local node realign: ' + node_ID
 
 	in_graph = nx.MultiDiGraph(in_graph)
 
@@ -1671,6 +1672,7 @@ def local_node_realign_fast(in_graph, node_ID, seq_fasta_paths_dict):
 			iso_node_seq = iso_full_seq[int(node_data_dict[node_isolate + '_leftend']) - 1:int(node_data_dict[node_isolate + '_rightend']) ]
 			node_seq_start_pos[node_isolate] = int(node_data_dict[node_isolate + '_leftend'])
 
+
 		else:
 			#print 'reversed'
 			#print abs(int(node_data_dict[node_isolate + '_rightend']))
@@ -1685,6 +1687,7 @@ def local_node_realign_fast(in_graph, node_ID, seq_fasta_paths_dict):
 
 		temp_fasta_file.write('>' + node_isolate + '\n')
 		temp_fasta_file.write(iso_node_seq + '\n')
+		node_seq_len_est = len(iso_node_seq)
 		#print 'passed start positions'
 		#print node_seq_start_pos
 
@@ -1696,11 +1699,21 @@ def local_node_realign_fast(in_graph, node_ID, seq_fasta_paths_dict):
 
 	if local_aligner == 'mafft':
 		print 'conducting mafft alignment'
+		print node_seq_len_est
 		mafft_alignment('temp_unaligned.fasta', 'temp_aln.fasta')
 
 	if local_aligner == 'clustalo':
 		print 'conducting clustal alignment'
 		clustalo_alignment('temp_unaligned.fasta', 'temp_aln.fasta')
+
+	if local_aligner == 'kalign':
+		print node_seq_len_est
+		if node_seq_len_est < 7:
+			print 'conducting mafft alignment'
+			mafft_alignment('temp_unaligned.fasta', 'temp_aln.fasta')
+		else:
+			print 'conducting kalign alignment'
+			kalign_alignment('temp_unaligned.fasta', 'temp_aln.fasta')
 
 
 	#fasta_alignment_to_bbone('temp_aln.fasta', 'temp_aln', true_start=node_seq_start_pos)
@@ -1850,6 +1863,13 @@ def local_node_realign(in_graph, node_ID, seq_fasta_paths_dict):
 	return new_merged_graph
 
 # ---------------------------------------------------- Alignment functions 
+
+
+def kalign_alignment(fasta_unaln_file, out_aln_name):
+
+	kalign_command_call = [path_to_kalign, '-i', fasta_unaln_file, '-o', out_aln_name, '-f', 'fasta', '-q']
+
+	return call(kalign_command_call)
 
 def muscle_alignment(fasta_unaln_file, out_aln_name):
 
@@ -2649,11 +2669,9 @@ def generate_graph_report(in_graph, out_file_name):
 if __name__ == '__main__':
 
 	parser=argparse.ArgumentParser(
-	description='''This is the test version of the packaged genome graph thing''',
+	description='''Welcome to GenGraph v0.1''',
 	
 	epilog="""Insanity is trying the same thing over and over and expecting different results""")
-
-	#parser.add_argument('analysis', type=str,  default='test_mode', help='Select what you would like to do')
 
 	parser.add_argument('toolkit', type=str,  default='test_mode', help='Select what you would like to do')
 
@@ -2667,9 +2685,9 @@ if __name__ == '__main__':
 
 	parser.add_argument('--seq_file', type=str, help='Tab delimited text file with paths to the aligned sequences')
 
-	parser.add_argument('--add_seq', dest='should_add_seq', action='store_true',  help='Set to True to add sequence to the graph')
+	parser.add_argument('--no_seq', dest='should_add_seq', action='store_false',  help='Create a graph genome with no sequence stored within')
 
-	parser.add_argument('--make_circular', type=str,  default='No', help='To circularise the graph for a sequence, give the name of that sequence')
+	parser.add_argument('--make_circular', type=str, default='No', help='To circularise the graph for a sequence, give the name of that sequence')
 
 	parser.add_argument('--recreate_check', dest='rec_check', action='store_true',  help='Set to True to attempt to recreate the input sequences from the graph and comapre to the origionals')
 
@@ -2685,7 +2703,7 @@ if __name__ == '__main__':
 
 	parser.add_argument('--input_file', type=str, help='Generic input')
 
-	parser.set_defaults(should_add_seq=False)
+	parser.set_defaults(should_add_seq=True)
 
 	parser.set_defaults(rec_check=False)
 
@@ -2713,8 +2731,8 @@ if __name__ == '__main__':
 	if args.toolkit == 'make_genome_graph':
 
 		# Requires:
-		# out_file_name
-		# seq_file
+		# --out_file_name
+		# --seq_file
 
 		# optional:
 		# --recreate_check
