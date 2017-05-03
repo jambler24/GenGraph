@@ -351,6 +351,19 @@ def bp_length_node(node_name):
 
 	return bp_distance(left_pos, right_pos)
 
+def export_to_fasta(sequence, headder, filename):
+	file_obj = open(filename + '.fa', 'w')
+
+	headder_line = '>' + headder + '\n'
+	file_obj.write(headder_line)
+
+	n=80
+	seq_split = [sequence[i:i+n] for i in range(0, len(sequence), n)]
+
+	for line in seq_split:
+		line = line + '\n'
+		file_obj.write(line)
+	file_obj.close()
 
 # ---------------------------------------------------- Graph generating functions 
 
@@ -2279,6 +2292,43 @@ def get_gene_homo_gff(graph_obj, gtf_file, reference_name):
 		print anno[8], found_in
 
 
+def calc_simmilarity_matrix(graph_obj, method='node'):
+	
+	import pandas as pd
+
+	iso_list = graph_obj.graph['isolates'].split(',')
+
+	distance_dict = {}
+
+	for ref_iso in iso_list:
+
+		distance_dict[ref_iso] = []
+
+		for other_iso in iso_list:
+			node_count = 0
+			for a_node,data in graph_obj.nodes_iter(data=True):
+				if ref_iso in data['present_in'] and other_iso in data['present_in']:
+					node_count += 1
+			distance_dict[ref_iso].append(float(node_count))
+
+	distMatrix = pd.DataFrame(distance_dict, index=iso_list)
+
+	#print distMatrix
+
+	self_matrix = {}
+	for a_iso in iso_list:
+		self_matrix[a_iso] = distMatrix[a_iso][a_iso]
+
+	#print pd.DataFrame(self_matrix, index=self_matrix.keys())
+
+
+	#print distMatrix / pd.DataFrame(self_matrix, index=self_matrix.keys())
+
+	return distMatrix / pd.DataFrame(self_matrix, index=self_matrix.keys())
+
+
+
+
 # --------------------- Sequence extraction related
 
 def extract_seq(graph_obj, seq_name):
@@ -2459,21 +2509,63 @@ def extract_iso_subgraph(graph_obj, isolate):
 
 # For heaviest path function
 
-def get_neighbour_most_iso(list_of_nodes, graph_obj):
+def get_neighbour_most_iso(list_of_nodes, graph_obj, weight_matrix):
+
+	# Returns the neighbouring node of the current node that contains the most isolates or the highest weight.
 
 	longest_list_node = 'nope'
 	longest_list_length = 0
 
-	for neigh_node in list_of_nodes:
+	isolate_list = graph_obj.graph['isolates'].split(',')
 
-		if len(graph_obj.node[neigh_node]['present_in'].split(',')) > longest_list_length:
-			longest_list_node = neigh_node
-			longest_list_length = len(graph_obj.node[neigh_node]['present_in'].split(','))
+
+	if len(weight_matrix) == 0:
+		for neigh_node in list_of_nodes:
+
+			if len(graph_obj.node[neigh_node]['present_in'].split(',')) > longest_list_length:
+				longest_list_node = neigh_node
+				longest_list_length = len(graph_obj.node[neigh_node]['present_in'].split(','))
+
+	else:
+		# Using the weight matrix
+
+		# Calculating the arverage distance (Maybe move if too time consuming)
+		ave_dist_dict = calc_average_distance_dict(weight_matrix, isolate_list)
+		largest_node_weight = 0
+
+		for neigh_node in list_of_nodes:
+
+			node_weight = 0
+
+			for iso_name in graph_obj.node[neigh_node]['present_in'].split(','):
+				node_weight = node_weight + ave_dist_dict[iso_name]
+
+			if node_weight > largest_node_weight:
+				longest_list_node = neigh_node
+				largest_node_weight = node_weight
+
 
 	return longest_list_node
 
-def extract_heaviest_path(graph_obj, phyloinfo):
+def calc_average_distance_dict(weight_matrix, a_list_of_isolates):
 
+	res_dict = {}
+
+	sum_of_distances = 0
+
+	for an_iso in a_list_of_isolates:
+		#print '\n'
+		#print an_iso
+		#print weight_matrix[an_iso]
+		#print sum(weight_matrix[an_iso]) - weight_matrix[an_iso][an_iso]
+
+		res_dict[an_iso] = (sum(weight_matrix[an_iso]) - weight_matrix[an_iso][an_iso]) / (float(len(a_list_of_isolates)) - 1.0)
+		
+
+	return res_dict
+
+
+def extract_heaviest_path(graph_obj, phyloinfo, weight_matrix=''):
 	# setup
 	out_graph = nx.MultiDiGraph()
 
@@ -2493,11 +2585,9 @@ def extract_heaviest_path(graph_obj, phyloinfo):
 	
 	while curr_node != 'nope':
 
-		#print graph_obj.node[curr_node]
-
 		neighbors_out = graph_obj.successors(curr_node)
 
-		new_node = get_neighbour_most_iso(neighbors_out, graph_obj)
+		new_node = get_neighbour_most_iso(neighbors_out, graph_obj, weight_matrix)
 
 		node_list.append(new_node)
 
@@ -2562,6 +2652,318 @@ def levenshtein(s1, s2):
         previous_row = current_row
     
     return previous_row[-1]
+
+# Extracting a branch sequence file
+
+# Shandu's code 
+
+def extract_max(graph_obj, node, extract_size, region):
+	'''Extract the largest possible sequence from the beginning or end of a node.
+	
+	Arguments for the region parameter:
+	   beginning: extract sequence from beginning of node
+	   end: extract sequence from end of node
+	
+	If the size to be extracted from the node (extract_size) is longer than the sequence of the node, this returns the entire sequence of the node.
+	
+	Otherwise, this returns only the length of the sequence specified by extract_size.
+	'''
+	if len(graph_obj.node[node]['sequence']) >= extract_size:
+		if region == 'end':
+			return graph_obj.node[node]['sequence'][-extract_size:]
+		else:
+			return graph_obj.node[node]['sequence'][:extract_size]
+	else:
+		return graph_obj.node[node]['sequence']
+
+
+def extract_branch_seq(graph_obj, out_file_name, extract_size):
+	'''Create a file listing the different sequence versions at each branch of the graph.
+	
+	extract_size specifies the maximum sequence length to be extracted from each node of the graph.
+	'''
+	
+	# For python 2.7
+	import Queue as queue
+	#For python 3
+	#import queue
+
+	# Changed error in formatting fasta file (missing newline and extra space in the headder)
+
+	start_node = graph_obj.graph['start_node']		# This should be an attribute of the graph_obj (currently uses the start node of new_fun_3_genome)
+	
+	size = extract_size*2
+	nx.set_node_attributes(graph_obj, 'tag', 'unreached')
+	out_file = open(out_file_name, 'w')
+	ready = queue.Queue()
+	graph_obj.node[start_node]['tag'] = 'reached'
+	ready.put(start_node)
+	while not ready.empty():
+		current_node = ready.get()
+		successors = graph_obj.successors(current_node)
+		for suc_node in successors:
+			if graph_obj.node[suc_node]['tag'] == 'unreached':
+				graph_obj.node[suc_node]['tag'] = 'reached'
+				ready.put(suc_node)
+			details = current_node + '-' + suc_node
+			sequence = extract_max(graph_obj, current_node, extract_size, 'end')
+			remaining_size = size - len(sequence)
+			sequence += extract_max(graph_obj, suc_node, remaining_size, 'beginning')
+			# Determine if sequence is long enough
+			if len(sequence) < size:
+				# Sequence is too short
+				details_initial = details
+				sequence_initial = sequence
+				
+				more_paths = list()	
+				# List of node paths from which sequences will be extracted to be added to sequence_initial
+				
+				paths = list()		
+				# List of node paths to which additional nodes will be added until the path contains enough nodes to yield a long enough sequence. At this point the path will be added to more_paths.
+				paths.append([suc_node])
+				
+				while len(paths) != 0:
+					path = paths.pop()
+					sequence = ''
+					size_remain = remaining_size
+					for node in path:
+						sequence += extract_max(graph_obj, node, size_remain, 'beginning')
+						size_remain = remaining_size - len(sequence)
+					# Determine if sequence is long enough
+					if size_remain > 0:
+						# Sequence is too short
+						if graph_obj.successors(path[-1]) == []:
+							# Reached the end of graph
+							more_paths.append(path)
+						else:
+							# Extend the path to include the next successor (a new path is created for each successor of the last node in the current path)
+							successors = graph_obj.successors(path[-1])
+							for suc_node in successors:
+								new_path = path + [suc_node]
+								paths.append(new_path)
+					else:
+						# Sequence is long enough
+						more_paths.append(path)				
+
+				# For each path in more_paths, extract the required sequence and append it to sequence_initial
+				for path in more_paths:
+					details = details_initial
+					sequence = sequence_initial
+					remaining = remaining_size
+					for node in path[1:]:	# path[0] is the successor (suc_node) of current_node so its sequence has already been extracted
+						remaining = size - len(sequence)
+						if remaining > 0:
+							details += '-' + node
+							sequence += extract_max(graph_obj, node, remaining, 'beginning')
+					out_file.write('>Branch-' + details + '\n')
+					out_file.write(sequence + '\n\n')
+			else:
+				# Sequence is long enough
+				out_file.write('>Branch-' + details + '\n')
+				out_file.write(sequence + '\n\n')
+	out_file.close()
+
+
+
+
+def get_branch_mapping_dict(path_to_edge_file):
+	''' Take the file generated by samtools and convert to a dict for the edge pairs '''
+	res_dict = {}
+
+	aln_path_obj = open(path_to_edge_file)
+
+	for line in aln_path_obj:
+		if len(line) > 1:
+			splitline = line.split('\t')
+			node_info = splitline[0]
+			node_coverage = splitline[2]
+
+			splitNodeInfo = node_info[7:]
+
+			res_dict[splitNodeInfo] = node_coverage
+
+	return res_dict
+
+def find_best_aln_subpaths_old(edge_aln_dict):
+
+	print "Finding best subpaths"
+
+	best_aln_paths = []
+
+	for edgeLabel in edge_aln_dict.keys():
+		other_path_available = False
+		edgeLabel_split = edgeLabel.split('-')
+		print edgeLabel
+		for other_edgeLabel in edge_aln_dict.keys():
+			other_edgeLabel_split = other_edgeLabel.split('-')
+
+			if edgeLabel_split[0] == other_edgeLabel_split[0] and edgeLabel_split[-1] == other_edgeLabel_split[-1]:
+				if edgeLabel != other_edgeLabel:
+					other_path_available = True
+					if int(edge_aln_dict[edgeLabel]) > int(edge_aln_dict[other_edgeLabel]):
+						best_aln_paths.append(edgeLabel)
+		if other_path_available == False:
+			best_aln_paths.append(edgeLabel)
+
+	return best_aln_paths
+
+def find_best_aln_subpaths(edge_aln_dict, coverage_threshold):
+
+	print "Finding best subpaths"
+
+	best_aln_paths = []
+
+	best_aln_paths_dict = {}
+
+	# Pre-filtering 
+	edge_aln_dict_filtered = {}
+
+	for edgeLabel in edge_aln_dict.keys():
+		if int(edge_aln_dict[edgeLabel]) > int(coverage_threshold):
+			edge_aln_dict_filtered[edgeLabel] = edge_aln_dict[edgeLabel]
+
+	print 'Pre-filter = ', str(len(edge_aln_dict))
+	print 'Post-filter = ', str(len(edge_aln_dict_filtered))
+	timeCount = 0
+	total_time = len(edge_aln_dict_filtered)
+
+
+	for edgeLabel in edge_aln_dict_filtered.keys():
+
+		edgeLabel_split = edgeLabel.split('-')
+
+		edge_key = edgeLabel_split[0] + '-' + edgeLabel_split[-1]
+
+		if edge_key not in best_aln_paths_dict.keys():
+
+			best_aln_paths_dict[edge_key] = edgeLabel
+
+		else:
+			# If this edge already exists, compare weights and only add the largest one.
+
+			if int(edge_aln_dict_filtered[edgeLabel]) > int(edge_aln_dict_filtered[best_aln_paths_dict[edge_key]]):
+
+				best_aln_paths_dict[edge_key] = edgeLabel
+
+		timeCount += 1
+	
+	# Now add the best paths to the list
+	for edgeLabel in best_aln_paths_dict.keys():
+		best_aln_paths.append(best_aln_paths_dict[edgeLabel])
+
+		if 'CDC1551' in edgeLabel:
+			print edgeLabel
+
+	return best_aln_paths
+
+def get_path_weight(path_list, aGraph):
+	
+	total_weight = 0
+
+	test_path = aGraph.subgraph(path_list)
+
+	for anEdge in list(test_path.edges_iter(data=True)):
+
+		total_weight = total_weight + anEdge[2]['weight']
+	
+	return total_weight
+
+
+
+
+def create_new_graph_from_aln_paths(graph_obj, aln_path_obj, path_dict, trim=True):
+
+	# This needs to go
+	startNode = 'Aln_61_1'
+	endNode = 'Aln_387_1'
+
+	print 'Creating new graph from edge mapping results'
+	newIsoGraph = nx.Graph()
+	
+
+	print "Add new edges"
+
+	for node_path in aln_path_obj:
+
+		node_path_list = node_path.split('-')
+
+		newIsoGraph.add_path(node_path_list, aln_isolate='shortPath',weight=int(path_dict[node_path]))
+
+
+	# Filter out alignments starting from a high threshold, and lowering it untill there is a path from the start to the stop node
+	# Test trimming all one degree nodes, and re-adding the start - stop nodes
+	# Move the "Add sequences" step to the end to lower memory usage
+	# If that doesn't work, do the heuristic stepwise graph traversal
+
+	if trim == True:
+		# find nodes with 3 edges, then kill the one with 1
+		
+		remove_node_list = []
+
+		for a_Node,data in newIsoGraph.nodes_iter(data=True):
+			if newIsoGraph.degree(a_Node) == 3:
+				# Get neighbours
+				all_neighbours_of_node = nx.all_neighbors(newIsoGraph, a_Node)
+
+				for node_neighbour in all_neighbours_of_node:
+
+					if newIsoGraph.degree(node_neighbour) == 1:
+						remove_node_list.append(node_neighbour)
+
+		for trimnode in remove_node_list:
+			newIsoGraph.remove_node(trimnode)
+
+
+	# Extract path
+
+	nx.write_graphml(newIsoGraph, 'newPaths.xml')
+
+	print "calculate heaviest path"
+
+	heaviest_path_weight = 0
+
+	for path in nx.all_simple_paths(newIsoGraph, startNode, endNode):
+		print 'start'
+		pathWeight = get_path_weight(path, newIsoGraph)
+		print pathWeight
+		if pathWeight > heaviest_path_weight:
+			heaviest_path_weight = pathWeight
+			heaviest_path = path
+
+
+	heavy_graph = newIsoGraph.subgraph(heaviest_path)
+
+	nx.write_graphml(heavy_graph, 'heaviestPath.xml')
+
+	#Add the new path to the old graph
+
+
+	print "Add sequences"
+
+	for seqNode,data in heavy_graph.nodes_iter(data=True):
+
+
+		heavy_graph.node[seqNode]['sequence'] = graph_obj.node[seqNode]['sequence']
+
+
+
+	# Extract sequence
+
+	nodesInOrder = nx.shortest_path(heavy_graph, source=startNode, target=endNode)
+
+	heavtSeq = ''
+
+	seqDict = nx.get_node_attributes(heavy_graph,'sequence')
+	for node in nodesInOrder:
+		print node
+		heavtSeq = heavtSeq + seqDict[node]
+
+	return heavtSeq
+
+
+
+# Why are we doing this? Can we recreate the sequence? Do away with a reference. Lets see if the new genome has better mapping stats. Can we identify the isolate closest? 
+
 
 # ---------------------------------------------------- # Testing functions
 
@@ -2717,9 +3119,19 @@ if __name__ == '__main__':
 
 	if args.toolkit == 'test_mode':
 
+		print 'add test code'
+		'''
+		# This is for the edge mapping stuff
 		print "Place code here for quick testing purposes"
 
+		res = get_branch_mapping_dict('/Users/panix/Dropbox/Programs/tools/genome_alignment_graph_tool/test_files/branchTest/example_out.txt')
+		print res
+		aln_path_list = find_best_aln_subpaths(res)
 
+		imported_genome = nx.read_graphml('/Users/panix/Dropbox/Programs/tools/genome_alignment_graph_tool/test_files/gg_paper/gg3genome.xml')
+
+		create_new_graph_from_aln_paths(imported_genome, aln_path_list)
+		'''
 	if args.toolkit == 'test':
 		print "Testing cuttent installation"
 		curr_graph = './test_files/test_g.gml'
@@ -2736,7 +3148,7 @@ if __name__ == '__main__':
 
 		# optional:
 		# --recreate_check
-		# --add_seq
+		# --no_seq
 
 
 		start_time = time.time()
@@ -2913,7 +3325,43 @@ if __name__ == '__main__':
 
 		print extract_original_seq_region(imported_genome, args.extract_sequence_range[0], args.extract_sequence_range[1], args.isolate)
 
+	if args.toolkit == 'extract_ancesteral_genome':
 
+		# Requires:
+		# --out_file_name
+		# --graph_file
+		# --isolate
+
+		imported_genome = nx.read_graphml(args.graph_file)
+
+
+		sim_matrix = calc_simmilarity_matrix(imported_genome)
+
+		plotDend = True
+
+		print sim_matrix.index.values.tolist()
+
+		print sim_matrix.as_matrix()
+
+		if plotDend == True:
+
+			from scipy.cluster import hierarchy
+			import matplotlib.pyplot as plt
+
+			Z = hierarchy.linkage(sim_matrix.as_matrix(), 'single')
+
+			plt.figure()
+			dn = hierarchy.dendrogram(Z,labels=sim_matrix.index.values.tolist())
+			#plt.show()
+
+
+		print sim_matrix
+
+		ancesteral_genome = extract_heaviest_path(imported_genome, args.isolate, weight_matrix=sim_matrix)
+
+		ancesteral_genome_seq = extract_seq_heavy(ancesteral_genome)
+
+		export_to_fasta(ancesteral_genome_seq, args.out_file_name, args.out_file_name)
 
 
 	if args.toolkit == 'extract_pan_transcriptome':
@@ -2950,19 +3398,61 @@ if __name__ == '__main__':
 		# Converting the csv to a fasta file of transcripts
 		#create_fasta_from_pangenome_csv(args.input_file, test_gtf_dict, parsed_input_dict, args.out_file_name)
 
+
+	if args.toolkit == 'map_to_graph':
+		# Requires:
+		# --out_file_name
+		# --graph_file
+
+		print "Creating branch mapping file"
+
+		imported_graph_obj = nx.read_graphml(args.graph_file)
+
+		imported_graph_obj.graph['start_node'] = 'Aln_61_1'
+
+		#extract_branch_seq(imported_graph_obj, args.out_file_name, 20)
+
+		
+
+		# Link the above to bellow later
+
+		res = get_branch_mapping_dict('/Volumes/HDD/Genomes/M_tuberculosis/gg_genomes/alnRestult.txt')
+		#print res
+		aln_path_list = find_best_aln_subpaths(res, 20)
+
+		print str(len(aln_path_list)) + ' paths extracted'
+
+		imported_genome = nx.read_graphml(args.graph_file)
+
+		newGraphSeq = create_new_graph_from_aln_paths(imported_genome, aln_path_list, res)
+
+
+		export_to_fasta(newGraphSeq, args.out_file_name, args.out_file_name)
+
 	if args.toolkit == 'generate_report':
 		imported_genome = nx.read_graphml(args.graph_file)
 
 		print generate_graph_report(imported_genome, args.out_file_name)
 
 
+'''
+GenGraphGit$ cat alnRestult.txt | grep Aln_386_20
+Branch- Aln_386_15-Aln_386_17-Aln_386_18-Aln_386_20	40	4	0
+Branch- Aln_386_17-Aln_386_18-Aln_386_20	40	11	0
+Branch- Aln_386_16-Aln_386_17-Aln_386_18-Aln_386_20	40	1	0
+
+Branch- Aln_386_19-Aln_386_20	40	6	0
+
+Branch- Aln_386_18-Aln_386_20	40	37	0
+Branch- Aln_386_20-Aln_386_21-Aln_386_23	40	124	0
 
 
 
 
+find all nodes with out edges > 2 
 
-
-
+look for each edge pair's mapping value 
+'''
 
 
 
