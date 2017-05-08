@@ -272,6 +272,15 @@ def input_parser(file_path, parse_as='default'):
 					list_of_dicts.append(entry_dict)
 		return list_of_dicts
 
+def reshape_fastaObj(in_obj):
+	out_fastaObj = {}
+
+	for seq_ent in in_obj:
+		out_fastaObj[seq_ent['gene_details']] = seq_ent['DNA_seq']
+
+
+	return out_fastaObj
+
 def parse_seq_file(path_to_seq_file):
 
 	seq_file_dict = input_parser(path_to_seq_file)
@@ -366,6 +375,318 @@ def export_to_fasta(sequence, headder, filename):
 	file_obj.close()
 
 # ---------------------------------------------------- Graph generating functions 
+
+def add_missing_nodes(a_graph, input_dict):
+
+	from operator import itemgetter
+
+	print input_dict[1].keys()
+
+	iso_list = a_graph.graph['isolates'].split(',')
+
+	for isolate in iso_list:
+
+		isolate_Seq = input_parser(input_dict[1][isolate])
+		isolate_Seq = isolate_Seq[0]['DNA_seq']
+
+		isolate_node_list = []
+		for node,data in a_graph.nodes_iter(data=True):
+			if isolate in data['present_in']:
+				isolate_node_list.append(node)
+		
+		#print isolate_node_list
+		presorted_list = []
+		for a_node in isolate_node_list:
+			presorted_list.append((a_node, abs(a_graph.node[a_node][isolate + '_leftend']), abs(a_graph.node[a_node][isolate + '_rightend'])))
+			if abs(a_graph.node[a_node][isolate + '_leftend']) > abs(a_graph.node[a_node][isolate + '_rightend']):
+				print 'problem node', a_node
+				print a_graph.node[a_node][isolate + '_leftend']
+
+		sorted_list = sorted(presorted_list,key=itemgetter(1))
+
+		count = 0
+
+		while count < len(sorted_list) - 1:
+
+			if sorted_list[count][2] != sorted_list[count + 1][1] - 1:
+				#print 'gap', sorted_list[count], sorted_list[count + 1]
+				new_node_dict = {isolate + '_leftend':sorted_list[count][2] + 1, isolate + '_rightend':sorted_list[count + 1][1] - 1, 'present_in':isolate}
+				#print new_node_dict
+				new_node_dict['sequence'] = isolate_Seq[sorted_list[count][2]:sorted_list[count + 1][1] - 1]
+
+				node_ID = isolate + "_" + str(count)
+				#print node_ID
+				a_graph.add_node(node_ID, new_node_dict)
+
+			count+=1
+
+def node_check(a_graph):
+	from operator import itemgetter
+	print 'checking nodes'
+	doespass = True
+
+	iso_list = a_graph.graph['isolates'].split(',')
+
+	for isolate in iso_list:
+		isolate_node_list = []
+		for node,data in a_graph.nodes_iter(data=True):
+			if isolate in data['present_in']:
+				isolate_node_list.append(node)
+		
+		#print isolate_node_list
+		presorted_list = []
+		for a_node in isolate_node_list:
+			presorted_list.append((a_node, abs(int(a_graph.node[a_node][isolate + '_leftend'])), abs(int(a_graph.node[a_node][isolate + '_rightend']))))
+			if abs(int(a_graph.node[a_node][isolate + '_leftend'])) > abs(int(a_graph.node[a_node][isolate + '_rightend'])):
+				print 'problem node', a_node
+				print a_graph.node[a_node][isolate + '_leftend']
+
+		sorted_list = sorted(presorted_list,key=itemgetter(1))
+
+		count = 0
+
+		while count < len(sorted_list) - 1:
+
+			if sorted_list[count][2] != sorted_list[count + 1][1] - 1:
+				print 'error 1: gaps in graph'
+				print isolate
+				print sorted_list[count]
+				print sorted_list[count + 1]
+				print 'Gap length:', sorted_list[count + 1][1] - sorted_list[count][2] - 1
+				doespass = False
+
+			if sorted_list[count][2] >= sorted_list[count + 1][1]:
+				print 'error 2'
+				print isolate
+				print sorted_list[count]
+				print sorted_list[count + 1]
+				doespass = False
+
+			if sorted_list[count][1] == sorted_list[count - 1][2] - 1:
+				print 'error 3: last node end close to node start. If this is not a SNP, there is an error'
+				print isolate
+				print sorted_list[count]
+				print sorted_list[count - 1]
+				doespass = False
+
+			if sorted_list[count][1] > sorted_list[count][2]:
+				print 'error 4: start greater than stop'
+				print isolate
+				print sorted_list[count]
+				print a_graph.node[sorted_list[count][0]]
+				doespass = False		
+
+
+			count+=1
+	return doespass
+
+def refine_initGraph(a_graph):
+	from operator import itemgetter
+
+	iso_list = a_graph.graph['isolates'].split(',')
+
+	for isolate in iso_list:
+		isolate_node_list = []
+		for node,data in a_graph.nodes_iter(data=True):
+			if isolate in data['present_in']:
+				isolate_node_list.append(node)
+		
+		#print isolate_node_list
+		presorted_list = []
+		for a_node in isolate_node_list:
+			presorted_list.append((a_node, abs(a_graph.node[a_node][isolate + '_leftend']), abs(a_graph.node[a_node][isolate + '_rightend'])))
+			if abs(a_graph.node[a_node][isolate + '_leftend']) > abs(a_graph.node[a_node][isolate + '_rightend']):
+				print 'problem node', a_node
+				print a_graph.node[a_node][isolate + '_leftend']
+
+		sorted_list = sorted(presorted_list,key=itemgetter(1))
+
+		count = 0
+
+		while count < len(sorted_list) - 1:
+
+			if sorted_list[count][2] == sorted_list[count + 1][1]:
+				print 'problem node'
+				print sorted_list[count]
+				print sorted_list[count + 1]
+				print a_graph.node[sorted_list[count][0]]
+				for a_node_isolate in a_graph.node[sorted_list[count][0]]['present_in'].split(','):
+					if a_graph.node[sorted_list[count][0]][a_node_isolate + '_rightend'] < 0:
+						a_graph.node[sorted_list[count][0]][a_node_isolate + '_rightend'] = a_graph.node[sorted_list[count][0]][a_node_isolate + '_rightend'] + 1
+					if a_graph.node[sorted_list[count][0]][a_node_isolate + '_rightend'] > 0:
+						a_graph.node[sorted_list[count][0]][a_node_isolate + '_rightend'] = a_graph.node[sorted_list[count][0]][a_node_isolate + '_rightend'] - 1
+				print a_graph.node[sorted_list[count][0]]	
+
+			count+=1
+
+def bbone_to_initGraph(bbone_file, input_dict):
+
+	backbone_obj = input_parser(bbone_file)
+
+	genome_network = nx.MultiDiGraph()
+
+	all_iso_in_graph = ''
+	all_iso_in_graph_list = []
+	iso_length_dict = {}
+	iso_largest_node = {}
+
+	has_start_dict = {}
+	has_stop_dict = {}
+
+	#print input_dict[0]
+
+
+	for isolate_name in input_dict[0].keys():
+		all_iso_in_graph_list.append(input_dict[0][isolate_name])
+		all_iso_in_graph = all_iso_in_graph + input_dict[0][isolate_name] + ','
+
+	for iso in all_iso_in_graph_list:
+		has_start_dict[iso + '_leftend'] = False
+		has_stop_dict[iso] = False
+		iso_largest_node[iso] = 0
+
+	for iso in all_iso_in_graph_list:
+		iso_length = len(input_parser(input_dict[1][iso])[0]['DNA_seq'])
+		iso_length_dict[iso] = iso_length
+
+	all_iso_in_graph = all_iso_in_graph[:-1]
+
+	#print all_iso_in_graph
+
+	genome_network.graph['isolates'] = all_iso_in_graph
+
+	# Parse the BBone file
+
+	backbone_lol = input_parser(bbone_file)
+
+	headder_line = backbone_lol[0]
+	#print headder_line
+
+	new_headder_line = []
+
+
+	for headder_item in headder_line:
+		for seqID in input_dict[0].keys():
+			if seqID in headder_item:
+				new_headder_line.append(headder_item.replace(seqID, input_dict[0][seqID]))
+
+	#print new_headder_line
+
+	backbone_lol_headless = backbone_lol[1:]
+
+	#print backbone_lol_headless[0]
+
+	node_count = 1
+
+	for line in backbone_lol_headless:
+		# Organise the info into a dict 
+		node_dict = {}
+		header_count = 0
+		for headder_item in new_headder_line:
+			if line[header_count] != '0':
+				node_dict[headder_item] = int(line[header_count])
+				# Chech for start node
+				if abs(int(line[header_count])) == 1:
+					has_start_dict[headder_item] = 'Aln_' + str(node_count)
+				# Check for end node
+				curr_iso = headder_item.replace('_leftend', '')
+				curr_iso = curr_iso.replace('_rightend', '')
+
+				if abs(int(line[header_count])) == iso_length_dict[curr_iso]:
+					has_stop_dict[curr_iso] = 'Aln_' + str(node_count)
+				
+				# Check if largest node
+
+				if abs(int(line[header_count])) > iso_largest_node[curr_iso]:
+					iso_largest_node[curr_iso] = abs(int(line[header_count]))
+
+
+
+
+			header_count += 1
+
+		found_in_list = []
+		for item in node_dict.keys():
+			item = item.split('_')[:-1]
+			item = '_'.join(item)
+			if item not in found_in_list:
+				found_in_list.append(item)
+
+		#print found_in_list
+		found_in_string = ','.join(found_in_list)
+		#print found_in_string
+		node_dict['present_in'] = found_in_string
+		
+		node_ID = 'Aln_' + str(node_count)
+
+		node_dict['name'] = node_ID
+
+		#print node_dict
+
+		genome_network.add_node(node_ID, node_dict)
+
+		node_count += 1
+
+
+
+	# Add start and stop node info
+	# Add missing start-stop nodes
+	print '\n'
+	print has_start_dict
+	print has_stop_dict
+	print iso_largest_node
+	print iso_length_dict
+
+	for an_iso in all_iso_in_graph_list:
+		for a_largest_node in iso_largest_node.keys():
+			an_LGN_iso = a_largest_node.replace('_leftend','')
+			an_LGN_iso = an_LGN_iso.replace('_leftend','')
+			if an_iso == an_LGN_iso:
+				if iso_largest_node[a_largest_node] != iso_length_dict[an_iso]:
+					#print an_iso
+					node_ID = 'Aln_' + str(node_count)
+					node_dict = {'present_in':an_iso, an_iso + '_leftend':iso_largest_node[a_largest_node] + 1, an_iso + '_rightend': iso_length_dict[an_iso]}
+					#print node_dict
+					genome_network.add_node(node_ID, node_dict)
+					has_stop_dict[an_iso] = node_ID
+
+					node_count += 1
+
+	print has_stop_dict
+
+	# Use coords to extract fasta files for alignment
+
+	# Parse the alignment files and place in graph
+	return genome_network
+
+def realign_all_nodes(inGraph, input_dict):
+	print 'creating ungapped graph'
+
+	realign_node_list = []
+
+	iso_list = inGraph.graph['isolates'].split(',')
+
+	# Load genomes into memory - Maybe a good idea, maybe bad...
+
+
+	for node,data in inGraph.nodes_iter(data=True):
+		print data
+		if len(data['present_in'].split(',')) > 1:
+
+			#print node
+
+			realign_node_list.append(node)
+
+	# Realign the nodes
+	for a_node in realign_node_list:
+
+		inGraph = local_node_realign_new(inGraph, a_node, input_dict[1])
+
+	
+	nx.write_graphml(inGraph, 'intermediate_split_unlinked.xml')
+
+	return inGraph
+
 
 
 def link_nodes_2(graph_obj, sequence_name, node_prefix='gn'):
@@ -924,7 +1245,7 @@ def create_genome_alignment_graph(backbone_file, seq_label_dict, input_path_dict
 	return genome_network
 
 
-def add_sequences_to_graph(graph_obj, paths_dict):
+def add_sequences_to_graph_old(graph_obj, paths_dict):
 	
 	print 'Adding sequences'
 
@@ -966,6 +1287,111 @@ def add_sequences_to_graph(graph_obj, paths_dict):
 			graph_obj.node[node]['sequence'] = node_seq
 
 	return graph_obj
+
+def add_sequences_to_graph(graph_obj, paths_dict):
+	
+	print 'Adding sequences'
+
+	for node,data in graph_obj.nodes_iter(data=True):
+
+		seq_source = data['present_in'].split(',')[0]
+		is_reversed = False
+		is_comp = False
+
+		if len(seq_source) < 1:
+			print 'No present_in current node'
+			print node
+
+		else:
+			ref_seq = input_parser(paths_dict[1][seq_source])[0]['DNA_seq']
+
+			# Check orientation
+			if int(data[seq_source + '_leftend']) < 0:
+				is_reversed = True
+
+			seq_start = abs(int(data[seq_source + '_leftend']))
+			seq_end = abs(int(data[seq_source + '_rightend']))
+
+			if seq_start > seq_end:
+				#new_seq_start = seq_end
+				#new_seq_end = seq_start
+				#seq_end = new_seq_end
+				#seq_start = new_seq_start
+				print 'Something wrong with orientation'
+
+			'''
+			if is_reversed != True:
+				seq_start = seq_start - 1
+
+			if is_reversed == True:
+				seq_end = seq_end + 1
+			'''
+			seq_start = seq_start - 1
+
+			node_seq = ref_seq[seq_start:seq_end].upper()
+
+			if is_reversed == True:
+				print 'seq was rev comp' + node
+				node_seq = reverse_compliment(node_seq)
+
+			graph_obj.node[node]['sequence'] = node_seq
+
+	return graph_obj
+
+
+def add_sequences_to_graph_fastaObj(graph_obj, imported_fasta_object):
+	
+	print 'Adding sequences'
+
+	seqObj = reshape_fastaObj(imported_fasta_object)
+
+	for node,data in graph_obj.nodes_iter(data=True):
+
+		seq_source = data['present_in'].split(',')[0]
+		is_reversed = False
+		is_comp = False
+
+		if len(seq_source) < 1:
+			print 'No present_in current node'
+			print node
+
+		else:
+			ref_seq = seqObj[seq_source]
+
+			# Check orientation
+			if int(data[seq_source + '_leftend']) < 0:
+				is_reversed = True
+
+			seq_start = abs(int(data[seq_source + '_leftend']))
+			seq_end = abs(int(data[seq_source + '_rightend']))
+
+			if seq_start > seq_end:
+				new_seq_start = seq_end
+				new_seq_end = seq_start
+				seq_end = new_seq_end
+				seq_start = new_seq_start
+
+			if is_reversed != True:
+				seq_start = seq_start - 1
+
+			if is_reversed == True:
+				seq_start = seq_start
+				seq_end = seq_end + 1
+
+				print seq_start, seq_end
+				print ref_seq[seq_start:seq_end].upper()
+
+
+			node_seq = ref_seq[seq_start:seq_end].upper()
+
+			if is_reversed == True:
+				print 'seq was rev comp' + node
+				#node_seq = reverse_compliment(node_seq)
+
+			graph_obj.node[node]['sequence'] = node_seq
+
+	return graph_obj
+
 
 def make_circular(graph_obj, seq_name):
 
@@ -1379,11 +1805,11 @@ def import_gtf_dict_to_massive_dict(gtf_dict):
 	return all_dict
 
 
-def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', orientation={}, re_link_nodes=True):
+def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', orientation={}, re_link_nodes=True, add_seq=False):
 	'''New and improved conversion function. Needs to be modified to work with inverted seq still'''
 	# Created 11/01/2017
-	#print true_start
-
+	print true_start
+	print orientation
 
 	aln_lol = input_parser(fasta_aln_file)
 
@@ -1457,8 +1883,13 @@ def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', or
 
 	# Making sure the start pos is correct
 	
-	for an_isolate in all_isolate_list:
-		true_start[an_isolate] = true_start[an_isolate] - 1
+	if len(true_start.keys()) > 0:
+		for an_isolate in all_isolate_list:
+			true_start[an_isolate] = true_start[an_isolate] - 1
+
+	else:
+		for an_isolate in all_isolate_list:
+			true_start[an_isolate] = 0
 
 	# Adding additional info and indexing
 
@@ -1588,8 +2019,8 @@ def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', or
 					# len node - pos - 1
 					# So, we need the total length of the nodes, found in seq_len_dict
 
-					local_node_network.node[new_node_name][block_isolate + '_leftend'] = '-' + str(int(seq_len_dict[block_isolate]) - start_block_list[count]['relative_pos'][block_isolate] - 1)
-					local_node_network.node[new_node_name][block_isolate + '_rightend'] = '-' + str(int(seq_len_dict[block_isolate]) - end_block_list[count]['relative_pos'][block_isolate] - 1)
+					local_node_network.node[new_node_name][block_isolate + '_rightend'] = '-' + str(int(seq_len_dict[block_isolate]) - start_block_list[count]['relative_pos'][block_isolate] - 1)
+					local_node_network.node[new_node_name][block_isolate + '_leftend'] = '-' + str(int(seq_len_dict[block_isolate]) - end_block_list[count]['relative_pos'][block_isolate] - 1)
 			
 				else:
 					print "ORIENTATION MISSING"
@@ -1605,6 +2036,21 @@ def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', or
 			local_node_network = link_nodes(local_node_network, a_isolate, node_prefix='gn')
 
 	#print '----------------'
+
+	# Here we add the seq if required
+
+	if add_seq == True:
+		#print aln_lol
+		new_fasta_list = []
+
+		for a_seq in aln_lol:
+			new_fasta_list.append({'DNA_seq':a_seq['DNA_seq'].replace('-',''),'gene_details':a_seq['gene_details']})
+
+		#print new_fasta_list
+		local_node_network = add_sequences_to_graph_fastaObj(local_node_network, new_fasta_list)
+
+
+	node_check(local_node_network)
 	return local_node_network
 
 	#print 'ORIENTATION'
@@ -1760,6 +2206,120 @@ def local_node_realign_fast(in_graph, node_ID, seq_fasta_paths_dict):
 
 	return new_merged_graph
 
+def local_node_realign_new(in_graph, node_ID, seq_fasta_paths_dict):
+
+	print 'Fast local node realign: ' + node_ID
+	print in_graph.node[node_ID]
+
+	in_graph = nx.MultiDiGraph(in_graph)
+
+	node_data_dict = in_graph.node[node_ID]
+
+	# Make temp fasta file and record the start positions into a dict
+
+	node_seq_start_pos = {}
+
+	# Store the orientation of the sequences in the node to pass to the fasta to graph conversion function
+	orientation_dict = {}
+
+	temp_fasta_file = open('temp_unaligned.fasta', 'w')
+
+	for node_isolate in node_data_dict['present_in'].split(','):
+		iso_full_seq = input_parser(seq_fasta_paths_dict[node_isolate])[0]['DNA_seq'].upper()
+
+		#print node_isolate
+		#print '----------------+------------------'
+
+		''' Currenty only rev comp sequences are seen in the BBone file, represented by a - but not reversed start / stop '''
+		#print node_data_dict
+
+		if int(node_data_dict[node_isolate + '_leftend']) > 0:
+			orientation_dict[node_isolate] = '+'
+		else:
+			orientation_dict[node_isolate] = '-'
+		
+
+		if orientation_dict[node_isolate] == '+':
+			#print 'not reversed'
+			#print 'Not compliment'
+			iso_node_seq = iso_full_seq[int(node_data_dict[node_isolate + '_leftend']) - 1:int(node_data_dict[node_isolate + '_rightend']) ]
+			node_seq_start_pos[node_isolate] = int(node_data_dict[node_isolate + '_leftend'])
+
+
+		else:
+			#print 'reversed'
+			#print abs(int(node_data_dict[node_isolate + '_rightend']))
+			#print abs(int(node_data_dict[node_isolate + '_leftend']))
+
+			iso_node_seq = iso_full_seq[abs(int(node_data_dict[node_isolate + '_leftend'])) - 1:abs(int(node_data_dict[node_isolate + '_rightend'])) ]
+			node_seq_start_pos[node_isolate] = int(node_data_dict[node_isolate + '_leftend'])
+			iso_node_seq = reverse_compliment(iso_node_seq)
+
+		#print 'seq'
+		#print iso_node_seq
+
+		temp_fasta_file.write('>' + node_isolate + '\n')
+		temp_fasta_file.write(iso_node_seq + '\n')
+		node_seq_len_est = len(iso_node_seq)
+		#print 'passed start positions'
+		#print node_seq_start_pos
+
+	temp_fasta_file.close()
+
+	if local_aligner == 'muscle':
+		print 'conducting muscle alignment'
+		muscle_alignment('temp_unaligned.fasta', 'temp_aln.fasta')
+
+	if local_aligner == 'mafft':
+		print 'conducting mafft alignment'
+		print node_seq_len_est
+		mafft_alignment('temp_unaligned.fasta', 'temp_aln.fasta')
+
+	if local_aligner == 'clustalo':
+		print 'conducting clustal alignment'
+		clustalo_alignment('temp_unaligned.fasta', 'temp_aln.fasta')
+
+	if local_aligner == 'kalign':
+		print node_seq_len_est
+		if node_seq_len_est < 7:
+			print 'conducting mafft alignment'
+			mafft_alignment('temp_unaligned.fasta', 'temp_aln.fasta')
+		else:
+			print 'conducting kalign alignment'
+			kalign_alignment('temp_unaligned.fasta', 'temp_aln.fasta')
+
+
+	#fasta_alignment_to_bbone('temp_aln.fasta', 'temp_aln', true_start=node_seq_start_pos)
+
+	new_subgraph = fasta_alignment_to_subnet('temp_aln.fasta', true_start=node_seq_start_pos, node_prefix=node_ID, orientation=orientation_dict, re_link_nodes=False, add_seq=True)
+
+	#nx.write_graphml(new_subgraph, 'test_new_subg_327.xml')
+
+
+
+	# -------------------------------- Here we take the new graph for the aligned node, and replace the origional node with it
+
+
+
+	iso_list = new_subgraph.graph['isolates'].split(',')
+
+
+	# remove the old node
+
+	in_graph.remove_node(node_ID)
+
+	# add new subgraph to the old graph
+
+	in_graph.add_nodes_from(new_subgraph.nodes(data=True))
+
+	in_graph.add_edges_from(new_subgraph.edges(data=True))
+
+	new_merged_graph = in_graph
+	
+	#nx.write_graphml(new_merged_graph, 'test_merged_graphs_linked.xml')
+
+	return new_merged_graph
+
 
 def local_node_realign(in_graph, node_ID, seq_fasta_paths_dict):
 
@@ -1874,6 +2434,38 @@ def local_node_realign(in_graph, node_ID, seq_fasta_paths_dict):
 	#nx.write_graphml(new_merged_graph, 'test_merged_graphs_linked.xml')
 
 	return new_merged_graph
+
+def seq_recreate_check(graph_obj, input_dict):
+	for isolate in input_dict[1].keys():
+		extracted_seq = extract_original_seq(graph_obj, isolate)
+		original_seq_from_fasta = input_parser(input_dict[1][isolate])
+
+		count = 0
+
+		while count < len(extracted_seq):
+			if extracted_seq[count] != original_seq_from_fasta[0]['DNA_seq'][count]:
+				print count
+				print extracted_seq[count]
+				print original_seq_from_fasta[0]['DNA_seq'][count]
+				print extracted_seq[count-10:count + 10]
+				print original_seq_from_fasta[0]['DNA_seq'][count-10:count + 10]
+			count += 1
+
+
+		if extracted_seq.upper() == original_seq_from_fasta[0]['DNA_seq'].upper():
+			print 'Sequence recreate pass'
+			recreate_check_result = 'Pass'
+		else:
+			print 'Sequence recreate fail'
+			print len(extracted_seq)
+			print len(original_seq_from_fasta[0]['DNA_seq'])
+			print extracted_seq[-10:]
+			print original_seq_from_fasta[0]['DNA_seq'][-10:]
+			print '\n'
+			print extracted_seq[:10]
+			print original_seq_from_fasta[0]['DNA_seq'][:10]
+			recreate_check_result = 'Fail'
+
 
 # ---------------------------------------------------- Alignment functions 
 
@@ -2869,7 +3461,16 @@ def get_path_weight(path_list, aGraph):
 	return total_weight
 
 
+def retrieve_genomic_sequence(bp_start, bp_stop, fasta_object):
 
+	if int(bp_start) > 0:
+		a_sequence = fasta_object[0]['DNA_deq'][bp_start - 1:bp_stop]
+
+	else:
+		a_sequence = fasta_object[0]['DNA_deq'][abs(bp_start) - 1:abs(bp_stop)]
+
+
+	return a_sequence
 
 def create_new_graph_from_aln_paths(graph_obj, aln_path_obj, path_dict, trim=True):
 
@@ -3118,6 +3719,52 @@ if __name__ == '__main__':
 
 
 	if args.toolkit == 'test_mode':
+
+		parsed_input_dict = parse_seq_file('/Users/panix/Dropbox/Programs/tools/genome_alignment_graph_tool/GenGraphGit/test_files/multiGenome.txt')
+
+		new_graph = bbone_to_initGraph('/Users/panix/Dropbox/Programs/tools/genome_alignment_graph_tool/GenGraphGit/globalAlignment_phyloTest.backbone', parsed_input_dict)
+
+		#old_graph = nx.read_graphml('newTestseqADDED.xml')
+		old_graph = nx.read_graphml('newTestGraph_Graph.xml')
+
+		print node_check(old_graph)
+
+		new_graph = add_sequences_to_graph(old_graph, parsed_input_dict)
+
+		seq_recreate_check(new_graph, parsed_input_dict)
+
+		quit()
+
+		nx.write_graphml(new_graph, 'newIntGraph_Graph.xml')
+
+		refine_initGraph(new_graph)
+
+		add_missing_nodes(new_graph, parsed_input_dict)
+
+		print 'run 2'
+
+		add_missing_nodes(new_graph, parsed_input_dict)
+
+		print 'recall test'
+
+		print node_check(new_graph)
+
+		print new_graph.node['Aln_484']
+
+		#local_node_realign_new(new_graph, 'Aln_484', parsed_input_dict[1])
+
+
+		new_graph = realign_all_nodes(new_graph, parsed_input_dict)
+
+		nx.write_graphml(new_graph, 'newTestseqADDED.xml')
+
+		print node_check(new_graph)
+
+		new_graph = add_sequences_to_graph(new_graph, parsed_input_dict)
+
+		seq_recreate_check(new_graph, parsed_input_dict)
+
+		nx.write_graphml(new_graph, 'newTestGraph_Graph.xml')
 
 		print 'add test code'
 		'''
