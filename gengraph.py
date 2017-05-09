@@ -688,174 +688,7 @@ def realign_all_nodes(inGraph, input_dict):
 	return inGraph
 
 
-
-def link_nodes_2(graph_obj, sequence_name, node_prefix='gn'):
-
-	print 'link nodes 2'
-	
-	# To make sure all new nodes have unique names, a count is kept
-
-	if 'add_count' in graph_obj.graph.keys():
-		#print 'found'
-		add_count_val = graph_obj.graph['add_count']
-	else:
-		#print 'none found'
-		graph_obj.graph['add_count'] = 0
-		add_count_val = 0
-
-	# This list is a list of all the existing nodes start and stop positions with the node name formatted at start, stop, node_name
-
-	pos_lol = []
-
-	for node,data in graph_obj.nodes_iter(data=True):
-		#print data
-		#print data[left_end_name], data[right_end_name], node
-		#print 'gggggg'
-		#print data
-
-		left_end_name = sequence_name + '_leftend'
-		right_end_name = sequence_name + '_rightend'		
-		#print '------------'
-		#print data
-		#print node
-		#print sequence_name
-		if sequence_name in data['present_in'].split(','):
-			#print 'right node'
-			#print data
-
-			new_left_pos = abs(int(data[left_end_name]))
-			new_right_pos = abs(int(data[right_end_name]))
-
-			if new_left_pos > new_right_pos:
-				temp_left = new_right_pos
-				temp_right = new_left_pos
-				new_left_pos = temp_left
-				new_right_pos = temp_right
-
-
-			if int(new_left_pos) != 0 and int(new_right_pos) != 0 or node == sequence_name + '_start':
-				pos_lol.append([new_left_pos, new_right_pos, node])
-
-	count = 0
-
-	gap_lol = []
-
-	pos_lol = sorted(pos_lol)
-
-	#for a_list in pos_lol:
-	#	print a_list
-
-	sorted_pos_lol = pos_lol
-
-	#print sorted_pos_lol
-
-	# -------------------------------------------------------- Here we determine if there are any gaps in the sequence 
-
-	while count < (len(sorted_pos_lol) - 1):
-
-		if sorted_pos_lol[count][1] != (sorted_pos_lol[count + 1][0] - 1) and sorted_pos_lol[count][1] != (sorted_pos_lol[count + 1][0]):
-			gap_list = [(sorted_pos_lol[count][1] + 1), ((sorted_pos_lol[count + 1][0] - 1)), sequence_name]
-			gap_lol.append(gap_list)
-
-		count +=1
-
-
-	for entry in gap_lol:
-		if entry[0] > entry[1]:
-			#print 'wtf'
-			#print entry
-			new_entry_0 = entry[1]
-			new_entry_1 = entry[0]
-			entry[1] = new_entry_1
-			entry[0] = new_entry_0
-
-	# -------------------------------------------------------- Add new nodes
-
-	#print gap_lol
-
-	new_node_list = []
-
-	for new_seq_node in gap_lol:
-		#print new_seq_node
-		gap_len = new_seq_node[1] - new_seq_node[0] + 1
-		node_dict = {new_seq_node[2] + '_leftend':str(new_seq_node[0]), new_seq_node[2] + '_rightend':str(new_seq_node[1]), 'present_in':sequence_name}
-
-		#print node_dict
-		node_name = node_prefix + '_' + str(add_count_val)
-
-		new_seq_node.append(node_name)
-
-		graph_obj.add_node(node_name, node_dict)
-
-
-		new_node_list.append([new_seq_node[0], new_seq_node[1], node_name])
-
-		add_count_val += 1
-
-
-
-
-
-	#print pos_lol
-	#print gap_lol
-	#print new_node_list
-
-	# -------------------------------------------------------- Combine the origional node list with the list of gaps generated earlier
-
-	all_node_list = pos_lol + new_node_list
-	#print '\n'
-
-	all_node_list = sorted(all_node_list)
-
-
-	#print 'This is the list*************************'
-	#print all_node_list
-
-
-	# -------------------------------------------------------- Here we add edges to the graph, weaving in the new nodes
-
-	count = 0
-
-	#graph_obj.add_edges_from([('H37Rv_seq_4', 'Aln_region_7', dict(sequence='testing'))])
-
-	while count < (len(all_node_list) - 1):
-
-		if (all_node_list[count][2], all_node_list[count+1][2]) in graph_obj.edges():
-
-			#print 'has edge'
-			#print count
-
-			#print all_node_list[count][2]
-			#print all_node_list[count+1][2]
-
-			#print '------'
-			#print graph_obj.edge[all_node_list[count][2]][all_node_list[count+1][2]]
-
-
-			if sequence_name not in graph_obj.edge[all_node_list[count][2]][all_node_list[count+1][2]][0]['sequence'].split(','):
-
-				new_seq_list = graph_obj.edge[all_node_list[count][2]][all_node_list[count+1][2]][0]['sequence'] + ',' + sequence_name
-
-			else:
-				new_seq_list = graph_obj.edge[all_node_list[count][2]][all_node_list[count+1][2]][0]['sequence']
-			#print new_seq_list
-
-			graph_obj.edge[all_node_list[count][2]][all_node_list[count+1][2]][0]['sequence'] = new_seq_list
-
-			#print 'appending'
-		else:
-
-			graph_obj.add_edges_from([(all_node_list[count][2], all_node_list[count+1][2], dict(sequence=sequence_name))])
-
-		count += 1
-
-	graph_obj.graph['add_count'] = add_count_val
-
-	print 'returning'
-
-	return graph_obj
-
-def link_nodes(graph_obj, sequence_name, node_prefix='gn'):
+def link_nodes_old(graph_obj, sequence_name, node_prefix='gn'):
 	print 'link nodes 3'
 	
 	# To make sure all new nodes have unique names, a count is kept
@@ -1062,231 +895,91 @@ def link_nodes(graph_obj, sequence_name, node_prefix='gn'):
 	return graph_obj
 
 
-
-def create_genome_alignment_graph(backbone_file, seq_label_dict, input_path_dict, node_prefix=''):
-
-	#print seq_label_dict
-	#print input_path_dict
-	# Getting graph info
-
-	all_iso_in_graph = ''
-
-	for isolate_name in seq_label_dict.keys():
-		all_iso_in_graph = all_iso_in_graph + seq_label_dict[isolate_name] + ','
-
-	all_iso_in_graph = all_iso_in_graph[:-1]
-
-	#print all_iso_in_graph
-
-
-	# ------------------------------------------------------- Determining node names 
-
-	if len(node_prefix) > 0:
-		list_node_prefix = node_prefix.split('_')
-		node_new_mid_fix = ''.join(list_node_prefix[2:])
-
-
-	backbone_lol = input_parser(backbone_file)
-
-	genome_network = nx.MultiDiGraph()
-
-	genome_network.graph['isolates'] = all_iso_in_graph
-
-	als_seq_number = len(seq_label_dict)
-	#print '================================'
-	#print seq_label_dict
-	aln_number = 0
-
-	headder_line = backbone_lol[0]
-
-	#print headder_line
-
-	backbone_lol_headless = backbone_lol[1:]
-
-
-	# Replacing generic names based on dict
-	new_headder_line = []
-
-	for headder_seq_name in headder_line:
-		seq_name_list = headder_seq_name.split('_')
-		#print seq_name_list
-		for seq_key in seq_label_dict.keys():
-			#print seq_key
-			if seq_name_list[0] == seq_key:
-				new_headder_name = seq_label_dict[seq_key] + '_' + seq_name_list[1]
-				new_headder_line.append(new_headder_name)
-
-	#print new_headder_line
-	#print '---------'
-
-	# Adding the aligned region nodes in this segment of code
-	for aligned_region in backbone_lol_headless:
-		aln_number += 1
-		#print aligned_region
-		node_dict = {}
-
-		# creating length dict
-		length_dict = {}
-
-
-		row_number = 0
-
-		# Adding isolate start/stop aka left/right to the node dict
-		while row_number < len(headder_line):
-			#pos_label = headder_line[row_number]
-			#print new_headder_line
-			#print node_dict[new_headder_line[row_number]]
-			#print aligned_region[row_number]
-			#print new_headder_line
-			node_dict[new_headder_line[row_number]] = aligned_region[row_number]
-
-			row_number += 1
-		#print node_dict
-
-		# creating length dict
-		length_dict = {}
-
-		for seq_name in seq_label_dict:
-			left_val = node_dict[seq_label_dict[seq_name] + '_leftend']
-			right_val = node_dict[seq_label_dict[seq_name] + '_rightend']
-
-			#print left_val, right_val
-
-			seq_aln_length = abs(int(left_val) - int(right_val))
-
-
-			# if int(left_val) != 0 and int(right_val) != 0 and int(left_val) != 1 and int(right_val) != 1:   (Changed 15 july 2016 to allow nodes starting at 1)
-			if int(left_val) != 0 and int(right_val) != 0:
-				#print 'hmmmm'
-				#print aln_number
-				#print left_val, right_val
-				seq_aln_length = seq_aln_length + 1
-				
-
-			length_dict[seq_label_dict[seq_name]] = seq_aln_length
-
-
-
-		present_in_str = ''
-
-
-		for seq_name in length_dict.keys():
-			if int(length_dict[seq_name]) != 0:
-				present_in_str = present_in_str + seq_name
-				present_in_str = present_in_str + ','
-
-		
-		present_in_str = present_in_str[:-1]
-
-		node_dict['present_in'] = present_in_str
-		#print present_in_str
-
-
-		# Assign the length of the node
-
-		iso_for_length = present_in_str.split(',')[0]
-
-		#node_dict['length'] = length_dict[iso_for_length]
-
-
-		# ----------- ----------- ----------- ----------- ----------- Adding prefix if needed to node name -----------
-
-		if len(node_prefix) > 0:
-			node_name = "Aln_" + node_new_mid_fix + "_" +  str(aln_number)
-		else:
-			node_name = "Aln_" + str(aln_number)
-
-		add_node = True
-
-		if len(node_dict['present_in'].split(',')) == 0:
-			add_node = False
-
-		test_node_dict = {}
-
-		if add_node == True:
-			#print '=========='
-			#print node_name
-			#print node_dict
-
-
-			genome_network.add_node(node_name, node_dict)
-
-	# ---------- ----------- ----------- ----------- -----------  Add seq start and stop ends ----------- -----------
-
-	for seq_name in input_path_dict.keys():
-		seq_fasta = input_parser(input_path_dict[seq_name])
-		#print seq_fasta[0].keys()
-		#print len(seq_fasta[0]['DNA_seq'])
-		seq_total_length = len(seq_fasta[0]['DNA_seq'])
-
-		start_node_name = seq_name + '_start'
-		stop_node_name = seq_name + '_stop'
-
-		genome_network.add_node(start_node_name)
-		genome_network.node[start_node_name][seq_name + '_leftend'] = '0'
-		genome_network.node[start_node_name][seq_name + '_rightend'] = '0'
-		genome_network.node[start_node_name]['present_in'] = seq_name
-
-		genome_network.add_node(stop_node_name)
-		genome_network.node[stop_node_name][seq_name + '_leftend'] = str(seq_total_length)
-		genome_network.node[stop_node_name][seq_name + '_rightend'] = str(seq_total_length)
-		genome_network.node[stop_node_name]['present_in'] = seq_name
-
-
-	# And now to add the edges...
-
-	for seq_name in seq_label_dict.keys():
-		#print seq_label_dict
-		genome_network = link_nodes(genome_network, seq_label_dict[seq_name])
-
-
-
-
-	return genome_network
-
-
-def add_sequences_to_graph_old(graph_obj, paths_dict):
+def link_nodes(graph_obj, sequence_name, node_prefix='gn'):
+	print 'link nodes 3'
 	
-	print 'Adding sequences'
+
+	# This list is a list of all the existing nodes start and stop positions with the node name formatted at start, stop, node_name
+
+	pos_lol = []
+
+	#print 'getting positions'
 
 	for node,data in graph_obj.nodes_iter(data=True):
 
-		seq_source = data['present_in'].split(',')[0]
-		is_reversed = False
-		is_comp = False
+		left_end_name = sequence_name + '_leftend'
+		right_end_name = sequence_name + '_rightend'		
 
-		if len(seq_source) < 1:
-			print 'No present_in current node'
-			print node
+		if sequence_name in data['present_in'].split(','):
 
+			new_left_pos = abs(int(data[left_end_name]))
+			new_right_pos = abs(int(data[right_end_name]))
+
+			if new_left_pos > new_right_pos:
+				print 'Doing the switch!'
+				temp_left = new_right_pos
+				temp_right = new_left_pos
+				new_left_pos = temp_left
+				new_right_pos = temp_right
+
+
+			if int(new_left_pos) != 0 and int(new_right_pos) != 0 or node == sequence_name + '_start':
+				pos_lol.append([new_left_pos, new_right_pos, node])
+
+	count = 0
+
+
+	#print 'Sorting'
+
+	all_node_list = sorted(pos_lol, key=lambda start_val: start_val[0])
+
+
+	# -------------------------------------------------------- Here we add edges to the graph, weaving in the new nodes
+
+	count = 0
+
+	print 'Add new edges'
+
+	edges_obj = graph_obj.edges()
+
+	while count < (len(all_node_list) - 1):
+	
+		if (all_node_list[count][2], all_node_list[count+1][2]) in edges_obj:
+
+			#print sequence_name
+
+			#print graph_obj.edge[all_node_list[count][2]][all_node_list[count+1][2]]['sequence'].split(',')
+	
+			if sequence_name not in graph_obj.edge[all_node_list[count][2]][all_node_list[count+1][2]]['sequence'].split(','):
+
+
+
+				new_seq_list = graph_obj.edge[all_node_list[count][2]][all_node_list[count+1][2]]['sequence'] + ',' + sequence_name
+
+			else:
+				new_seq_list = graph_obj.edge[all_node_list[count][2]][all_node_list[count+1][2]]['sequence']
+			#print new_seq_list
+
+			graph_obj.edge[all_node_list[count][2]][all_node_list[count+1][2]]['sequence'] = new_seq_list
+
+			#print 'appending'
 		else:
-			ref_seq = input_parser(paths_dict[seq_source])[0]['DNA_seq']
 
-			# Check orientation
-			if int(data[seq_source + '_leftend']) < 0:
-				is_reversed = True
+			graph_obj.add_edges_from([(all_node_list[count][2], all_node_list[count+1][2], dict(sequence=sequence_name))])
 
-			seq_start = abs(int(data[seq_source + '_leftend']))
-			seq_end = abs(int(data[seq_source + '_rightend']))
+		count += 1
 
-			if seq_start > seq_end:
-				new_seq_start = seq_end
-				new_seq_end = seq_start
-				seq_end = new_seq_end
-				seq_start = new_seq_start
-
-
-			seq_start = seq_start - 1
-
-			node_seq = ref_seq[seq_start:seq_end].upper()
-
-			if is_reversed == True:
-				print 'seq was rev comp' + node
-				node_seq = reverse_compliment(node_seq)
-
-			graph_obj.node[node]['sequence'] = node_seq
+	print 'Edges added'
 
 	return graph_obj
+
+
+def link_all_nodes(graph_obj):
+	for isolate in graph_obj.graph['isolates'].split(','):
+		print isolate
+		graph_obj = link_nodes(graph_obj, isolate)
+	return graph_obj
+
 
 def add_sequences_to_graph(graph_obj, paths_dict):
 	
@@ -2466,6 +2159,33 @@ def seq_recreate_check(graph_obj, input_dict):
 			print original_seq_from_fasta[0]['DNA_seq'][:10]
 			recreate_check_result = 'Fail'
 
+def add_graph_data(graph_obj):
+
+	count_dict = {}
+
+	# Add start nodes
+	for node,data in graph_obj.nodes_iter(data=True):
+
+		for an_isolate in data['present_in'].split(','):
+			if abs(int(data[an_isolate + '_leftend'])) == 1:
+				graph_obj.graph[an_isolate + '_startnode'] = node
+				if node not in count_dict.keys():
+					count_dict[node] = 1
+				else:
+					count_dict[node] = count_dict[node] + 1
+
+	print count_dict
+	most_start_node = ''
+	most_start_node_number = 0
+
+	for a_node in count_dict.keys():
+		if count_dict[a_node] > most_start_node_number:
+			most_start_node = a_node
+			most_start_node_number = count_dict[a_node]
+
+	graph_obj.graph['start_node'] = most_start_node
+
+
 
 # ---------------------------------------------------- Alignment functions 
 
@@ -3140,6 +2860,7 @@ def get_neighbour_most_iso(list_of_nodes, graph_obj, weight_matrix):
 	return longest_list_node
 
 def calc_average_distance_dict(weight_matrix, a_list_of_isolates):
+	# Return the average distance from
 
 	res_dict = {}
 
@@ -3163,13 +2884,9 @@ def extract_heaviest_path(graph_obj, phyloinfo, weight_matrix=''):
 
 	# Determine starting node
 
-	start_node = phyloinfo + '_start'
-
-	start_node = graph_obj.successors(start_node)[0]
+	start_node = graph_obj.graph['start_node']
 
 	# Adding, and let's go!
-
-	out_graph.graph['start_node'] = start_node
 
 	node_list = [start_node]
 
@@ -3562,6 +3279,9 @@ def create_new_graph_from_aln_paths(graph_obj, aln_path_obj, path_dict, trim=Tru
 	return heavtSeq
 
 
+# Ancesteral genome creation
+
+
 
 # Why are we doing this? Can we recreate the sequence? Do away with a reference. Lets see if the new genome has better mapping stats. Can we identify the isolate closest? 
 
@@ -3729,6 +3449,12 @@ if __name__ == '__main__':
 
 		print node_check(old_graph)
 
+		add_graph_data(old_graph)
+
+		print old_graph.graph
+
+		quit()
+
 		new_graph = add_sequences_to_graph(old_graph, parsed_input_dict)
 
 		seq_recreate_check(new_graph, parsed_input_dict)
@@ -3821,11 +3547,15 @@ if __name__ == '__main__':
 			bbone_file = args.backbone_file[0]
 
 
-		genome_aln_graph = create_genome_alignment_graph(bbone_file, parsed_input_dict[0], parsed_input_dict[1])
+		genome_aln_graph = bbone_to_initGraph(bbone_file, parsed_input_dict)
+
+		refine_initGraph(genome_aln_graph)
+
+		add_missing_nodes(genome_aln_graph, parsed_input_dict)
 
 		nx.write_graphml(genome_aln_graph, 'intermediate_Graph.xml')
 
-		# --------------------------------------------------------------------------------- node splitting
+		# --------------------------------------------------------------------------------- node splitting BETA
 
 		if args.max_node_length != -1:
 
@@ -3841,7 +3571,12 @@ if __name__ == '__main__':
 
 		print 'Conducting local node realignment'
 
-		genome_aln_graph = create_ungapped_graph(genome_aln_graph, parsed_input_dict[1])
+
+		genome_aln_graph = realign_all_nodes(genome_aln_graph, parsed_input_dict)
+
+		add_graph_data(genome_aln_graph)
+
+		genome_aln_graph = link_all_nodes(genome_aln_graph)
 		
 		print 'Genome graph created'
 
@@ -3856,7 +3591,7 @@ if __name__ == '__main__':
 			print 'Sequence dict used:'
 			print parsed_input_dict[1]
 
-			genome_aln_graph = add_sequences_to_graph(genome_aln_graph, parsed_input_dict[1])
+			genome_aln_graph = add_sequences_to_graph(genome_aln_graph, parsed_input_dict)
 			print 'Sequence added'
 
 		if args.make_circular != 'No':
@@ -3865,23 +3600,8 @@ if __name__ == '__main__':
 
 
 		if args.rec_check == True:
-			for isolate in parsed_input_dict[1].keys():
-				extracted_seq = extract_original_seq(genome_aln_graph, isolate)
-				original_seq_from_fasta = input_parser(parsed_input_dict[1][isolate])
 
-				if extracted_seq.upper() == original_seq_from_fasta[0]['DNA_seq'].upper():
-					print 'Sequence recreate pass'
-					recreate_check_result = 'Pass'
-				else:
-					print 'Sequence recreate fail'
-					print len(extracted_seq)
-					print len(original_seq_from_fasta[0]['DNA_seq'])
-					print extracted_seq[-10:]
-					print original_seq_from_fasta[0]['DNA_seq'][-10:]
-					print '\n'
-					print extracted_seq[:10]
-					print original_seq_from_fasta[0]['DNA_seq'][:10]
-					recreate_check_result = 'Fail'
+			seq_recreate_check(genome_aln_graph, parsed_input_dict)
 
 
 		# Saving output
@@ -3980,7 +3700,9 @@ if __name__ == '__main__':
 		# --isolate
 
 		imported_genome = nx.read_graphml(args.graph_file)
+		add_graph_data(imported_genome)
 
+		imported_genome = link_all_nodes(imported_genome)
 
 		sim_matrix = calc_simmilarity_matrix(imported_genome)
 
