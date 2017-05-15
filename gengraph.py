@@ -943,29 +943,40 @@ def link_nodes(graph_obj, sequence_name, node_prefix='gn'):
 	edges_obj = graph_obj.edges()
 
 	while count < (len(all_node_list) - 1):
-	
-		if (all_node_list[count][2], all_node_list[count+1][2]) in edges_obj:
 
+		node_1 = all_node_list[count][2]
+		node_2 = all_node_list[count+1][2]
+	
+		if (node_1, node_2) in edges_obj:
+
+			print 'edge found'
 			#print sequence_name
 
 			#print graph_obj.edge[all_node_list[count][2]][all_node_list[count+1][2]]['sequence'].split(',')
-	
-			if sequence_name not in graph_obj.edge[all_node_list[count][2]][all_node_list[count+1][2]]['sequence'].split(','):
+			
+			print graph_obj.edge[node_1][node_2]
+			print graph_obj.edge[node_1][node_2][0]['sequence'].split(',')
+
+			if sequence_name not in graph_obj.edge[node_1][node_2][0]['sequence'].split(','):
 
 
-
-				new_seq_list = graph_obj.edge[all_node_list[count][2]][all_node_list[count+1][2]]['sequence'] + ',' + sequence_name
+				new_seq_list = graph_obj.edge[node_1][node_2][0]['sequence'] + ',' + sequence_name
+				print new_seq_list
 
 			else:
-				new_seq_list = graph_obj.edge[all_node_list[count][2]][all_node_list[count+1][2]]['sequence']
+				print 'this'
+				quit()
+				new_seq_list = graph_obj.edge[node_1][node_2]['sequence']
 			#print new_seq_list
 
-			graph_obj.edge[all_node_list[count][2]][all_node_list[count+1][2]]['sequence'] = new_seq_list
+			graph_obj.edge[node_1][node_2][0]['sequence'] = new_seq_list
 
 			#print 'appending'
 		else:
+			print 'new edge'
+			print [(node_1, node_2, dict(sequence=sequence_name))]
 
-			graph_obj.add_edges_from([(all_node_list[count][2], all_node_list[count+1][2], dict(sequence=sequence_name))])
+			graph_obj.add_edge(node_1, node_2, sequence=sequence_name)
 
 		count += 1
 
@@ -2824,7 +2835,6 @@ def extract_iso_subgraph(graph_obj, isolate):
 def get_neighbour_most_iso(list_of_nodes, graph_obj, weight_matrix):
 
 	# Returns the neighbouring node of the current node that contains the most isolates or the highest weight.
-
 	longest_list_node = 'nope'
 	longest_list_length = 0
 
@@ -2846,17 +2856,24 @@ def get_neighbour_most_iso(list_of_nodes, graph_obj, weight_matrix):
 		largest_node_weight = 0
 
 		for neigh_node in list_of_nodes:
+			#print neigh_node
+			if 'visited' not in graph_obj.node[neigh_node].keys(): 
+				#print 'checking node'
+				node_weight = 0
 
-			node_weight = 0
+				for iso_name in graph_obj.node[neigh_node]['present_in'].split(','):
+					node_weight = node_weight + ave_dist_dict[iso_name]
 
-			for iso_name in graph_obj.node[neigh_node]['present_in'].split(','):
-				node_weight = node_weight + ave_dist_dict[iso_name]
+				if node_weight > largest_node_weight:
+					longest_list_node = neigh_node
+					largest_node_weight = node_weight
+			else:
+				1 == 1
+				#print 'visited'
 
-			if node_weight > largest_node_weight:
-				longest_list_node = neigh_node
-				largest_node_weight = node_weight
-
-
+	if longest_list_node != 'nope':
+		graph_obj.node[longest_list_node]['visited'] = 'yes'
+	
 	return longest_list_node
 
 def calc_average_distance_dict(weight_matrix, a_list_of_isolates):
@@ -2878,13 +2895,9 @@ def calc_average_distance_dict(weight_matrix, a_list_of_isolates):
 	return res_dict
 
 
-def extract_heaviest_path(graph_obj, phyloinfo, weight_matrix=''):
+def extract_heaviest_path(graph_obj, start_node, stop_node, weight_matrix=''):
 	# setup
 	out_graph = nx.MultiDiGraph()
-
-	# Determine starting node
-
-	start_node = graph_obj.graph['start_node']
 
 	# Adding, and let's go!
 
@@ -2892,15 +2905,24 @@ def extract_heaviest_path(graph_obj, phyloinfo, weight_matrix=''):
 
 	curr_node = start_node
 	
-	while curr_node != 'nope':
+	while curr_node != stop_node:
 
 		neighbors_out = graph_obj.successors(curr_node)
 
 		new_node = get_neighbour_most_iso(neighbors_out, graph_obj, weight_matrix)
 
-		node_list.append(new_node)
-
 		curr_node = new_node
+
+		print curr_node
+
+		if curr_node != 'nope':
+			node_list.append(new_node)
+
+
+		if curr_node == 'nope':
+			curr_node = node_list[-2]
+		print curr_node
+
 
 	node_list = node_list[:-1]
 
@@ -3279,12 +3301,77 @@ def create_new_graph_from_aln_paths(graph_obj, aln_path_obj, path_dict, trim=Tru
 	return heavtSeq
 
 
-# Ancesteral genome creation
+# Ancestral genome creation
+
+def get_end_node_dict(graph_obj):
+	end_dict_value = {}
+	end_dict_node = {}
+
+	for an_isolate in graph_obj.graph['isolates'].split(','):
+		end_dict_value[an_isolate] = 0
+	
+	for node,data in graph_obj.nodes_iter(data=True):
+		for an_isolate in graph_obj.graph['isolates'].split(','):
+			if an_isolate in data['present_in'].split(','):
+				if abs(int(data[an_isolate + '_rightend'])) > end_dict_value[an_isolate]:
+					end_dict_value[an_isolate] = abs(int(data[an_isolate + '_rightend']))
+					end_dict_node[an_isolate] = node
+	
+	return end_dict_node
 
 
+def generate_ancesteral_genome(graph_obj, weight_matrix=''):
 
-# Why are we doing this? Can we recreate the sequence? Do away with a reference. Lets see if the new genome has better mapping stats. Can we identify the isolate closest? 
+	# Remove all nodes with only one isolate in them (Simplify graph)
+	
+	out_path = extract_heaviest_path(graph_obj, graph_obj.graph['start_node'], 'Aln_700_1', weight_matrix=weight_matrix)
+	#print len(out_path)
+	out_path.graph['start_node'] = graph_obj.graph['start_node']
+	nx.write_graphml(out_path, 'ancestor_path.xml')
 
+	seq_string = ''
+	for node,data in out_path.nodes_iter(data=True):
+		seq_string = seq_string + data['sequence']
+	#print len(seq_string)
+
+	return out_path
+	
+	'''
+	quit()
+	print get_end_node_dict(graph_obj)
+	max_nodes = 5000
+
+	#print([p for p in nx.all_shortest_paths(graph_obj,source=graph_obj.graph['start_node'],target='Aln_700_1')])
+
+	p=nx.shortest_path(graph_obj)
+	print p[graph_obj.graph['start_node']]['Aln_700_1']
+
+	quit()
+	path_count = 0
+	for a_path in nx.all_simple_paths(graph_obj, graph_obj.graph['start_node'], 'Aln_700_1', cutoff=max_nodes):
+		path_count += 1
+
+	print path_count
+	'''
+
+def add_ancestral_path(old_graph_obj, anc_graph_obj):
+
+	iso_node_count = {}
+
+	for a_node,data in anc_graph_obj.nodes_iter(data=True):
+
+		for a_iso in old_graph_obj.node[a_node]['present_in'].split(','):
+			if a_iso in iso_node_count.keys():
+				iso_node_count[a_iso] = iso_node_count[a_iso] + 1
+			else:
+				iso_node_count[a_iso] = 1
+
+		old_graph_obj.node[a_node]['present_in'] = data['present_in'] + ',' + 'ancestral'
+		#print old_graph_obj.node[a_node]['present_in']
+
+
+	#print iso_node_count
+	return old_graph_obj
 
 # ---------------------------------------------------- # Testing functions
 
@@ -3452,6 +3539,8 @@ if __name__ == '__main__':
 		add_graph_data(old_graph)
 
 		print old_graph.graph
+
+		link_all_nodes(old_graph)
 
 		quit()
 
@@ -3700,13 +3789,11 @@ if __name__ == '__main__':
 		# --isolate
 
 		imported_genome = nx.read_graphml(args.graph_file)
-		add_graph_data(imported_genome)
-
-		imported_genome = link_all_nodes(imported_genome)
 
 		sim_matrix = calc_simmilarity_matrix(imported_genome)
 
 		plotDend = True
+		add_to_GG = True
 
 		print sim_matrix.index.values.tolist()
 
@@ -3721,14 +3808,23 @@ if __name__ == '__main__':
 
 			plt.figure()
 			dn = hierarchy.dendrogram(Z,labels=sim_matrix.index.values.tolist())
-			#plt.show()
-
+			plt.show()
 
 		print sim_matrix
 
-		ancesteral_genome = extract_heaviest_path(imported_genome, args.isolate, weight_matrix=sim_matrix)
+		anc_genome_obj = generate_ancesteral_genome(imported_genome, weight_matrix=sim_matrix)
 
-		ancesteral_genome_seq = extract_seq_heavy(ancesteral_genome)
+		#ancesteral_genome = extract_heaviest_path(imported_genome, args.isolate, weight_matrix=sim_matrix)
+
+		if add_to_GG == True:
+			fresh_imported_genome = nx.read_graphml(args.graph_file)
+			anc_genome_added_graph = add_ancestral_path(fresh_imported_genome, anc_genome_obj)
+			nx.write_graphml(anc_genome_added_graph, args.out_file_name + 'Ancesteral.xml')
+
+
+		ancesteral_genome_seq = extract_seq_heavy(anc_genome_obj)
+
+
 
 		export_to_fasta(ancesteral_genome_seq, args.out_file_name, args.out_file_name)
 
