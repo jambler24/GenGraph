@@ -30,7 +30,6 @@ path_to_kalign = '/Users/panix/Dropbox/Programs/tools/kalign2/kalign'
 
 path_to_progressiveMauve = '/Applications/Mauve.app/Contents/MacOS/progressiveMauve'
 
-
 global_aligner = 'progressiveMauve'
 
 local_aligner = 'mafft'
@@ -229,16 +228,23 @@ def input_parser(file_path, parse_as='default'):
 						gtf_info_dict = {}
 
 						for info_byte in entries_extra_info:
+							print info_byte
 							info_byte = info_byte.split('=')
 							extra_info_dict[info_byte[0]] = info_byte[1]
+
+						print extra_info_dict
 
 						if 'locus_tag' in extra_info_dict.keys():
 
 							gtf_info_dict['gene_id'] = extra_info_dict['locus_tag']
+							gtf_info_dict['locus_tag'] = extra_info_dict['locus_tag']
 
 							entries[8] = gtf_info_dict
 					
 							list_of_lists.append(entries)
+
+							#quit()
+
 
 
 		return list_of_lists
@@ -688,215 +694,8 @@ def realign_all_nodes(inGraph, input_dict):
 	return inGraph
 
 
-def link_nodes_old(graph_obj, sequence_name, node_prefix='gn'):
-	print 'link nodes 3'
-	
-	# To make sure all new nodes have unique names, a count is kept
-
-	if 'add_count' in graph_obj.graph.keys():
-		#print 'found'
-		add_count_val = graph_obj.graph['add_count']
-	else:
-		#print 'none found'
-		graph_obj.graph['add_count'] = 0
-		add_count_val = 0
-
-	# This list is a list of all the existing nodes start and stop positions with the node name formatted at start, stop, node_name
-
-	pos_lol = []
-
-	print 'getting positions'
-
-	for node,data in graph_obj.nodes_iter(data=True):
-		#print data
-		#print data[left_end_name], data[right_end_name], node
-		#print 'gggggg'
-		#print data
-
-		left_end_name = sequence_name + '_leftend'
-		right_end_name = sequence_name + '_rightend'		
-		#print '------------'
-		#print data
-		#print node
-		#print sequence_name
-		if sequence_name in data['present_in'].split(','):
-			#print 'right node'
-			#print data
-
-			new_left_pos = abs(int(data[left_end_name]))
-			new_right_pos = abs(int(data[right_end_name]))
-
-			if new_left_pos > new_right_pos:
-				print 'Doing the switch!'
-				temp_left = new_right_pos
-				temp_right = new_left_pos
-				new_left_pos = temp_left
-				new_right_pos = temp_right
-
-
-			if int(new_left_pos) != 0 and int(new_right_pos) != 0 or node == sequence_name + '_start':
-				pos_lol.append([new_left_pos, new_right_pos, node])
-
-	count = 0
-
-	gap_lol = []
-
-	print 'Sorting'
-
-	pos_lol = sorted(pos_lol, key=lambda start_val: start_val[0])
-
-	#for a_list in pos_lol:
-	#	print a_list
-
-	sorted_pos_lol = pos_lol
-
-	for a_pos in sorted_pos_lol:
-		if a_pos[0] > a_pos[1]:
-			print 'ERROR ON LINE 734'
-
-	#print sorted_pos_lol
-
-	# -------------------------------------------------------- Here we determine if there are any gaps in the sequence 
-	print 'Look for gaps'
-
-	while count < (len(sorted_pos_lol) - 1):
-
-		# if the end of the current node is not equal to the end of the next node -1 and it is not equal to the start of the next node
-			
-		current_node_end = sorted_pos_lol[count][1]
-		current_node_start = sorted_pos_lol[count][0]
-		next_node_start = sorted_pos_lol[count + 1][0]
-		next_node_stop = sorted_pos_lol[count + 1][1]
-
-		if current_node_end > next_node_start or current_node_end > next_node_stop or current_node_start > next_node_start or current_node_start > next_node_stop:
-			print 'Node order wrong'
-			print current_node_start, current_node_end
-			print next_node_start, next_node_stop
-
-
-		if current_node_end != (next_node_start - 1):
-
-			if current_node_end != next_node_start:
-
-				if current_node_start > current_node_end or next_node_start > next_node_stop or current_node_end > next_node_start:
-
-					print "Strange thing --------------------------<"
-					print current_node_start, current_node_end
-					print next_node_start, next_node_stop
-
-				gap_list = [(current_node_end + 1), ((next_node_start - 1)), sequence_name]
-				gap_lol.append(gap_list)
-
-		count +=1
-
-
-	print 're-orientate'
-	for entry in gap_lol:
-		if entry[0] > entry[1]:
-			print 'wtf'
-			print entry
-			new_entry_0 = entry[1]
-			new_entry_1 = entry[0]
-			entry[1] = new_entry_1
-			entry[0] = new_entry_0
-
-	# -------------------------------------------------------- Add new nodes
-
-	#print gap_lol
-
-	new_node_list = []
-
-	print 'Add new nodes'
-
-	for new_seq_node in gap_lol:
-		#print new_seq_node
-		#gap_len = new_seq_node[1] - new_seq_node[0] + 1
-		node_dict = {new_seq_node[2] + '_leftend':str(new_seq_node[0]), new_seq_node[2] + '_rightend':str(new_seq_node[1]), 'present_in':sequence_name}
-
-		#print node_dict
-		node_name = node_prefix + '_' + str(add_count_val)
-
-		new_seq_node.append(node_name)
-
-		graph_obj.add_node(node_name, node_dict)
-
-
-		new_node_list.append([new_seq_node[0], new_seq_node[1], node_name])
-
-		add_count_val += 1
-
-
-
-
-
-	#print pos_lol
-	#print gap_lol
-	#print new_node_list
-
-	# -------------------------------------------------------- Combine the original node list with the list of gaps generated earlier
-
-	all_node_list = pos_lol + new_node_list
-	#print '\n'
-
-	all_node_list = sorted(all_node_list)
-
-
-	#print 'This is the list*************************'
-	#print all_node_list
-
-
-	# -------------------------------------------------------- Here we add edges to the graph, weaving in the new nodes
-
-	count = 0
-
-	#graph_obj.add_edges_from([('H37Rv_seq_4', 'Aln_region_7', dict(sequence='testing'))])
-
-	print 'Add new edges'
-
-	edges_obj = graph_obj.edges()
-
-	while count < (len(all_node_list) - 1):
-	
-
-		if (all_node_list[count][2], all_node_list[count+1][2]) in edges_obj:
-
-			#print 'has edge'
-			#print count
-
-			#print all_node_list[count][2]
-			#print all_node_list[count+1][2]
-
-			#print '------'
-			#print graph_obj.edge[all_node_list[count][2]][all_node_list[count+1][2]]
-
-	
-			if sequence_name not in graph_obj.edge[all_node_list[count][2]][all_node_list[count+1][2]][0]['sequence'].split(','):
-
-				new_seq_list = graph_obj.edge[all_node_list[count][2]][all_node_list[count+1][2]][0]['sequence'] + ',' + sequence_name
-
-			else:
-				new_seq_list = graph_obj.edge[all_node_list[count][2]][all_node_list[count+1][2]][0]['sequence']
-			#print new_seq_list
-
-			graph_obj.edge[all_node_list[count][2]][all_node_list[count+1][2]][0]['sequence'] = new_seq_list
-
-			#print 'appending'
-		else:
-
-			graph_obj.add_edges_from([(all_node_list[count][2], all_node_list[count+1][2], dict(sequence=sequence_name))])
-
-		count += 1
-
-	print 'Edges added'
-
-	graph_obj.graph['add_count'] = add_count_val
-
-
-	return graph_obj
-
-
 def link_nodes(graph_obj, sequence_name, node_prefix='gn'):
-	print 'link nodes 3'
+	#print 'link nodes v4'
 	
 
 	# This list is a list of all the existing nodes start and stop positions with the node name formatted at start, stop, node_name
@@ -938,7 +737,7 @@ def link_nodes(graph_obj, sequence_name, node_prefix='gn'):
 
 	count = 0
 
-	print 'Add new edges'
+	#print 'Add new edges'
 
 	edges_obj = graph_obj.edges()
 
@@ -949,22 +748,22 @@ def link_nodes(graph_obj, sequence_name, node_prefix='gn'):
 	
 		if (node_1, node_2) in edges_obj:
 
-			print 'edge found'
+			#print 'edge found'
 			#print sequence_name
 
 			#print graph_obj.edge[all_node_list[count][2]][all_node_list[count+1][2]]['sequence'].split(',')
 			
-			print graph_obj.edge[node_1][node_2]
-			print graph_obj.edge[node_1][node_2][0]['sequence'].split(',')
+			#print graph_obj.edge[node_1][node_2]
+			#print graph_obj.edge[node_1][node_2][0]['sequence'].split(',')
 
 			if sequence_name not in graph_obj.edge[node_1][node_2][0]['sequence'].split(','):
 
 
 				new_seq_list = graph_obj.edge[node_1][node_2][0]['sequence'] + ',' + sequence_name
-				print new_seq_list
+				#print new_seq_list
 
 			else:
-				print 'this'
+				print 'Error found.'
 				quit()
 				new_seq_list = graph_obj.edge[node_1][node_2]['sequence']
 			#print new_seq_list
@@ -973,8 +772,8 @@ def link_nodes(graph_obj, sequence_name, node_prefix='gn'):
 
 			#print 'appending'
 		else:
-			print 'new edge'
-			print [(node_1, node_2, dict(sequence=sequence_name))]
+			#print 'new edge'
+			#print [(node_1, node_2, dict(sequence=sequence_name))]
 
 			graph_obj.add_edge(node_1, node_2, sequence=sequence_name)
 
@@ -1035,7 +834,7 @@ def add_sequences_to_graph(graph_obj, paths_dict):
 			node_seq = ref_seq[seq_start:seq_end].upper()
 
 			if is_reversed == True:
-				print 'seq was rev comp' + node
+				#print 'seq was rev comp' + node
 				node_seq = reverse_compliment(node_seq)
 
 			graph_obj.node[node]['sequence'] = node_seq
@@ -1089,8 +888,9 @@ def add_sequences_to_graph_fastaObj(graph_obj, imported_fasta_object):
 			node_seq = ref_seq[seq_start:seq_end].upper()
 
 			if is_reversed == True:
-				print 'seq was rev comp' + node
+				#print 'seq was rev comp' + node
 				#node_seq = reverse_compliment(node_seq)
+				1 == 1 
 
 			graph_obj.node[node]['sequence'] = node_seq
 
@@ -1141,7 +941,7 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 		if reference_name in data['present_in']:
 
 			if int(data[node_leftend_label]) > 0:
-
+				#print 'positive'
 				if abs(int(data[node_leftend_label])) <= int(start_pos) <= abs(int(data[node_rightend_label])):
 					start_node = node
 					print 'Ping'
@@ -1158,8 +958,10 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 					#stop_overlap = int(stop_pos) - int(data[node_leftend_label]) + 1
 
 			if int(data[node_leftend_label]) < 0:
-				
-				if abs(int(data[node_leftend_label])) >= int(start_pos) >= abs(int(data[node_rightend_label])):
+				#print 'negative'
+				#print data[node_leftend_label]
+				#print data[node_rightend_label]
+				if abs(int(data[node_leftend_label])) <= int(start_pos) <= abs(int(data[node_rightend_label])):
 					start_node = node
 					print 'Ping'
 					print 'neg node'
@@ -1168,7 +970,7 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 					#print data[node_rightend_label]
 					start_overlap =  bp_distance(data[node_rightend_label], start_pos)
 
-				if abs(int(data[node_leftend_label])) >= int(stop_pos) >= abs(int(data[node_rightend_label])) or abs(int(data[node_leftend_label])) >= int(stop_pos) >= abs(int(data[node_rightend_label])):
+				if abs(int(data[node_leftend_label])) <= int(stop_pos) <= abs(int(data[node_rightend_label])):
 					print 'ping'
 					print 'neg node'
 					stop_node = node
@@ -1178,11 +980,14 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 
 
 
-	#print start_node
-	#print start_overlap
-	#print stop_node
+
 	#print stop_overlap
+	#print start_pos
+	print stop_pos
 	#print '\n'
+	print start_node
+	#print start_overlap
+	print stop_node
 
 	# Dealing with genes that occur at the start and stop nodes of the graph... needs a propper solution
 	# Caused by the lack of a 'length' attribute in the start and stop node
@@ -2228,7 +2033,7 @@ def mafft_alignment(fasta_unaln_file, out_aln_name):
 
 def progressiveMauve_alignment(fasta_path_list, out_aln_name):
 
-	progressiveMauve_call = [path_to_progressiveMauve, '--output=globalAlignment_'+out_aln_name] + fasta_path_list
+	progressiveMauve_call = [path_to_progressiveMauve, '--output=globalAlignment_'+out_aln_name, '--scratch-path-1=/Volumes/HDD/mauveTemp','--scratch-path-2=/Volumes/HDD/mauveTemp'] + fasta_path_list
 
 	return call(progressiveMauve_call)
 
@@ -2364,6 +2169,9 @@ def extract_pan_genome_csv(graph_obj, gtf_dict, out_file_name, hom_threshold=1.0
 					if 'gene_id' in entry[8].keys():
 						curr_gene = entry[8]['gene_id']
 
+					if 'locus_tag' in entry[8].keys():
+						curr_gene = entry[8]['locus_tag']
+
 					#print found_in_list
 					#print line_str
 					line_str = line_str.replace('gene',curr_gene)
@@ -2446,7 +2254,7 @@ def extract_anno_pan_genome_csv(graph_obj, gtf_dict, out_file_name, refseq='', s
 	outfile_obj.write(csv_headder)
 
 	for isolate in isolate_list:
-		gtf_lol = input_parser(gtf_dict[isolate], parse_as='gtf')
+		gtf_lol = input_parser(gtf_dict[isolate])
 		timer = 0
 
 		# For each gene for this isolate, see which other isolates have the same sequence
@@ -2456,7 +2264,7 @@ def extract_anno_pan_genome_csv(graph_obj, gtf_dict, out_file_name, refseq='', s
 			# For this gene for this isolate
 			#print entry
 
-			if entry[2] == 'exon' or entry[2] == 'gene':
+			if entry[2] == 'gene':
 
 				# Entries that are genes	
 				
@@ -2471,17 +2279,24 @@ def extract_anno_pan_genome_csv(graph_obj, gtf_dict, out_file_name, refseq='', s
 				if len(list(set(found_in_list) & set(added_list))) < 1:
 					line_str = csv_headder
 
-					#print entry[8].keys()
-
+					print entry[8].keys()
+					'''
 					if 'ID' in entry[8].keys():
 						curr_gene = entry[8]['ID']
 
 					if 'gene_id' in entry[8].keys():
 						curr_gene = entry[8]['gene_id']
+					'''
+					if 'locus_tag' in entry[8].keys():
+						curr_gene = entry[8]['locus_tag']
+
+					print '_#_#_#_#_#'
 					print curr_gene
 
+					print line_str
 					line_str = line_str.replace('gene',curr_gene)
 					line_str = line_str.replace(isolate,curr_gene)
+					print line_str
 					
 					#print 'here we get the other iso annotations'
 
@@ -2598,7 +2413,7 @@ def get_anno_from_coordinates(in_gtf_lol, start_pos, stop_pos, tollerence):
 		# if using gff3
 		if anno[2] == 'gene':
 			if abs(int(anno[3]) - int(start_pos)) <= int(tollerence) and abs(int(anno[4]) - int(stop_pos)) <= int(tollerence):
-				return anno[8]['ID']
+				return anno[8]['locus_tag']
 
 	return '1'
 
@@ -3373,6 +3188,43 @@ def add_ancestral_path(old_graph_obj, anc_graph_obj):
 	#print iso_node_count
 	return old_graph_obj
 
+def get_panTrans_stats(in_annoTransCSV):
+	''' Get general stats from the output of the pan-transcriptome generation '''
+	csv_obj = open(in_annoTransCSV, 'r')
+
+	header_line = True
+
+	total_genes_count = 0
+	core_genes_count = 0
+
+	for line in csv_obj:
+
+		is_core_gene = True
+
+		if header_line == True:
+			headder = line.split(',')[1:]
+			is_core_gene = False
+			header_line = False
+		else:
+			line_list = line.split(',')[1:]
+
+			for list_item in line_list:
+				if list_item == '0':
+					is_core_gene = False
+				if list_item == '1':
+					is_core_gene = False
+
+		if is_core_gene == True:
+			core_genes_count = core_genes_count + 1
+
+		total_genes_count = total_genes_count + 1
+
+	print 'Total genes', total_genes_count
+	print 'Core genes', core_genes_count
+
+
+
+
 # ---------------------------------------------------- # Testing functions
 
 
@@ -3526,6 +3378,9 @@ if __name__ == '__main__':
 
 
 	if args.toolkit == 'test_mode':
+
+		get_panTrans_stats('pan6Genomeanno.csv')
+		quit()
 
 		parsed_input_dict = parse_seq_file('/Users/panix/Dropbox/Programs/tools/genome_alignment_graph_tool/GenGraphGit/test_files/multiGenome.txt')
 
@@ -3786,7 +3641,6 @@ if __name__ == '__main__':
 		# Requires:
 		# --out_file_name
 		# --graph_file
-		# --isolate
 
 		imported_genome = nx.read_graphml(args.graph_file)
 
