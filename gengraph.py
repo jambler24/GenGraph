@@ -436,7 +436,7 @@ def node_check(a_graph):
 	for isolate in iso_list:
 		isolate_node_list = []
 		for node,data in a_graph.nodes_iter(data=True):
-			if isolate in data['present_in']:
+			if isolate in data['present_in'].split(','):
 				isolate_node_list.append(node)
 		
 		#print isolate_node_list
@@ -2294,8 +2294,9 @@ def extract_anno_pan_genome_csv(graph_obj, gtf_dict, out_file_name, refseq='', s
 					print curr_gene
 
 					print line_str
-					line_str = line_str.replace('gene',curr_gene)
+					#line_str = line_str.replace('gene',curr_gene)
 					line_str = line_str.replace(isolate,curr_gene)
+					line_str = line_str.replace('gene',curr_gene)
 					print line_str
 					
 					#print 'here we get the other iso annotations'
@@ -2334,21 +2335,41 @@ def extract_anno_pan_genome_csv(graph_obj, gtf_dict, out_file_name, refseq='', s
 
 							print 'gene found!!'
 							print homo_gene
+							print found_iso
 
-							line_str = line_str.replace(found_iso, homo_gene)
+							line_string_list = line_str.split(',')
+							for n,i in enumerate(line_string_list):
+								if str(i).replace('\n','') == found_iso:
+									print 'yes'
+									line_string_list[n] = homo_gene
 
+							line_str = ','.join(line_string_list)
+							print 'line string'
 							print line_str
 						else:
+
 							line_str = line_str.replace(found_iso, 'partial')
 
 
 					for remaining_iso in isolate_list:
-						line_str = line_str.replace(remaining_iso, '0')
+						line_string_list = line_str.split(',')
+						for n,i in enumerate(line_string_list):
+							if i.replace('\n','') == remaining_iso:
+								line_string_list[n] = '0'
+						line_str = ','.join(line_string_list)
 
-
+					print 'NB OUT --------------------------------------------'
+					print line_str
 
 					timer += 1
 					#print timer
+
+					if line_str[-2:] != '\n':
+						line_str = line_str + '\n'
+
+					print 'Writing line'
+					print line_str
+
 					outfile_obj.write(line_str)
 
 
@@ -2406,16 +2427,22 @@ def get_anno_from_coordinates(in_gtf_lol, start_pos, stop_pos, tollerence):
 
 
 	for anno in in_gtf_lol:
+		'''
 		if anno[2] == 'exon':
 			if abs(int(anno[3]) - int(start_pos)) <= int(tollerence) and abs(int(anno[4]) - int(stop_pos)) <= int(tollerence):
 				return anno[8]['gene_id']
-
+		'''
 		# if using gff3
 		if anno[2] == 'gene':
 			if abs(int(anno[3]) - int(start_pos)) <= int(tollerence) and abs(int(anno[4]) - int(stop_pos)) <= int(tollerence):
 				return anno[8]['locus_tag']
+			if abs(int(anno[4]) - int(start_pos)) <= int(tollerence) and abs(int(anno[3]) - int(stop_pos)) <= int(tollerence):
 
-	return '1'
+				print 'aha'
+				quit()
+
+	else:
+		return '1'
 
 def get_gene_homo_gff(graph_obj, gtf_file, reference_name):
 
@@ -2644,6 +2671,46 @@ def extract_iso_subgraph(graph_obj, isolate):
 	iso_graph = link_nodes(iso_graph, isolate)
 
 	return iso_graph
+
+
+def extract_gene(seq_locus_id, seq_isolate_origin, graph_obj, annotation_path_dict):
+
+
+	iso_anno_obj = input_parser(annotation_path_dict[3][seq_isolate_origin])
+
+
+	tar_gene_anno = 'Not found'
+
+	for entry in iso_anno_obj:
+		if entry[2] == 'gene':
+			if entry[8]['locus_tag'] == seq_locus_id:
+				tar_gene_anno = entry
+
+			if 'old_locus_tag' in entry[8].keys():
+				if entry[8]['old_locus_tag'] == seq_locus_id:
+					tar_gene_anno = entry
+
+
+	if tar_gene_anno != 'Not found':
+
+		print tar_gene_anno[3], tar_gene_anno[4]
+		print int(tar_gene_anno[4]) - int(tar_gene_anno[3])
+		print tar_gene_anno[6]
+
+		out_seq = extract_original_seq_region(graph_obj, tar_gene_anno[3], tar_gene_anno[4], seq_isolate_origin)
+
+		if tar_gene_anno[6] == '-':
+			out_seq = reverse_compliment(out_seq)
+
+		return out_seq
+
+	else:
+		return tar_gene_anno
+
+
+
+	print 'in function'
+
 
 # For heaviest path function
 
@@ -3206,13 +3273,24 @@ def get_panTrans_stats(in_annoTransCSV):
 			is_core_gene = False
 			header_line = False
 		else:
+
 			line_list = line.split(',')[1:]
 
 			for list_item in line_list:
 				if list_item == '0':
 					is_core_gene = False
+
+			'''
+			for list_item in line_list:
 				if list_item == '1':
 					is_core_gene = False
+			'''
+
+			for list_item in line_list:
+				if list_item == 'partial':
+					is_core_gene = False
+			
+
 
 		if is_core_gene == True:
 			core_genes_count = core_genes_count + 1
@@ -3222,6 +3300,132 @@ def get_panTrans_stats(in_annoTransCSV):
 	print 'Total genes', total_genes_count
 	print 'Core genes', core_genes_count
 
+# ----------------------------------------------------- # Development code
+
+def split_all_long_nodes(a_in_graph, max_length):
+
+	print 'splitting all nodes'
+
+	node_list = a_in_graph.nodes()
+
+	for a_node in node_list:
+		#print 'current node: ' + a_node
+		a_in_graph = split_node(a_in_graph, a_node, max_length)
+
+	return a_in_graph
+
+def split_node(in_graph, node, max_length):
+
+	print 'splitting node: ' + node
+
+	#print 'testing'
+
+	# Extract info from node
+
+	#print in_graph.node[node]
+
+	graph_iso_list = in_graph.node[node]['present_in'].split(',')
+
+	len_dict = {}
+
+	longest_seq = 0
+
+	for a_isolate in graph_iso_list:
+		a_length = abs(abs(int(in_graph.node[node][a_isolate + '_rightend'])) - abs(int(in_graph.node[node][a_isolate + '_leftend'])))
+
+		len_dict[a_isolate] = a_length
+
+		if a_length > longest_seq:
+			longest_seq = a_length
+
+	#print len_dict
+	#print longest_seq
+
+	# determine split
+
+	if longest_seq < max_length:
+		return in_graph
+
+	new_nodes = int(longest_seq) // int(max_length) + 1
+	#print new_nodes
+
+	new_node_dict = {}
+	count = 1
+	while count <= new_nodes:
+
+		new_node_dict[node + '_' + str(count)] = {'present_in':in_graph.node[node]['present_in']}
+
+		count += 1
+
+	#print new_node_dict
+
+	for a_isolate in graph_iso_list:
+
+		if int(in_graph.node[node][a_isolate + '_rightend']) < 0:
+			# dealing with reverse comp
+			print 'next'
+
+
+		else:
+			# Not reverse comp
+			#print a_isolate
+
+			node_interval = len_dict[a_isolate] // new_nodes
+			node_length_remainder = len_dict[a_isolate] % new_nodes
+			#print node_interval
+			#print node_length_remainder
+
+			currnode = 1
+
+			# Initialise with the start position
+			prev_node_stop_plus_one = int(in_graph.node[node][a_isolate + '_leftend'])
+
+			#print prev_node_stop_plus_one
+
+			while currnode <= new_nodes:
+
+				curr_node_start = prev_node_stop_plus_one
+
+				curr_node_stop = curr_node_start + node_interval - 1
+
+				# Taking care of the remainders
+				if currnode <= node_length_remainder + 1:
+					curr_node_stop = curr_node_stop + 1
+				
+
+				prev_node_stop_plus_one = curr_node_stop + 1
+
+				new_node_dict[node + '_' + str(currnode)][a_isolate + '_leftend'] = str(curr_node_start)
+				new_node_dict[node + '_' + str(currnode)][a_isolate + '_rightend'] = str(curr_node_stop)
+
+				currnode += 1
+
+			
+			#print curr_node_start, curr_node_stop
+			#print int(in_graph.node[node][a_isolate + '_rightend'])
+			#print new_node_dict
+
+
+	
+
+	# Create new nodes 
+
+	for a_new_node in new_node_dict.keys():
+		#print a_new_node
+		in_graph.add_node(a_new_node, new_node_dict[a_new_node])
+
+
+	# Delete old node
+
+	in_graph.remove_node(node)
+
+
+	# Link nodes
+	#for a_isolate in graph_iso_list:
+	#	in_graph = link_nodes_2(in_graph, a_isolate)
+
+
+	return in_graph
 
 
 
@@ -3365,6 +3569,8 @@ if __name__ == '__main__':
 
 	parser.add_argument('--input_file', type=str, help='Generic input')
 
+	parser.add_argument('--locus_ID', type=str, help='The name of the gene or feature')
+
 	parser.set_defaults(should_add_seq=True)
 
 	parser.set_defaults(rec_check=False)
@@ -3379,7 +3585,7 @@ if __name__ == '__main__':
 
 	if args.toolkit == 'test_mode':
 
-		get_panTrans_stats('pan6Genomeanno.csv')
+		get_panTrans_stats('xTestPanTransAnno2.csv')
 		quit()
 
 		parsed_input_dict = parse_seq_file('/Users/panix/Dropbox/Programs/tools/genome_alignment_graph_tool/GenGraphGit/test_files/multiGenome.txt')
@@ -3587,13 +3793,13 @@ if __name__ == '__main__':
 
 		
 
-		new_graph = fasta_alignment_to_subnet(args.input_file, true_start=seqStartDict)
+		new_graph = fasta_alignment_to_subnet(args.input_file, true_start=seqStartDict, add_seq=True)
 
 		nx.write_graphml(new_graph, 'intermediate_virus_Graph.xml')
 
-		new_graph = add_sequences_to_graph(new_graph, fasta_object)
+		#new_graph = add_sequences_to_graph(new_graph, fasta_object)
 
-		nx.write_graphml(new_graph, args.out_file_name)
+		nx.write_graphml(new_graph, args.out_file_name + '.xml')
 		
 
 
@@ -3716,6 +3922,28 @@ if __name__ == '__main__':
 
 		# Converting the csv to a fasta file of transcripts
 		#create_fasta_from_pangenome_csv(args.input_file, test_gtf_dict, parsed_input_dict, args.out_file_name)
+
+	if args.toolkit == 'extract_gene':
+		'''Return the sequence of a gene'''
+
+		# --seq_file
+		# --graph_file
+		# --locus_ID
+		# --isolate
+
+		gene_isolate = args.isolate
+		gene_name = args.locus_ID
+		create_fasta_file = False
+
+		print 'Here we go'
+
+		parsed_seq_obj = parse_seq_file(args.seq_file)	
+
+		imp_genome_obj = nx.read_graphml(args.graph_file)	
+
+		print extract_gene(gene_name, gene_isolate, imp_genome_obj, parsed_seq_obj)
+
+
 
 
 	if args.toolkit == 'map_to_graph':
