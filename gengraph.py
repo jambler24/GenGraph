@@ -228,11 +228,11 @@ def input_parser(file_path, parse_as='default'):
 						gtf_info_dict = {}
 
 						for info_byte in entries_extra_info:
-							print info_byte
+							#print info_byte
 							info_byte = info_byte.split('=')
 							extra_info_dict[info_byte[0]] = info_byte[1]
 
-						print extra_info_dict
+						#print extra_info_dict
 
 						if 'locus_tag' in extra_info_dict.keys():
 
@@ -1300,7 +1300,7 @@ def import_gtf_dict_to_massive_dict(gtf_dict):
 		
 		for entry in curr_gtf:
 			#print entry
-			pos_deets = isolate + ',' + entry[3] + ',' + entry[4] + ',' + entry[5]
+			pos_deets = isolate + ',' + entry[3] + ',' + entry[4] + ',' + entry[6]
 			if 'gene_id' not in entry[8].keys():
 				print 'key error'
 				print entry
@@ -2232,9 +2232,10 @@ def create_fasta_from_pangenome_csv(pg_csv, seq_file_dict, out_name):
 			out_transcriptome.write('\n')
 			out_transcriptome.write('\n')
 
-def pangenome_csv_to_virtual_genome_fasta(pg_csv, gtf_dict, seq_file_dict, out_name):
+def pangenome_csv_to_virtual_genome_fasta(pg_csv, seq_file_dict, out_name, chrom_name='virtChromosome'):
 	in_pg_obj = open(pg_csv, "r")
-	out_transcriptome = open(out_name + '.fasta', "w")
+	out_fasta = open(out_name + '.fasta', "w")
+	out_gff = open(out_name + '.gff3', "w")
 	reader = csv.reader(in_pg_obj)
 	next(reader, None)
 
@@ -2246,29 +2247,42 @@ def pangenome_csv_to_virtual_genome_fasta(pg_csv, gtf_dict, seq_file_dict, out_n
 		genome_dict[iso_seq_dict] = fasta_seq_dict[0]['DNA_seq']
 
 
-	all_anno_dict = import_gtf_dict_to_massive_dict(gtf_dict)
+	all_anno_dict = import_gtf_dict_to_massive_dict(seq_file_dict[3])
+
+	filler = 'NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN'
+
+	out_headder = ">" + chrom_name + '\n'
+	out_fasta.write(out_headder)
+
+	out_gff.write('##gff-version 3\n')
+
+	current_pos = len(filler) + 1
+	temp_seq = ''
+
+	count = 0
 
 	for line in reader:
-		#print '----'
-		#print line
 
-		out_headder = ">" + line[0] + '\n'
-		
-		seq_details = all_anno_dict[line[0]].split(',')
+		if len(line) > 0:
+				
+			seq_details = all_anno_dict[line[0]].split(',')
 
-		#print seq_details
-
-		if seq_details[3] == '-':
-			out_seq = genome_dict[seq_details[0]][int(seq_details[1])-1:int(seq_details[2])]
-			#out_seq = reverse_compliment(out_seq)
-		else:
 			out_seq = genome_dict[seq_details[0]][int(seq_details[1])-1:int(seq_details[2])]
 
+			feature_name = line[0]
+			feature_start = current_pos
+			feature_stop = feature_start + len(out_seq)
 
-		out_transcriptome.write(out_headder)
-		out_transcriptome.write(out_seq)
-		out_transcriptome.write('\n')
-		out_transcriptome.write('\n')
+			out_gff.write(chrom_name + '\t' + 'gengraph' + '\t' + 'gene' + '\t' + str(feature_start) + '\t' + str(feature_stop) + '\t' + '.' + '\t' + seq_details[3] + '\t' + '.' + '\t' + 'ID=' + feature_name + '\n')
+			current_pos = feature_stop + len(filler)
+
+			out_fasta.write(filler)
+			temp_seq = temp_seq + filler
+			out_fasta.write(out_seq)
+			temp_seq = temp_seq + out_seq
+
+
+
 
 
 
@@ -3629,8 +3643,9 @@ if __name__ == '__main__':
 
 		print '\n'
 
-		create_fasta_from_pangenome_csv('../xTestPanTrans2anno.csv', parsed_input_dict, 'xExtractFasta')
+		#create_fasta_from_pangenome_csv('../xTestPanTrans2anno.csv', parsed_input_dict, 'xExtractFasta')
 
+		pangenome_csv_to_virtual_genome_fasta('../xTestPanTrans2anno.csv', parsed_input_dict, 'xExtractVG')
 
 		quit()
 
