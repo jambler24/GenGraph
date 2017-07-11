@@ -2193,7 +2193,46 @@ def extract_pan_genome_csv(graph_obj, gtf_dict, out_file_name, hom_threshold=1.0
 
 		added_list.append(isolate)
 
-def create_fasta_from_pangenome_csv(pg_csv, gtf_dict, seq_file_dict, out_name):
+def create_fasta_from_pangenome_csv(pg_csv, seq_file_dict, out_name):
+	in_pg_obj = open(pg_csv, "r")
+	out_transcriptome = open(out_name + '.fasta', "w")
+	reader = csv.reader(in_pg_obj)
+	next(reader, None)
+
+	genome_dict = {}
+
+	for iso_seq_dict in seq_file_dict[1].keys():
+		
+		fasta_seq_dict = input_parser(seq_file_dict[1][iso_seq_dict])
+		genome_dict[iso_seq_dict] = fasta_seq_dict[0]['DNA_seq']
+
+
+	all_anno_dict = import_gtf_dict_to_massive_dict(seq_file_dict[3])
+
+
+	for line in reader:
+
+
+		if len(line) > 0:
+			out_headder = ">" + line[0] + '\n'
+			
+			seq_details = all_anno_dict[line[0]].split(',')
+
+			#print seq_details
+
+			if seq_details[3] == '-':
+				out_seq = genome_dict[seq_details[0]][int(seq_details[1])-1:int(seq_details[2])]
+				#out_seq = reverse_compliment(out_seq)
+			else:
+				out_seq = genome_dict[seq_details[0]][int(seq_details[1])-1:int(seq_details[2])]
+
+
+			out_transcriptome.write(out_headder)
+			out_transcriptome.write(out_seq)
+			out_transcriptome.write('\n')
+			out_transcriptome.write('\n')
+
+def pangenome_csv_to_virtual_genome_fasta(pg_csv, gtf_dict, seq_file_dict, out_name):
 	in_pg_obj = open(pg_csv, "r")
 	out_transcriptome = open(out_name + '.fasta', "w")
 	reader = csv.reader(in_pg_obj)
@@ -2230,6 +2269,7 @@ def create_fasta_from_pangenome_csv(pg_csv, gtf_dict, seq_file_dict, out_name):
 		out_transcriptome.write(out_seq)
 		out_transcriptome.write('\n')
 		out_transcriptome.write('\n')
+
 
 
 def extract_anno_pan_genome_csv(graph_obj, gtf_dict, out_file_name, refseq='', sim_threshold=1.0):
@@ -3585,7 +3625,13 @@ if __name__ == '__main__':
 
 	if args.toolkit == 'test_mode':
 
-		get_panTrans_stats('xTestPanTransAnno2.csv')
+		parsed_input_dict = parse_seq_file('/Users/panix/Dropbox/Programs/tools/genome_alignment_graph_tool/GenGraphGit/test_files/multiGenome3.txt')
+
+		print '\n'
+
+		create_fasta_from_pangenome_csv('../xTestPanTrans2anno.csv', parsed_input_dict, 'xExtractFasta')
+
+
 		quit()
 
 		parsed_input_dict = parse_seq_file('/Users/panix/Dropbox/Programs/tools/genome_alignment_graph_tool/GenGraphGit/test_files/multiGenome.txt')
