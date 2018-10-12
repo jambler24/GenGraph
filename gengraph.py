@@ -3717,6 +3717,19 @@ if __name__ == '__main__':
 		create_new_graph_from_aln_paths(imported_genome, aln_path_list)
 		'''
 	if args.toolkit == 'test':
+
+		imported_genome = nx.read_graphml('/Users/panix/Dropbox/Programs/tools/genome_alignment_graph_tool/GenGraphGit/test_files/w148_h37rv_ncbi.xml')
+
+		h37rv_gtf = '/Volumes/HDD/Genomes/M_tuberculosis/sRNA/mtb_h37rv_srna_BSRD.gtf'
+		w_gtf = '/Volumes/HDD/Genomes/M_tuberculosis/sRNA/sRNAdiscovery/Combined_sRNA_potentials_potential_sRNA.gff3'
+
+
+		test_gtf_dict = {'H37Rv':h37rv_gtf, 'W-148':w_gtf}
+
+		extract_anno_pan_genome_csv(imported_genome, test_gtf_dict, 'sRNAsimMatrix', sim_threshold=0.90)
+
+		quit()
+
 		print "Testing cuttent installation"
 		curr_graph = './test_files/test_g.gml'
 		#test_gtf_dict = {'H37Rv':h37rv_gtf, 'H37Ra':hra_gtf, 'CDC1551':cdc1551_gtf, 'F11':f11_gtf, 'c':c_gtf, 'W-148':w_gtf}
@@ -3792,7 +3805,15 @@ if __name__ == '__main__':
 		print 'Genome graph created'
 
 
+		# --------------------------------------------------------------------------------- adding annotation data to the graph
+		# TEMP FIX FOR NOW
+
+		parsed_input_dict
+
+
+
 		# --------------------------------------------------------------------------------- adding sequence to the graph
+
 
 		if args.should_add_seq == True:
 
@@ -3909,9 +3930,13 @@ if __name__ == '__main__':
 		# --out_file_name
 		# --graph_file
 
+		print "CHANGES MADE TO THE MATRIX ARE PROBLEMATIC AND WILL CAUSE A INCORRECT TREE TO BE MADE"
+
 		imported_genome = nx.read_graphml(args.graph_file)
 
 		sim_matrix = calc_simmilarity_matrix(imported_genome)
+
+		#sim_matrix = (sim_matrix - 1) * -1
 
 		plotDend = True
 		add_to_GG = True
@@ -3932,6 +3957,8 @@ if __name__ == '__main__':
 			plt.show()
 
 		print sim_matrix
+
+		quit()
 
 		anc_genome_obj = generate_ancesteral_genome(imported_genome, weight_matrix=sim_matrix)
 
