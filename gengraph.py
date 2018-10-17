@@ -19,6 +19,8 @@ import time
 
 import pickle
 
+import logging
+
 
 path_to_muscle = 'muscle3.8.31_i86darwin64'
 
@@ -232,7 +234,6 @@ def input_parser(file_path, parse_as='default'):
 							info_byte = info_byte.split('=')
 							extra_info_dict[info_byte[0]] = info_byte[1]
 
-						#print extra_info_dict
 
 						if 'locus_tag' in extra_info_dict.keys():
 
@@ -297,7 +298,7 @@ def parse_seq_file(path_to_seq_file):
 	anno_path_dict = {}
 
 	for a_seq_file in seq_file_dict:
-		print a_seq_file
+		logging.info(a_seq_file)
 		A_seq_label_dict[a_seq_file['aln_name']] = a_seq_file['seq_name']
 		A_input_path_dict[a_seq_file['seq_name']] = a_seq_file['seq_path']
 		ordered_paths_list.append(a_seq_file['seq_path'])
@@ -386,7 +387,7 @@ def add_missing_nodes(a_graph, input_dict):
 
 	from operator import itemgetter
 
-	print input_dict[1].keys()
+	logging.info(input_dict[1].keys())
 
 	iso_list = a_graph.graph['isolates'].split(',')
 
@@ -400,13 +401,12 @@ def add_missing_nodes(a_graph, input_dict):
 			if isolate in data['present_in']:
 				isolate_node_list.append(node)
 		
-		#print isolate_node_list
 		presorted_list = []
 		for a_node in isolate_node_list:
 			presorted_list.append((a_node, abs(a_graph.node[a_node][isolate + '_leftend']), abs(a_graph.node[a_node][isolate + '_rightend'])))
 			if abs(a_graph.node[a_node][isolate + '_leftend']) > abs(a_graph.node[a_node][isolate + '_rightend']):
-				print 'problem node', a_node
-				print a_graph.node[a_node][isolate + '_leftend']
+				logging.warning('problem node', a_node)
+				logging.warning(a_graph.node[a_node][isolate + '_leftend'])
 
 		sorted_list = sorted(presorted_list,key=itemgetter(1))
 
@@ -428,7 +428,7 @@ def add_missing_nodes(a_graph, input_dict):
 
 def node_check(a_graph):
 	from operator import itemgetter
-	print 'checking nodes'
+	logging.info('checking nodes')
 	doespass = True
 
 	iso_list = a_graph.graph['isolates'].split(',')
@@ -444,8 +444,8 @@ def node_check(a_graph):
 		for a_node in isolate_node_list:
 			presorted_list.append((a_node, abs(int(a_graph.node[a_node][isolate + '_leftend'])), abs(int(a_graph.node[a_node][isolate + '_rightend']))))
 			if abs(int(a_graph.node[a_node][isolate + '_leftend'])) > abs(int(a_graph.node[a_node][isolate + '_rightend'])):
-				print 'problem node', a_node
-				print a_graph.node[a_node][isolate + '_leftend']
+				logging.warning('problem node', a_node)
+				logging.warning(a_graph.node[a_node][isolate + '_leftend'])
 
 		sorted_list = sorted(presorted_list,key=itemgetter(1))
 
@@ -454,32 +454,32 @@ def node_check(a_graph):
 		while count < len(sorted_list) - 1:
 
 			if sorted_list[count][2] != sorted_list[count + 1][1] - 1:
-				print 'error 1: gaps in graph'
-				print isolate
-				print sorted_list[count]
-				print sorted_list[count + 1]
-				print 'Gap length:', sorted_list[count + 1][1] - sorted_list[count][2] - 1
+				logging.error('error 1: gaps in graph')
+				logging.error(isolate)
+				logging.error(sorted_list[count])
+				logging.error(sorted_list[count + 1])
+				logging.error('Gap length:', sorted_list[count + 1][1] - sorted_list[count][2] - 1)
 				doespass = False
 
 			if sorted_list[count][2] >= sorted_list[count + 1][1]:
-				print 'error 2'
-				print isolate
-				print sorted_list[count]
-				print sorted_list[count + 1]
+				logging.error('error 2')
+				logging.error(isolate)
+				logging.error(sorted_list[count])
+				logging.error(sorted_list[count + 1])
 				doespass = False
 
 			if sorted_list[count][1] == sorted_list[count - 1][2] - 1:
-				print 'error 3: last node end close to node start. If this is not a SNP, there is an error'
-				print isolate
-				print sorted_list[count]
-				print sorted_list[count - 1]
+				logging.error('error 3: last node end close to node start. If this is not a SNP, there is an error')
+				logging.error(isolate)
+				logging.error(sorted_list[count])
+				logging.error(sorted_list[count - 1])
 				doespass = False
 
 			if sorted_list[count][1] > sorted_list[count][2]:
-				print 'error 4: start greater than stop'
-				print isolate
-				print sorted_list[count]
-				print a_graph.node[sorted_list[count][0]]
+				logging.error('error 4: start greater than stop')
+				logging.error(isolate)
+				logging.error(sorted_list[count])
+				logging.error(a_graph.node[sorted_list[count][0]])
 				doespass = False		
 
 
@@ -497,13 +497,12 @@ def refine_initGraph(a_graph):
 			if isolate in data['present_in']:
 				isolate_node_list.append(node)
 		
-		#print isolate_node_list
 		presorted_list = []
 		for a_node in isolate_node_list:
 			presorted_list.append((a_node, abs(a_graph.node[a_node][isolate + '_leftend']), abs(a_graph.node[a_node][isolate + '_rightend'])))
 			if abs(a_graph.node[a_node][isolate + '_leftend']) > abs(a_graph.node[a_node][isolate + '_rightend']):
-				print 'problem node', a_node
-				print a_graph.node[a_node][isolate + '_leftend']
+				logging.warning('problem node', a_node)
+				logging.warning(a_graph.node[a_node][isolate + '_leftend'])
 
 		sorted_list = sorted(presorted_list,key=itemgetter(1))
 
@@ -512,16 +511,17 @@ def refine_initGraph(a_graph):
 		while count < len(sorted_list) - 1:
 
 			if sorted_list[count][2] == sorted_list[count + 1][1]:
-				print 'problem node'
-				print sorted_list[count]
-				print sorted_list[count + 1]
-				print a_graph.node[sorted_list[count][0]]
+				logging.warning('problem node')
+				logging.warning(sorted_list[count])
+				logging.warning(sorted_list[count + 1])
+				logging.warning(a_graph.node[sorted_list[count][0]])
 				for a_node_isolate in a_graph.node[sorted_list[count][0]]['present_in'].split(','):
 					if a_graph.node[sorted_list[count][0]][a_node_isolate + '_rightend'] < 0:
 						a_graph.node[sorted_list[count][0]][a_node_isolate + '_rightend'] = a_graph.node[sorted_list[count][0]][a_node_isolate + '_rightend'] + 1
 					if a_graph.node[sorted_list[count][0]][a_node_isolate + '_rightend'] > 0:
 						a_graph.node[sorted_list[count][0]][a_node_isolate + '_rightend'] = a_graph.node[sorted_list[count][0]][a_node_isolate + '_rightend'] - 1
-				print a_graph.node[sorted_list[count][0]]	
+
+				logging.warning(a_graph.node[sorted_list[count][0]])
 
 			count+=1
 
@@ -637,11 +637,11 @@ def bbone_to_initGraph(bbone_file, input_dict):
 
 	# Add start and stop node info
 	# Add missing start-stop nodes
-	print '\n'
-	print has_start_dict
-	print has_stop_dict
-	print iso_largest_node
-	print iso_length_dict
+	print('\n')
+	print(has_start_dict)
+	print(has_stop_dict)
+	print(iso_largest_node)
+	print(iso_length_dict)
 
 	for an_iso in all_iso_in_graph_list:
 		for a_largest_node in iso_largest_node.keys():
@@ -658,7 +658,7 @@ def bbone_to_initGraph(bbone_file, input_dict):
 
 					node_count += 1
 
-	print has_stop_dict
+	print(has_stop_dict)
 
 	# Use coords to extract fasta files for alignment
 
@@ -666,7 +666,7 @@ def bbone_to_initGraph(bbone_file, input_dict):
 	return genome_network
 
 def realign_all_nodes(inGraph, input_dict):
-	print 'creating ungapped graph'
+	print('creating ungapped graph')
 
 	realign_node_list = []
 
@@ -676,7 +676,7 @@ def realign_all_nodes(inGraph, input_dict):
 
 
 	for node,data in inGraph.nodes_iter(data=True):
-		print data
+		print(data)
 		if len(data['present_in'].split(',')) > 1:
 
 			#print node
@@ -715,7 +715,7 @@ def link_nodes(graph_obj, sequence_name, node_prefix='gn'):
 			new_right_pos = abs(int(data[right_end_name]))
 
 			if new_left_pos > new_right_pos:
-				print 'Doing the switch!'
+				print('Doing the switch!')
 				temp_left = new_right_pos
 				temp_right = new_left_pos
 				new_left_pos = temp_left
@@ -763,7 +763,7 @@ def link_nodes(graph_obj, sequence_name, node_prefix='gn'):
 				#print new_seq_list
 
 			else:
-				print 'Error found.'
+				print('Error found.')
 				quit()
 				new_seq_list = graph_obj.edge[node_1][node_2]['sequence']
 			#print new_seq_list
@@ -779,21 +779,21 @@ def link_nodes(graph_obj, sequence_name, node_prefix='gn'):
 
 		count += 1
 
-	print 'Edges added'
+	print('Edges added')
 
 	return graph_obj
 
 
 def link_all_nodes(graph_obj):
 	for isolate in graph_obj.graph['isolates'].split(','):
-		print isolate
+		print(isolate)
 		graph_obj = link_nodes(graph_obj, isolate)
 	return graph_obj
 
 
 def add_sequences_to_graph(graph_obj, paths_dict):
-	
-	print 'Adding sequences'
+
+	logging.info('Adding sequences')
 
 	for node,data in graph_obj.nodes_iter(data=True):
 
@@ -802,8 +802,8 @@ def add_sequences_to_graph(graph_obj, paths_dict):
 		is_comp = False
 
 		if len(seq_source) < 1:
-			print 'No present_in current node'
-			print node
+			logging.error('No present_in current node')
+			logging.error(node)
 
 		else:
 			ref_seq = input_parser(paths_dict[1][seq_source])[0]['DNA_seq']
@@ -820,7 +820,7 @@ def add_sequences_to_graph(graph_obj, paths_dict):
 				#new_seq_end = seq_start
 				#seq_end = new_seq_end
 				#seq_start = new_seq_start
-				print 'Something wrong with orientation'
+				logging.error('Something wrong with orientation')
 
 			'''
 			if is_reversed != True:
@@ -833,7 +833,7 @@ def add_sequences_to_graph(graph_obj, paths_dict):
 
 			node_seq = ref_seq[seq_start:seq_end].upper()
 
-			if is_reversed == True:
+			if is_reversed:
 				#print 'seq was rev comp' + node
 				node_seq = reverse_compliment(node_seq)
 
@@ -844,7 +844,7 @@ def add_sequences_to_graph(graph_obj, paths_dict):
 
 def add_sequences_to_graph_fastaObj(graph_obj, imported_fasta_object):
 	
-	print 'Adding sequences'
+	print('Adding sequences')
 
 	seqObj = reshape_fastaObj(imported_fasta_object)
 
@@ -855,8 +855,8 @@ def add_sequences_to_graph_fastaObj(graph_obj, imported_fasta_object):
 		is_comp = False
 
 		if len(seq_source) < 1:
-			print 'No present_in current node'
-			print node
+			print('No present_in current node')
+			print(node)
 
 		else:
 			ref_seq = seqObj[seq_source]
@@ -881,8 +881,8 @@ def add_sequences_to_graph_fastaObj(graph_obj, imported_fasta_object):
 				seq_start = seq_start
 				seq_end = seq_end + 1
 
-				print seq_start, seq_end
-				print ref_seq[seq_start:seq_end].upper()
+				print(seq_start, seq_end)
+				print(ref_seq[seq_start:seq_end].upper())
 
 
 			node_seq = ref_seq[seq_start:seq_end].upper()
@@ -910,7 +910,7 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 	'''Retrieve the nodes from a graph spanning a region'''
 
 
-	print start_pos, stop_pos
+	print(start_pos, stop_pos)
 
 	#print '\nchecking iso in region'
 
@@ -920,9 +920,9 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 	expected_ref_length = expected_ref_length + 1
 
 	if expected_ref_length < 0:
-		print 'POSSIBLE ERROR, start larger than stop'
-		print int(stop_pos), int(start_pos)
-		print expected_ref_length
+		print('POSSIBLE ERROR, start larger than stop')
+		print(int(stop_pos), int(start_pos))
+		print(expected_ref_length)
 
 	#print expected_ref_length
 	#print reference_name
@@ -935,7 +935,7 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 
 	#print int(start_pos)
 	#print int(stop_pos)
-	print reference_name
+	print(reference_name)
 
 	for node,data in graph_obj.nodes_iter(data=True):
 		if reference_name in data['present_in']:
@@ -944,16 +944,16 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 				#print 'positive'
 				if abs(int(data[node_leftend_label])) <= int(start_pos) <= abs(int(data[node_rightend_label])):
 					start_node = node
-					print 'Ping'
+					print('Ping')
 					#print data[node_leftend_label]
-					print start_pos
+					print(start_pos)
 					#print data[node_rightend_label]
 					start_overlap =  bp_distance(data[node_rightend_label], start_pos)
 
 				if abs(int(data[node_leftend_label])) <= int(stop_pos) <= abs(int(data[node_rightend_label])) or abs(int(data[node_leftend_label])) >= int(stop_pos) >= abs(int(data[node_rightend_label])):
-					print 'ping'
+					print('ping')
 					stop_node = node
-					print stop_pos
+					print(stop_pos)
 					stop_overlap = bp_distance(stop_pos, data[node_leftend_label])
 					#stop_overlap = int(stop_pos) - int(data[node_leftend_label]) + 1
 
@@ -963,10 +963,10 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 				#print data[node_rightend_label]
 				if abs(int(data[node_leftend_label])) <= int(start_pos) <= abs(int(data[node_rightend_label])):
 					start_node = node
-					print 'Ping'
-					print 'neg node'
+					print('Ping')
+					print('neg node')
 					#print data[node_leftend_label]
-					print start_pos
+					print(start_pos)
 					#print data[node_rightend_label]
 					start_overlap =  bp_distance(data[node_rightend_label], start_pos)
 
@@ -1604,7 +1604,7 @@ def create_ungapped_graph(in_graph, seq_fasta_paths_dict):
 
 def local_node_realign_fast(in_graph, node_ID, seq_fasta_paths_dict):
 
-	print 'Fast local node realign: ' + node_ID
+	logging.info('Fast local node realign: ' + node_ID)
 
 	in_graph = nx.MultiDiGraph(in_graph)
 
@@ -1666,8 +1666,8 @@ def local_node_realign_fast(in_graph, node_ID, seq_fasta_paths_dict):
 		muscle_alignment('temp_unaligned.fasta', 'temp_aln.fasta')
 
 	if local_aligner == 'mafft':
-		print 'conducting mafft alignment'
-		print node_seq_len_est
+		logging.info('conducting mafft alignment')
+		logging.info(node_seq_len_est)
 		mafft_alignment('temp_unaligned.fasta', 'temp_aln.fasta')
 
 	if local_aligner == 'clustalo':
@@ -1982,6 +1982,9 @@ def add_graph_data(graph_obj):
 	# Add start nodes
 	for node,data in graph_obj.nodes_iter(data=True):
 
+		logging.info(node)
+		logging.info(data)
+
 		for an_isolate in data['present_in'].split(','):
 			if abs(int(data[an_isolate + '_leftend'])) == 1:
 				graph_obj.graph[an_isolate + '_startnode'] = node
@@ -1990,7 +1993,7 @@ def add_graph_data(graph_obj):
 				else:
 					count_dict[node] = count_dict[node] + 1
 
-	print count_dict
+	logging.info(count_dict)
 	most_start_node = ''
 	most_start_node_number = 0
 
@@ -2033,9 +2036,10 @@ def mafft_alignment(fasta_unaln_file, out_aln_name):
 
 def progressiveMauve_alignment(fasta_path_list, out_aln_name):
 
-	progressiveMauve_call = [path_to_progressiveMauve, '--output=globalAlignment_'+out_aln_name, '--scratch-path-1=/Volumes/HDD/mauveTemp','--scratch-path-2=/Volumes/HDD/mauveTemp'] + fasta_path_list
+	print(path_to_progressiveMauve)
+	progressiveMauve_call = [path_to_progressiveMauve, '--output=globalAlignment_' + out_aln_name, '--scratch-path-1=/Volumes/HDD/mauveTemp', '--scratch-path-2=/Volumes/HDD/mauveTemp'] + fasta_path_list
 
-	return call(progressiveMauve_call)
+	return call(progressiveMauve_call, stdout=open(os.devnull, 'wb'))
 
 # ---------------------------------------------------- Utility functions 
 
@@ -3583,511 +3587,6 @@ def generate_graph_report(in_graph, out_file_name):
 	report_file.write("\nDensity: " + str(nx.density(in_graph)))
 
 	return nx_summary
-
-# ---------------------------------------------------- # Main loop of the program
-
-if __name__ == '__main__':
-
-	parser=argparse.ArgumentParser(
-	description='''Welcome to GenGraph v0.1''',
-	
-	epilog="""Insanity is trying the same thing over and over and expecting different results""")
-
-	parser.add_argument('toolkit', type=str,  default='test_mode', help='Select what you would like to do')
-
-	parser.add_argument('--out_file_name', type=str, help='Prefix of the created file')
-
-	parser.add_argument('--alignment_file', nargs=1,  help='The path to the alignment file')
-
-	parser.add_argument('--backbone_file', nargs=1, default='default', help='The path to the backbone file')
-
-	parser.add_argument('--out_format', nargs=1, default='default', help='Format for the output')
-
-	parser.add_argument('--seq_file', type=str, help='Tab delimited text file with paths to the aligned sequences')
-
-	parser.add_argument('--no_seq', dest='should_add_seq', action='store_false',  help='Create a graph genome with no sequence stored within')
-
-	parser.add_argument('--make_circular', type=str, default='No', help='To circularise the graph for a sequence, give the name of that sequence')
-
-	parser.add_argument('--recreate_check', dest='rec_check', action='store_true',  help='Set to True to attempt to recreate the input sequences from the graph and comapre to the origionals')
-
-	parser.add_argument('--extract_sequence', type=str,  default='some_isolate', help='To circularise the graph for a sequence, give the name of that sequence')
-
-	parser.add_argument('--isolate', type=str,  default='some_isolate', help='pass the isolate variable')
-
-	parser.add_argument('--extract_sequence_range', nargs=2,  default=['all','all'], help='Extract sequence between two positions')
-
-	parser.add_argument('--graph_file', type=str, help='Give the path to the graph file')
-
-	parser.add_argument('--max_node_length', type=int,  default=-1, help='Max sequence length that can be aligned')
-
-	parser.add_argument('--input_file', type=str, help='Generic input')
-
-	parser.add_argument('--locus_ID', type=str, help='The name of the gene or feature')
-
-	parser.set_defaults(should_add_seq=True)
-
-	parser.set_defaults(rec_check=False)
-
-
-	args=parser.parse_args()
-
-
-	print 'Current settings'
-	print args
-
-
-	if args.toolkit == 'test_mode':
-
-		parsed_input_dict = parse_seq_file('/Users/panix/Dropbox/Programs/tools/genome_alignment_graph_tool/GenGraphGit/test_files/multiGenome3.txt')
-
-		print '\n'
-
-		#create_fasta_from_pangenome_csv('../xTestPanTrans2anno.csv', parsed_input_dict, 'xExtractFasta')
-
-		pangenome_csv_to_virtual_genome_fasta('../xTestPanTrans2anno.csv', parsed_input_dict, 'xExtractVG')
-
-		quit()
-
-		parsed_input_dict = parse_seq_file('/Users/panix/Dropbox/Programs/tools/genome_alignment_graph_tool/GenGraphGit/test_files/multiGenome.txt')
-
-		new_graph = bbone_to_initGraph('/Users/panix/Dropbox/Programs/tools/genome_alignment_graph_tool/GenGraphGit/globalAlignment_phyloTest.backbone', parsed_input_dict)
-
-		#old_graph = nx.read_graphml('newTestseqADDED.xml')
-		old_graph = nx.read_graphml('newTestGraph_Graph.xml')
-
-		print node_check(old_graph)
-
-		add_graph_data(old_graph)
-
-		print old_graph.graph
-
-		link_all_nodes(old_graph)
-
-		quit()
-
-		new_graph = add_sequences_to_graph(old_graph, parsed_input_dict)
-
-		seq_recreate_check(new_graph, parsed_input_dict)
-
-		quit()
-
-		nx.write_graphml(new_graph, 'newIntGraph_Graph.xml')
-
-		refine_initGraph(new_graph)
-
-		add_missing_nodes(new_graph, parsed_input_dict)
-
-		print 'run 2'
-
-		add_missing_nodes(new_graph, parsed_input_dict)
-
-		print 'recall test'
-
-		print node_check(new_graph)
-
-		print new_graph.node['Aln_484']
-
-		#local_node_realign_new(new_graph, 'Aln_484', parsed_input_dict[1])
-
-
-		new_graph = realign_all_nodes(new_graph, parsed_input_dict)
-
-		nx.write_graphml(new_graph, 'newTestseqADDED.xml')
-
-		print node_check(new_graph)
-
-		new_graph = add_sequences_to_graph(new_graph, parsed_input_dict)
-
-		seq_recreate_check(new_graph, parsed_input_dict)
-
-		nx.write_graphml(new_graph, 'newTestGraph_Graph.xml')
-
-		print 'add test code'
-		'''
-		# This is for the edge mapping stuff
-		print "Place code here for quick testing purposes"
-
-		res = get_branch_mapping_dict('/Users/panix/Dropbox/Programs/tools/genome_alignment_graph_tool/test_files/branchTest/example_out.txt')
-		print res
-		aln_path_list = find_best_aln_subpaths(res)
-
-		imported_genome = nx.read_graphml('/Users/panix/Dropbox/Programs/tools/genome_alignment_graph_tool/test_files/gg_paper/gg3genome.xml')
-
-		create_new_graph_from_aln_paths(imported_genome, aln_path_list)
-		'''
-	if args.toolkit == 'test':
-
-		imported_genome = nx.read_graphml('/Users/panix/Dropbox/Programs/tools/genome_alignment_graph_tool/GenGraphGit/test_files/w148_h37rv_ncbi.xml')
-
-		h37rv_gtf = '/Volumes/HDD/Genomes/M_tuberculosis/sRNA/mtb_h37rv_srna_BSRD.gtf'
-		w_gtf = '/Volumes/HDD/Genomes/M_tuberculosis/sRNA/sRNAdiscovery/Combined_sRNA_potentials_potential_sRNA.gff3'
-
-
-		test_gtf_dict = {'H37Rv':h37rv_gtf, 'W-148':w_gtf}
-
-		extract_anno_pan_genome_csv(imported_genome, test_gtf_dict, 'sRNAsimMatrix', sim_threshold=0.90)
-
-		quit()
-
-		print "Testing cuttent installation"
-		curr_graph = './test_files/test_g.gml'
-		#test_gtf_dict = {'H37Rv':h37rv_gtf, 'H37Ra':hra_gtf, 'CDC1551':cdc1551_gtf, 'F11':f11_gtf, 'c':c_gtf, 'W-148':w_gtf}
-		test_input_file = './test_files/input_test.txt'
-		test_backbone = './test_files/aln_test.backbone'
-
-
-	if args.toolkit == 'make_genome_graph':
-
-		# Requires:
-		# --out_file_name
-		# --seq_file
-
-		# optional:
-		# --recreate_check
-		# --no_seq
-
-
-		start_time = time.time()
-
-		parsed_input_dict = parse_seq_file(args.seq_file)
-
-
-
-		# --------------------------------------------------------------------------------- Initial global alignment
-
-		if global_aligner == 'progressiveMauve' and args.backbone_file == 'default':
-			
-			print 'Conducting progressiveMauve'
-
-			progressiveMauve_alignment(parsed_input_dict[2], args.out_file_name)
-		
-		# --------------------------------------------------------------------------------- Conversion to graph
-
-
-		if args.backbone_file == 'default':
-			bbone_file = 'globalAlignment_' + args.out_file_name + '.backbone'
-		else:
-			bbone_file = args.backbone_file[0]
-
-
-		genome_aln_graph = bbone_to_initGraph(bbone_file, parsed_input_dict)
-
-		refine_initGraph(genome_aln_graph)
-
-		add_missing_nodes(genome_aln_graph, parsed_input_dict)
-
-		nx.write_graphml(genome_aln_graph, 'intermediate_Graph.xml')
-
-		# --------------------------------------------------------------------------------- node splitting BETA
-
-		if args.max_node_length != -1:
-
-			genome_aln_graph = split_all_long_nodes(genome_aln_graph, args.max_node_length)
-
-			print 'Nodes split'
-
-			nx.write_graphml(genome_aln_graph, 'intermediate_split_Graph.xml')
-
-	
-
-		# --------------------------------------------------------------------------------- Local node realignment
-
-		print 'Conducting local node realignment'
-
-
-		genome_aln_graph = realign_all_nodes(genome_aln_graph, parsed_input_dict)
-
-		add_graph_data(genome_aln_graph)
-
-		genome_aln_graph = link_all_nodes(genome_aln_graph)
-		
-		print 'Genome graph created'
-
-
-		# --------------------------------------------------------------------------------- adding annotation data to the graph
-		# TEMP FIX FOR NOW
-
-		parsed_input_dict
-
-
-
-		# --------------------------------------------------------------------------------- adding sequence to the graph
-
-
-		if args.should_add_seq == True:
-
-			if args.isolate[0] == 'some_isolate':
-				ref_isolate = graph_obj.graph['isolates'].split(',')[0]
-
-			print 'Sequence dict used:'
-			print parsed_input_dict[1]
-
-			genome_aln_graph = add_sequences_to_graph(genome_aln_graph, parsed_input_dict)
-			print 'Sequence added'
-
-		if args.make_circular != 'No':
-			make_circular(genome_aln_graph, args.make_circular)
-			print 'Graph circularised'
-
-
-		if args.rec_check == True:
-
-			seq_recreate_check(genome_aln_graph, parsed_input_dict)
-
-
-		# Saving output
-
-		if args.out_format == 'default':
-			print 'Writing to GraphML'
-			out_filename_created = args.out_file_name + '.xml'
-			nx.write_graphml(genome_aln_graph, out_filename_created)
-
-		if args.out_format[0] == 'serialize':
-			print 'Writing to serialized file'
-			pickle.dump(genome_aln_graph, open(args.out_file_name + '.pkl', 'wb'), protocol=pickle.HIGHEST_PROTOCOL)
-
-		end_time = (time.time() - start_time)
-
-		print "run time: " + str(end_time)
-
-		generate_graph_report(genome_aln_graph, args.out_file_name)
-
-
-
-	if args.toolkit == 'make_graph_from_fasta':
-
-		# Requires:
-		# --input_file
-		# --out_file_name
-
-
-		print 'In testing'
-
-		fasta_object = input_parser(args.input_file)
-
-		print 'Adding', len(fasta_object), 'sequences'
-
-		seqStartDict = {}
-
-		for seq_entry in fasta_object:
-			seqStartDict[seq_entry['gene_details']] = 1
-
-		
-
-		new_graph = fasta_alignment_to_subnet(args.input_file, true_start=seqStartDict, add_seq=True)
-
-		nx.write_graphml(new_graph, 'intermediate_virus_Graph.xml')
-
-		#new_graph = add_sequences_to_graph(new_graph, fasta_object)
-
-		nx.write_graphml(new_graph, args.out_file_name + '.xml')
-		
-
-
-	if args.toolkit == 'region_alignment_score':
-
-		print args.graph_file
-		graph_obj = nx.read_graphml(args.graph_file)
-
-		print 'this is the region alignment section'
-		result = check_isolates_in_region(graph_obj, args.extract_sequence_range[0], args.extract_sequence_range[1], args.isolate, threshold=1.0, return_dict=True)
-
-		print 'result is'
-		print result
-
-
-
-	if args.toolkit == 'extract_fasta_file':
-
-		out_fasta = open(args.out_file_name, 'w')
-
-		graph_obj = nx.read_graphml(args.graph_file)
-
-		extracted_seq = extract_original_seq(graph_obj, args.isolate)
-
-		fasta_headder = '>' + args.isolate + '\n'
-
-		out_fasta.write(fasta_headder)
-
-		n = 70
-		for seq_line in [extracted_seq[i:i+n] for i in range(0, len(extracted_seq), n)]:
-
-			out_fasta.write(seq_line + '\n')
-
-		out_fasta.close()
-
-	if args.toolkit == 'extract_region':
-		imported_genome = nx.read_graphml(args.graph_file)
-
-		print "Extracting from " + str(args.extract_sequence_range[0]) + " to " + str(args.extract_sequence_range[1])
-
-		print extract_original_seq_region(imported_genome, args.extract_sequence_range[0], args.extract_sequence_range[1], args.isolate)
-
-	if args.toolkit == 'extract_ancesteral_genome':
-
-		# Requires:
-		# --out_file_name
-		# --graph_file
-
-		print "CHANGES MADE TO THE MATRIX ARE PROBLEMATIC AND WILL CAUSE A INCORRECT TREE TO BE MADE"
-
-		imported_genome = nx.read_graphml(args.graph_file)
-
-		sim_matrix = calc_simmilarity_matrix(imported_genome)
-
-		#sim_matrix = (sim_matrix - 1) * -1
-
-		plotDend = True
-		add_to_GG = True
-
-		print sim_matrix.index.values.tolist()
-
-		print sim_matrix.as_matrix()
-
-		if plotDend == True:
-
-			from scipy.cluster import hierarchy
-			import matplotlib.pyplot as plt
-
-			Z = hierarchy.linkage(sim_matrix.as_matrix(), 'single')
-
-			plt.figure()
-			dn = hierarchy.dendrogram(Z,labels=sim_matrix.index.values.tolist())
-			plt.show()
-
-		print sim_matrix
-
-		quit()
-
-		anc_genome_obj = generate_ancesteral_genome(imported_genome, weight_matrix=sim_matrix)
-
-		#ancesteral_genome = extract_heaviest_path(imported_genome, args.isolate, weight_matrix=sim_matrix)
-
-		if add_to_GG == True:
-			fresh_imported_genome = nx.read_graphml(args.graph_file)
-			anc_genome_added_graph = add_ancestral_path(fresh_imported_genome, anc_genome_obj)
-			nx.write_graphml(anc_genome_added_graph, args.out_file_name + 'Ancesteral.xml')
-
-
-		ancesteral_genome_seq = extract_seq_heavy(anc_genome_obj)
-
-
-
-		export_to_fasta(ancesteral_genome_seq, args.out_file_name, args.out_file_name)
-
-
-	if args.toolkit == 'extract_pan_transcriptome':
-
-		# This needs to deal with the required GTF dict and seq_file_dict
-
-		# Needs
-		# --graph_file
-		# --seq_file
-		# --out_file_name
-
-		print 'Extracting...'
-
-		parsed_input_dict = parse_seq_file(args.seq_file)
-
-		graph_obj = nx.read_graphml(args.graph_file)
-
-		test_gtf_dict = parsed_input_dict[3]
-
-
-		if args.isolate == 'some_isolate':
-			ref_isolate = ''
-		else:
-			ref_isolate = args.isolate
-
-		# Extracting the csv from the graph
-		print 'Extracting annotated pan genome csv'
-		extract_anno_pan_genome_csv(graph_obj, test_gtf_dict, args.out_file_name, sim_threshold=0.95)
-		print 'Extracting pan genome csv'
-		extract_pan_genome_csv(graph_obj, test_gtf_dict, args.out_file_name, hom_threshold=0.95, refseq=ref_isolate)
-		print 'Extracting pan genome transcriptome'
-		create_fasta_from_pangenome_csv(args.out_file_name + '.csv', test_gtf_dict, parsed_input_dict, args.out_file_name)
-
-		# Converting the csv to a fasta file of transcripts
-		#create_fasta_from_pangenome_csv(args.input_file, test_gtf_dict, parsed_input_dict, args.out_file_name)
-
-	if args.toolkit == 'extract_gene':
-		'''Return the sequence of a gene'''
-
-		# --seq_file
-		# --graph_file
-		# --locus_ID
-		# --isolate
-
-		gene_isolate = args.isolate
-		gene_name = args.locus_ID
-		create_fasta_file = False
-
-		print 'Here we go'
-
-		parsed_seq_obj = parse_seq_file(args.seq_file)	
-
-		imp_genome_obj = nx.read_graphml(args.graph_file)	
-
-		print extract_gene(gene_name, gene_isolate, imp_genome_obj, parsed_seq_obj)
-
-
-
-
-	if args.toolkit == 'map_to_graph':
-		# Requires:
-		# --out_file_name
-		# --graph_file
-
-		print "Creating branch mapping file"
-
-		imported_graph_obj = nx.read_graphml(args.graph_file)
-
-		imported_graph_obj.graph['start_node'] = 'Aln_61_1'
-
-		#extract_branch_seq(imported_graph_obj, args.out_file_name, 20)
-
-		
-
-		# Link the above to bellow later
-
-		res = get_branch_mapping_dict('/Volumes/HDD/Genomes/M_tuberculosis/gg_genomes/alnRestult.txt')
-		#print res
-		aln_path_list = find_best_aln_subpaths(res, 20)
-
-		print str(len(aln_path_list)) + ' paths extracted'
-
-		imported_genome = nx.read_graphml(args.graph_file)
-
-		newGraphSeq = create_new_graph_from_aln_paths(imported_genome, aln_path_list, res)
-
-
-		export_to_fasta(newGraphSeq, args.out_file_name, args.out_file_name)
-
-	if args.toolkit == 'generate_report':
-		imported_genome = nx.read_graphml(args.graph_file)
-
-		print generate_graph_report(imported_genome, args.out_file_name)
-
-
-'''
-GenGraphGit$ cat alnRestult.txt | grep Aln_386_20
-Branch- Aln_386_15-Aln_386_17-Aln_386_18-Aln_386_20	40	4	0
-Branch- Aln_386_17-Aln_386_18-Aln_386_20	40	11	0
-Branch- Aln_386_16-Aln_386_17-Aln_386_18-Aln_386_20	40	1	0
-
-Branch- Aln_386_19-Aln_386_20	40	6	0
-
-Branch- Aln_386_18-Aln_386_20	40	37	0
-Branch- Aln_386_20-Aln_386_21-Aln_386_23	40	124	0
-
-
-
-
-find all nodes with out edges > 2 
-
-look for each edge pair's mapping value 
-'''
 
 
 
