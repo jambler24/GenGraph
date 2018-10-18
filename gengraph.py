@@ -853,7 +853,7 @@ def add_sequences_to_graph(graph_obj, paths_dict):
 
 def add_sequences_to_graph_fastaObj(graph_obj, imported_fasta_object):
 
-	print('Adding sequences')
+	logging.info('Adding sequences')
 
 	seqObj = reshape_fastaObj(imported_fasta_object)
 
@@ -864,8 +864,8 @@ def add_sequences_to_graph_fastaObj(graph_obj, imported_fasta_object):
 		is_comp = False
 
 		if len(seq_source) < 1:
-			print('No ids current node')
-			print(node)
+			logging.error('No ids current node')
+			logging.error(node)
 
 		else:
 			ref_seq = seqObj[seq_source]
@@ -886,20 +886,17 @@ def add_sequences_to_graph_fastaObj(graph_obj, imported_fasta_object):
 			if is_reversed != True:
 				seq_start = seq_start - 1
 
-			if is_reversed == True:
+			if is_reversed:
 				seq_start = seq_start
 				seq_end = seq_end + 1
 
-				print(seq_start, seq_end)
-				print(ref_seq[seq_start:seq_end].upper())
+				logging.info(seq_start, seq_end)
+				logging.info(ref_seq[seq_start:seq_end].upper())
 
 
 			node_seq = ref_seq[seq_start:seq_end].upper()
 
-			if is_reversed == True:
-				#print 'seq was rev comp' + node
-				#node_seq = reverse_compliment(node_seq)
-				1 == 1
+
 
 			graph_obj.node[node]['sequence'] = node_seq
 
@@ -914,6 +911,7 @@ def make_circular(graph_obj, seq_name):
 	graph_obj.add_edges_from([(start_node_name, end_node_name, dict(sequence=seq_name))])
 
 	return graph_obj
+
 
 def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, threshold=1.0, return_dict=False, simmilarity_measure='percentage'):
 	'''Retrieve the nodes from a graph spanning a region'''
@@ -980,23 +978,14 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 					start_overlap =  bp_distance(data[node_rightend_label], start_pos)
 
 				if abs(int(data[node_leftend_label])) <= int(stop_pos) <= abs(int(data[node_rightend_label])):
-					print 'ping'
-					print 'neg node'
+					logging.info('neg node')
 					stop_node = node
-					print stop_pos
+					logging.info(stop_pos)
 					stop_overlap = bp_distance(stop_pos, data[node_leftend_label])
 					#stop_overlap = int(stop_pos) - int(data[node_leftend_label]) + 1
 
 
 
-
-	#print stop_overlap
-	#print start_pos
-	print stop_pos
-	#print '\n'
-	print start_node
-	#print start_overlap
-	print stop_node
 
 	# Dealing with genes that occur at the start and stop nodes of the graph... needs a propper solution
 	# Caused by the lack of a 'length' attribute in the start and stop node
@@ -1027,18 +1016,6 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 	ref_nodes_in_path = []
 	alt_nodes_in_path = []
 
-	'''
-	if start_node != stop_node:
-		for path in nx.shortest_simple_paths(graph_obj, source=start_node, target=stop_node):
-			#print path
-			for path_node in path:
-				if path_node not in nodes_in_path:
-					nodes_in_path.append(path_node)
-	else:
-		nodes_in_path.append(start_node)
-		nodes_in_path.append(stop_node)
-
-	'''
 
 	if start_node != stop_node:
 		for path in nx.shortest_path(graph_obj, source=start_node, target=stop_node):
@@ -1207,7 +1184,7 @@ def convert_coordinate(graph_obj, q_position, ref_iso, query_iso):
 			if int(data[node_leftend_label]) > 0:
 				#print 'positive node search'
 				if abs(int(data[node_leftend_label])) <= abs(int(q_position)) <= abs(int(data[node_rightend_label])):
-					print 'positive local found!!!!'
+					logging.info('positive local found!!!!')
 					#print data[node_leftend_label]
 					#print data[node_rightend_label]
 
@@ -1248,9 +1225,9 @@ def convert_coordinate(graph_obj, q_position, ref_iso, query_iso):
 			if int(data[node_leftend_label]) < 0:
 				#print 'negative ref search'
 				if abs(int(data[node_leftend_label])) >= abs(int(q_position)) >= abs(int(data[node_rightend_label])):
-					print 'Negative local found'
-					print q_position
-					print data[node_leftend_label], data[node_rightend_label]
+					logging.info('Negative local found')
+					logging.info(q_position)
+					logging.info(data[node_leftend_label], data[node_rightend_label])
 
 					#print data
 
@@ -1259,7 +1236,7 @@ def convert_coordinate(graph_obj, q_position, ref_iso, query_iso):
 					query_node_left = data[query_leftend_label]
 					query_node_right = data[query_rightend_label]
 
-					print query_node_left, query_node_right
+					logging.info(query_node_left, query_node_right)
 
 					#print int(ref_node_left) - int(ref_node_right)
 					#print int(query_node_left) - int(query_node_right)
@@ -1278,13 +1255,12 @@ def convert_coordinate(graph_obj, q_position, ref_iso, query_iso):
 
 					conversion_factor = abs(int(q_position)) - abs(int(ref_node_smallest_val))
 
-					print 'conversion_factor'
-					print conversion_factor
-					print query_high_num
+					logging.info('conversion_factor')
+					logging.info(conversion_factor)
+					logging.info(query_high_num)
 					new_r_start = query_high_num - conversion_factor
 
-					print '-----'
-					print new_r_start
+					logging.info(new_r_start)
 					#print new_r_stop
 
 					if int(query_node_left) < 0:
@@ -1311,9 +1287,9 @@ def import_gtf_dict_to_massive_dict(gtf_dict):
 			#print entry
 			pos_deets = isolate + ',' + entry[3] + ',' + entry[4] + ',' + entry[6]
 			if 'gene_id' not in entry[8].keys():
-				print 'key error'
-				print entry
-				print isolate
+				logging.error('key error')
+				logging.error(entry)
+				logging.error(isolate)
 				quit()
 			else:
 				gene_name = entry[8]['gene_id']
@@ -1326,8 +1302,6 @@ def import_gtf_dict_to_massive_dict(gtf_dict):
 def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', orientation={}, re_link_nodes=True, add_seq=False):
 	'''New and improved conversion function. Needs to be modified to work with inverted seq still'''
 	# Created 11/01/2017
-	print true_start
-	print orientation
 
 	aln_lol = input_parser(fasta_aln_file)
 
@@ -2849,6 +2823,7 @@ def find_best_aln_subpaths(edge_aln_dict, coverage_threshold):
 
 	return best_aln_paths
 
+
 def get_path_weight(path_list, aGraph):
 
 	total_weight = 0
@@ -3015,6 +2990,7 @@ def generate_ancesteral_genome(graph_obj, weight_matrix=''):
 	print path_count
 	'''
 
+
 def add_ancestral_path(old_graph_obj, anc_graph_obj):
 
 	iso_node_count = {}
@@ -3033,6 +3009,7 @@ def add_ancestral_path(old_graph_obj, anc_graph_obj):
 
 	#print iso_node_count
 	return old_graph_obj
+
 
 def get_panTrans_stats(in_annoTransCSV):
 	''' Get general stats from the output of the pan-transcriptome generation '''
@@ -3081,6 +3058,7 @@ def get_panTrans_stats(in_annoTransCSV):
 
 # ----------------------------------------------------- # Development code
 
+
 def split_all_long_nodes(a_in_graph, max_length):
 	logging.info('splitting all nodes')
 
@@ -3091,6 +3069,7 @@ def split_all_long_nodes(a_in_graph, max_length):
 		a_in_graph = split_node(a_in_graph, a_node, max_length)
 
 	return a_in_graph
+
 
 def split_node(in_graph, node, max_length):
 
@@ -3202,13 +3181,9 @@ def split_node(in_graph, node, max_length):
 	#for a_isolate in graph_iso_list:
 	#	in_graph = link_nodes_2(in_graph, a_isolate)
 
-
 	return in_graph
 
-
-
 # ---------------------------------------------------- # Testing functions
-
 
 def seq_addition_test(in_graph, node_ID, seq_fasta_paths_dict):
 
@@ -3261,8 +3236,8 @@ def seq_addition_test(in_graph, node_ID, seq_fasta_paths_dict):
 			logging.info(seq_isolate + ' - Failed ' + str(start_pos) + ' - ' + str(end_pos))
 			logging.info(sub_iso_seq)
 
-
 	return pass_seq_test
+
 
 def generate_graph_report(in_graph, out_file_name):
 	nx_summary = nx.info(in_graph)
