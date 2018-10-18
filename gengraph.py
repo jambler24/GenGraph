@@ -896,8 +896,6 @@ def add_sequences_to_graph_fastaObj(graph_obj, imported_fasta_object):
 
 			node_seq = ref_seq[seq_start:seq_end].upper()
 
-
-
 			graph_obj.node[node]['sequence'] = node_seq
 
 	return graph_obj
