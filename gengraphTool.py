@@ -32,7 +32,7 @@ if __name__ == '__main__':
 	parser.add_argument('--extract_sequence', type=str, default='some_isolate',
 						help='To circularise the graph for a sequence, give the name of that sequence')
 
-	parser.add_argument('--isolate', type=str, default='some_isolate', help='pass the isolate variable')
+	parser.add_argument('--isolate', type=str, default='some_isolate', help='pass the isolate variable. For graph generation, this should be the genome that best represents the ancesteral state.')
 
 	parser.add_argument('--extract_sequence_range', nargs=2, default=['all', 'all'],
 						help='Extract sequence between two positions')
