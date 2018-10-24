@@ -7,6 +7,8 @@ import networkx as nx
 
 from subprocess import call
 
+from operator import itemgetter
+
 import argparse
 
 import sys, os
@@ -511,7 +513,6 @@ def node_check(a_graph):
 
 
 def refine_initGraph(a_graph):
-	from operator import itemgetter
 
 	iso_list = a_graph.graph['isolates'].split(',')
 
@@ -674,7 +675,7 @@ def bbone_to_initGraph(bbone_file, input_dict):
 				if iso_largest_node[a_largest_node] != iso_length_dict[an_iso]:
 					#print an_iso
 					node_ID = 'Aln_' + str(node_count)
-					node_dict = {'ids': an_iso, an_iso + '_leftend': iso_largest_node[a_largest_node] + 1, an_iso + '_rightend': iso_length_dict[an_iso]}
+					node_dict = {'ids': an_iso, an_iso + '_leftend': int(iso_largest_node[a_largest_node]) + 1, an_iso + '_rightend': int(iso_length_dict[an_iso])}
 					#print node_dict
 					genome_network.add_node(node_ID, node_dict)
 					has_stop_dict[an_iso] = node_ID
@@ -1332,8 +1333,6 @@ def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', or
 		all_isolate_list.append(fasta_entry['gene_details'])
 		fasta_entry['DNA_seq'] = fasta_entry['DNA_seq'].upper()
 
-	#print seq_len_dict
-
 	# Setting the orientation dict for later
 	if len(orientation) == 0:
 		#print 'Orientation dict empty'
@@ -1375,13 +1374,6 @@ def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', or
 
 		count += 1
 
-	#print '------------'
-	#print block_list
-
-	relative_pos_dict = {}
-
-	#print orientation
-
 	# Making sure the start pos is correct
 
 	if len(true_start.keys()) > 0:
@@ -1398,7 +1390,7 @@ def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', or
 
 	bpos_count = 1
 
-	# Working along the black from here ----------------------
+	# Working along the block from here ----------------------
 	for bline in block_list:
 
 		for an_isolate in all_isolate_list:
@@ -1501,8 +1493,8 @@ def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', or
 			for block_isolate in block_group:
 				if orientation[block_isolate] == '+':
 
-					local_node_network.node[new_node_name][block_isolate + '_leftend'] = str(start_block_list[count]['relative_pos'][block_isolate])
-					local_node_network.node[new_node_name][block_isolate + '_rightend'] = str(end_block_list[count]['relative_pos'][block_isolate])
+					local_node_network.node[new_node_name][block_isolate + '_leftend'] = int(start_block_list[count]['relative_pos'][block_isolate])
+					local_node_network.node[new_node_name][block_isolate + '_rightend'] = int(end_block_list[count]['relative_pos'][block_isolate])
 
 				elif orientation[block_isolate] == '-':
 
@@ -1511,8 +1503,8 @@ def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', or
 					# len node - pos - 1
 					# So, we need the total length of the nodes, found in seq_len_dict
 
-					local_node_network.node[new_node_name][block_isolate + '_rightend'] = '-' + str(int(seq_len_dict[block_isolate]) - start_block_list[count]['relative_pos'][block_isolate] - 1)
-					local_node_network.node[new_node_name][block_isolate + '_leftend'] = '-' + str(int(seq_len_dict[block_isolate]) - end_block_list[count]['relative_pos'][block_isolate] - 1)
+					local_node_network.node[new_node_name][block_isolate + '_rightend'] = -1 * int(int(seq_len_dict[block_isolate]) - start_block_list[count]['relative_pos'][block_isolate] - 1)
+					local_node_network.node[new_node_name][block_isolate + '_leftend'] = -1 * int(int(seq_len_dict[block_isolate]) - end_block_list[count]['relative_pos'][block_isolate] - 1)
 
 				else:
 					logging.error("ORIENTATION MISSING")

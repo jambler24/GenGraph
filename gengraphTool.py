@@ -87,9 +87,9 @@ if __name__ == '__main__':
 		# --------------------------------------------------------------------------------- Conversion to block graph
 
 		if args.backbone_file == 'default':
-			print('Using existing BBone file')
 			bbone_file = 'globalAlignment_' + args.out_file_name + '.backbone'
 		else:
+			print('Using existing BBone file')
 			bbone_file = args.backbone_file[0]
 
 		genome_aln_graph = bbone_to_initGraph(bbone_file, parsed_input_dict)
