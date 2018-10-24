@@ -50,14 +50,17 @@ Orientation is relative to the sequence in the node, which is default the refere
 '''
 # ---------------------------------------------------- New functions under testing
 
+
 def get_neighbours_context(graph, source_node, label, dir='out'):
 	'''Retrieves neighbours of a node using only edges containing a certain label'''
 	'''Created by shandu.mulaudzi@gmail.com'''
+
+	# Changes seequence to ids
 	list_of_neighbours = []
-	in_edges = graph.in_edges(source_node, data='sequence')
-	out_edges = graph.out_edges(source_node, data='sequence')
+	in_edges = graph.in_edges(source_node, data='ids')
+	out_edges = graph.out_edges(source_node, data='ids')
 	for (a,b,c) in in_edges:
-		if label in c['sequence'].strip(','):
+		if label in c['ids'].strip(','):
 			list_of_neighbours.append(a)
 	for (a,b,c) in out_edges:
 		if label in c.strip(','):
@@ -67,9 +70,8 @@ def get_neighbours_context(graph, source_node, label, dir='out'):
 		
 	return list_of_neighbours
 
-
-
 # ---------------------------------------------------- General functions 
+
 
 def input_parser(file_path, parse_as='default'):
 	if file_path[-3:] == ".fa" or file_path[-6:] == ".fasta":
@@ -135,13 +137,13 @@ def input_parser(file_path, parse_as='default'):
 		entry_label = file_path
 		for line in in_file:
 			if line[0:2] != "##" and line[0] == "#":
-				vcf_headder_line = line.split('\t')
-				vcf_headder_line[0] = vcf_headder_line[0][1:]
-				vcf_headder_line[-1] = vcf_headder_line[-1].strip()
+				vcf_header_line = line.split('\t')
+				vcf_header_line[0] = vcf_header_line[0][1:]
+				vcf_header_line[-1] = vcf_header_line[-1].strip()
 
 			if not line.startswith('#'):
 				entries = line.split('\t')
-				entry_dict = {vcf_headder_line[0]:entries[0], vcf_headder_line[1]:entries[1], vcf_headder_line[2]:entries[2], vcf_headder_line[3]:entries[3], vcf_headder_line[4]:entries[4], vcf_headder_line[5]:entries[5], vcf_headder_line[6]:entries[6], vcf_headder_line[7]:entries[7], vcf_headder_line[8]:entries[8], vcf_headder_line[9]:entries[9].strip(), 'ORIGIN':entry_label} 
+				entry_dict = {vcf_header_line[0]:entries[0], vcf_header_line[1]:entries[1], vcf_header_line[2]:entries[2], vcf_header_line[3]:entries[3], vcf_header_line[4]:entries[4], vcf_header_line[5]:entries[5], vcf_header_line[6]:entries[6], vcf_header_line[7]:entries[7], vcf_header_line[8]:entries[8], vcf_header_line[9]:entries[9].strip(), 'ORIGIN':entry_label} 
 
 				list_of_dicts.append(entry_dict)
 		return list_of_dicts
@@ -279,14 +281,15 @@ def input_parser(file_path, parse_as='default'):
 					list_of_dicts.append(entry_dict)
 		return list_of_dicts
 
+
 def reshape_fastaObj(in_obj):
 	out_fastaObj = {}
 
 	for seq_ent in in_obj:
 		out_fastaObj[seq_ent['gene_details']] = seq_ent['DNA_seq']
 
-
 	return out_fastaObj
+
 
 def parse_seq_file(path_to_seq_file):
 
@@ -306,6 +309,7 @@ def parse_seq_file(path_to_seq_file):
 
 	return A_seq_label_dict, A_input_path_dict, ordered_paths_list, anno_path_dict
 
+
 def compliment_DNA(seq_in):
 	# Returns the string with the complimentry base pairs
 	seq_out = ""
@@ -313,20 +317,29 @@ def compliment_DNA(seq_in):
 		seq_out += compliment_Base(char)
 	return seq_out
 
+
 def reverse(text):
 	# returns a reversed string using recursion
 	return text[::-1]
 
+
 def reverse_compliment(seq_in):
-	"Returns the reverse compliment of a sequence"
+	'''
+	Returns the reverse compliment of a sequence
+	:param seq_in: A string representing a DNA sequence
+	:return: The reverse-compliment of that sequence
+	'''
 	comp_seq = compliment_DNA(seq_in)
 	rev_comp_seq = reverse(comp_seq)
 	return rev_comp_seq
 
-def compliment_Base(base_in):
-	# Returns the compliment of the given base. Assuning DNA
-	# Non-DNA bases are returned as a empty string
 
+def compliment_Base(base_in):
+	'''
+	Returns the compliment of the given base. Assuming DNA. Non-DNA bases are returned as a empty string
+	:param base_in: A single letter string.
+	:return: The compliment of that base. So A -> T
+	'''
 	base_in = base_in.upper()
 	if base_in == "A":
 		return "T"
@@ -341,12 +354,14 @@ def compliment_Base(base_in):
 	else:
 		return ""
 
+
 def is_even(a_num):
     x = int(a_num)
     if x % 2 == 0:
         return True
     else:
         return False
+
 
 def bp_distance(pos_A, pos_B):
 	# Assuming that you cannot get a negitive and a positive base pair value set
@@ -359,19 +374,25 @@ def bp_distance(pos_A, pos_B):
 
 	return dist
 
+
 def bp_length_node(node_name):
-	''' Returns the length of a node in base pairs '''
+	'''
+	Returns the length of a node in base pairs
+	:param node_name:
+	:return:
+	'''
 	iso_string = node_name['ids'].split(',')[0]
 	left_pos = node_name[iso_string + '_leftend']
 	right_pos = node_name[iso_string + '_rightend']
 
 	return bp_distance(left_pos, right_pos)
 
-def export_to_fasta(sequence, headder, filename):
+
+def export_to_fasta(sequence, header, filename):
 	file_obj = open(filename + '.fa', 'w')
 
-	headder_line = '>' + headder + '\n'
-	file_obj.write(headder_line)
+	header_line = '>' + header + '\n'
+	file_obj.write(header_line)
 
 	n=80
 	seq_split = [sequence[i:i+n] for i in range(0, len(sequence), n)]
@@ -382,6 +403,7 @@ def export_to_fasta(sequence, headder, filename):
 	file_obj.close()
 
 # ---------------------------------------------------- Graph generating functions
+
 
 def add_missing_nodes(a_graph, input_dict):
 
@@ -408,7 +430,7 @@ def add_missing_nodes(a_graph, input_dict):
 				logging.warning('problem node', a_node)
 				logging.warning(a_graph.node[a_node][isolate + '_leftend'])
 
-		sorted_list = sorted(presorted_list,key=itemgetter(1))
+		sorted_list = sorted(presorted_list, key=itemgetter(1))
 
 		count = 0
 
@@ -425,6 +447,7 @@ def add_missing_nodes(a_graph, input_dict):
 				a_graph.add_node(node_ID, new_node_dict)
 
 			count+=1
+
 
 def node_check(a_graph):
 	from operator import itemgetter
@@ -486,6 +509,7 @@ def node_check(a_graph):
 			count+=1
 	return doespass
 
+
 def refine_initGraph(a_graph):
 	from operator import itemgetter
 
@@ -525,10 +549,18 @@ def refine_initGraph(a_graph):
 
 			count+=1
 
+
 def bbone_to_initGraph(bbone_file, input_dict):
 
-	backbone_obj = input_parser(bbone_file)
+	"""
+	This function takes a bbone file created by MAUVE that represents the colinear blocks of sequences
+	and uses it to create the initial graph.
+	:param bbone_file:
+	:param input_dict:
+	:return:
+	"""
 
+	# This is the network that will be returned in the end
 	genome_network = nx.MultiDiGraph()
 
 	all_iso_in_graph = ''
@@ -539,9 +571,7 @@ def bbone_to_initGraph(bbone_file, input_dict):
 	has_start_dict = {}
 	has_stop_dict = {}
 
-	#print input_dict[0]
-
-
+	# Get the identifiers of all the sequences in the bbone file from the input_dict.
 	for isolate_name in input_dict[0].keys():
 		all_iso_in_graph_list.append(input_dict[0][isolate_name])
 		all_iso_in_graph = all_iso_in_graph + input_dict[0][isolate_name] + ','
@@ -549,6 +579,9 @@ def bbone_to_initGraph(bbone_file, input_dict):
 	for iso in all_iso_in_graph_list:
 		has_start_dict[iso + '_leftend'] = False
 		has_stop_dict[iso] = False
+		# The iso_largest_node keeps track of the current highest nucleotide position for an isolate. This is so when
+		# the sequences are aligned and there is a bit at the end og the sequence with no match, it can be made into an
+		# end node.
 		iso_largest_node[iso] = 0
 
 	for iso in all_iso_in_graph_list:
@@ -557,57 +590,57 @@ def bbone_to_initGraph(bbone_file, input_dict):
 
 	all_iso_in_graph = all_iso_in_graph[:-1]
 
-	#print all_iso_in_graph
-
 	genome_network.graph['isolates'] = all_iso_in_graph
 
 	# Parse the BBone file
-
 	backbone_lol = input_parser(bbone_file)
 
-	headder_line = backbone_lol[0]
-	#print headder_line
+	# Get the first line, which identifies which column relates to what identifier.
+	header_line = backbone_lol[0]
 
-	new_headder_line = []
+	new_header_line = []
 
-
-	for headder_item in headder_line:
+	# Because MAUVE does not use teh sequence names in the bbone file, you need to replace the generic names like 'seq0'
+	# with the identifiers like 'H37Rv'
+	for header_item in header_line:
 		for seqID in input_dict[0].keys():
-			if seqID in headder_item:
-				new_headder_line.append(headder_item.replace(seqID, input_dict[0][seqID]))
+			if seqID in header_item:
+				new_header_line.append(header_item.replace(seqID, input_dict[0][seqID]))
 
-	#print new_headder_line
-
+	# This is now the list of lists without the header line.
 	backbone_lol_headless = backbone_lol[1:]
 
 	#print backbone_lol_headless[0]
 
+	# When naming nodes, keep track of how many have been created so each name is unique.
 	node_count = 1
 
 	for line in backbone_lol_headless:
 		# Organise the info into a dict
 		node_dict = {}
+		# This header_count links the sequence positions with the sequence identifiers.
 		header_count = 0
-		for headder_item in new_headder_line:
+		# For each isolate / sequence identifier in the list. The header_item is the sequence identifier (eg., H37Rv)
+		for header_item in new_header_line:
+			# if the value is 0 at this position, the sequence was not found for this block.
 			if line[header_count] != '0':
-				node_dict[headder_item] = int(line[header_count])
-				# Chech for start node
+				# This is the record of the sequences represented by this node and their relative nucleotide positions.
+				node_dict[header_item] = int(line[header_count])
+
+				# Check for start node
 				if abs(int(line[header_count])) == 1:
-					has_start_dict[headder_item] = 'Aln_' + str(node_count)
+					has_start_dict[header_item] = 'Aln_' + str(node_count)
 				# Check for end node
-				curr_iso = headder_item.replace('_leftend', '')
+				curr_iso = header_item.replace('_leftend', '')
 				curr_iso = curr_iso.replace('_rightend', '')
 
 				if abs(int(line[header_count])) == iso_length_dict[curr_iso]:
 					has_stop_dict[curr_iso] = 'Aln_' + str(node_count)
 
-				# Check if largest node
+				# Check if largest node, if it is larger that the last largest, make it the new one.
 
 				if abs(int(line[header_count])) > iso_largest_node[curr_iso]:
 					iso_largest_node[curr_iso] = abs(int(line[header_count]))
-
-
-
 
 			header_count += 1
 
@@ -633,40 +666,31 @@ def bbone_to_initGraph(bbone_file, input_dict):
 
 		node_count += 1
 
-
-
-	# Add start and stop node info
-	# Add missing start-stop nodes
-	print('\n')
-	print(has_start_dict)
-	print(has_stop_dict)
-	print(iso_largest_node)
-	print(iso_length_dict)
-
 	for an_iso in all_iso_in_graph_list:
 		for a_largest_node in iso_largest_node.keys():
-			an_LGN_iso = a_largest_node.replace('_leftend','')
-			an_LGN_iso = an_LGN_iso.replace('_leftend','')
+			an_LGN_iso = a_largest_node.replace('_leftend', '')
+			an_LGN_iso = an_LGN_iso.replace('_leftend', '')
 			if an_iso == an_LGN_iso:
 				if iso_largest_node[a_largest_node] != iso_length_dict[an_iso]:
 					#print an_iso
 					node_ID = 'Aln_' + str(node_count)
-					node_dict = {'ids':an_iso, an_iso + '_leftend':iso_largest_node[a_largest_node] + 1, an_iso + '_rightend': iso_length_dict[an_iso]}
+					node_dict = {'ids': an_iso, an_iso + '_leftend': iso_largest_node[a_largest_node] + 1, an_iso + '_rightend': iso_length_dict[an_iso]}
 					#print node_dict
 					genome_network.add_node(node_ID, node_dict)
 					has_stop_dict[an_iso] = node_ID
 
 					node_count += 1
 
-	print(has_stop_dict)
+	# print(has_stop_dict)
 
 	# Use coords to extract fasta files for alignment
 
 	# Parse the alignment files and place in graph
 	return genome_network
 
+
 def realign_all_nodes(inGraph, input_dict):
-	print('creating ungapped graph')
+	logging.info('Running realign_all_nodes')
 
 	realign_node_list = []
 
@@ -674,9 +698,8 @@ def realign_all_nodes(inGraph, input_dict):
 
 	# Load genomes into memory - Maybe a good idea, maybe bad...
 
-
 	for node,data in inGraph.nodes_iter(data=True):
-		print(data)
+		# print(data)
 		if len(data['ids'].split(',')) > 1:
 
 			#print node
@@ -687,7 +710,6 @@ def realign_all_nodes(inGraph, input_dict):
 	for a_node in realign_node_list:
 
 		inGraph = local_node_realign_new(inGraph, a_node, input_dict[1])
-
 
 	nx.write_graphml(inGraph, 'intermediate_split_unlinked.xml')
 
@@ -704,16 +726,12 @@ def link_nodes(graph_obj, sequence_name, node_prefix='gn'):
 	:param node_prefix: Depreciated, will be removed.
 	:return: A networkx graph object.
 	"""
-	#print 'link nodes v4'
-
 
 	# This list is a list of all the existing nodes start and stop positions with the node name formatted at start, stop, node_name
 
 	pos_lol = []
 
-	#print 'getting positions'
-
-	for node,data in graph_obj.nodes_iter(data=True):
+	for node, data in graph_obj.nodes_iter(data=True):
 
 		left_end_name = sequence_name + '_leftend'
 		right_end_name = sequence_name + '_rightend'
@@ -729,7 +747,6 @@ def link_nodes(graph_obj, sequence_name, node_prefix='gn'):
 				temp_right = new_left_pos
 				new_left_pos = temp_left
 				new_right_pos = temp_right
-
 
 			if int(new_left_pos) != 0 and int(new_right_pos) != 0 or node == sequence_name + '_start':
 				pos_lol.append([new_left_pos, new_right_pos, node])
@@ -757,45 +774,38 @@ def link_nodes(graph_obj, sequence_name, node_prefix='gn'):
 
 		if (node_1, node_2) in edges_obj:
 
-			#print 'edge found'
-			#print sequence_name
-
-			#print graph_obj.edge[all_node_list[count][2]][all_node_list[count+1][2]]['sequence'].split(',')
-
-			#print graph_obj.edge[node_1][node_2]
-			#print graph_obj.edge[node_1][node_2][0]['sequence'].split(',')
-
-			if sequence_name not in graph_obj.edge[node_1][node_2][0]['sequence'].split(','):
+			if sequence_name not in graph_obj.edge[node_1][node_2][0]['ids'].split(','):
 
 
-				new_seq_list = graph_obj.edge[node_1][node_2][0]['sequence'] + ',' + sequence_name
+				new_seq_list = graph_obj.edge[node_1][node_2][0]['ids'] + ',' + sequence_name
 				#print new_seq_list
 
 			else:
 				print('Error found.')
 				quit()
-				new_seq_list = graph_obj.edge[node_1][node_2]['sequence']
+				new_seq_list = graph_obj.edge[node_1][node_2]['ids']
 			#print new_seq_list
 
-			graph_obj.edge[node_1][node_2][0]['sequence'] = new_seq_list
+			graph_obj.edge[node_1][node_2][0]['ids'] = new_seq_list
 
 			#print 'appending'
 		else:
 			#print 'new edge'
-			#print [(node_1, node_2, dict(sequence=sequence_name))]
+			#print [(node_1, node_2, dict(ids=sequence_name))]
 
-			graph_obj.add_edge(node_1, node_2, sequence=sequence_name)
+			graph_obj.add_edge(node_1, node_2, ids=sequence_name)
 
 		count += 1
 
-	print('Edges added')
+	logging.info('Edges added')
 
 	return graph_obj
 
 
 def link_all_nodes(graph_obj):
+	logging.info('Running link_all_nodes')
 	for isolate in graph_obj.graph['isolates'].split(','):
-		print(isolate)
+		logging.info(isolate)
 		graph_obj = link_nodes(graph_obj, isolate)
 	return graph_obj
 
@@ -906,7 +916,7 @@ def make_circular(graph_obj, seq_name):
 	start_node_name = seq_name + '_start'
 	end_node_name = seq_name + '_stop'
 
-	graph_obj.add_edges_from([(start_node_name, end_node_name, dict(sequence=seq_name))])
+	graph_obj.add_edges_from([(start_node_name, end_node_name, dict(ids=seq_name))])
 
 	return graph_obj
 
@@ -1106,6 +1116,7 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 		return iso_sim_score_dict
 	else:
 		return ret_list
+
 
 def convert_coordinates(graph_obj, q_start, q_stop, ref_iso, query_iso):
 
@@ -1649,6 +1660,7 @@ def local_node_realign_new(in_graph, node_ID, seq_fasta_paths_dict):
 
 	return new_merged_graph
 
+
 def seq_recreate_check(graph_obj, input_dict):
 	for isolate in input_dict[1].keys():
 		extracted_seq = extract_original_seq(graph_obj, isolate)
@@ -1680,6 +1692,7 @@ def seq_recreate_check(graph_obj, input_dict):
 			logging.error(original_seq_from_fasta[0]['DNA_seq'][:10])
 			recreate_check_result = 'Fail'
 
+
 def add_graph_data(graph_obj):
 
 	count_dict = {}
@@ -1710,15 +1723,14 @@ def add_graph_data(graph_obj):
 	graph_obj.graph['start_node'] = most_start_node
 
 
-
 # ---------------------------------------------------- Alignment functions
-
 
 def kalign_alignment(fasta_unaln_file, out_aln_name):
 
 	kalign_command_call = [path_to_kalign, '-i', fasta_unaln_file, '-o', out_aln_name, '-f', 'fasta', '-q']
 
 	return call(kalign_command_call)
+
 
 def muscle_alignment(fasta_unaln_file, out_aln_name):
 
@@ -1727,11 +1739,13 @@ def muscle_alignment(fasta_unaln_file, out_aln_name):
 
 	return call(muscle_command_call)
 
+
 def clustalo_alignment(fasta_unaln_file, out_aln_name):
 
 	clustalo_command_call = [path_to_clustal, '-i', fasta_unaln_file, '-o', out_aln_name, '--force']
 
 	return call(clustalo_command_call)
+
 
 def mafft_alignment(fasta_unaln_file, out_aln_name):
 
@@ -1739,9 +1753,10 @@ def mafft_alignment(fasta_unaln_file, out_aln_name):
 
 	call([path_to_mafft, '--retree', '2', '--maxiterate', '2', '--quiet', '--thread', '-1', fasta_unaln_file], stdout=out_temp_fa)
 
+
 def progressiveMauve_alignment(fasta_path_list, out_aln_name):
 
-	print(path_to_progressiveMauve)
+	logging.info(path_to_progressiveMauve)
 	progressiveMauve_call = [path_to_progressiveMauve, '--output=globalAlignment_' + out_aln_name, '--scratch-path-1=/Volumes/HDD/mauveTemp', '--scratch-path-2=/Volumes/HDD/mauveTemp'] + fasta_path_list
 
 	return call(progressiveMauve_call, stdout=open(os.devnull, 'wb'))
@@ -1750,6 +1765,7 @@ def progressiveMauve_alignment(fasta_path_list, out_aln_name):
 
 def nodes_connected(u, v, graph_obj):
 	return u in graph_obj.neighbors(v)
+
 
 def convert_transcriptome_to_aln_input(trans_fasta_path, out_name):
 
@@ -1818,13 +1834,14 @@ def extract_pan_genome(graph_obj, gtf_dict, out_file_name):
 				found_in_list = found_in_string.split(',')
 				if len(list(set(found_in_list) & set(added_list))) < 1:
 					curr_seq = extract_seq_region(graph_obj, entry[3], entry[4], isolate)
-					curr_seq_headder = '>' + entry[8] + found_in_string + '\n'
-					logging.info(curr_seq_headder)
-					outfile_obj.write(curr_seq_headder)
+					curr_seq_header = '>' + entry[8] + found_in_string + '\n'
+					logging.info(curr_seq_header)
+					outfile_obj.write(curr_seq_header)
 					outfile_obj.write(curr_seq)
 					outfile_obj.write('\n')
 
 		added_list.append(isolate)
+
 
 def extract_pan_genome_csv(graph_obj, gtf_dict, out_file_name, hom_threshold=1.0, refseq=''):
 
@@ -1841,14 +1858,14 @@ def extract_pan_genome_csv(graph_obj, gtf_dict, out_file_name, hom_threshold=1.0
 
 	outfile_obj = open(out_file_name + '.csv', 'w')
 
-	csv_headder = 'gene'
+	csv_header = 'gene'
 
 	for iso in isolate_list:
-		csv_headder = csv_headder + ',' + iso
+		csv_header = csv_header + ',' + iso
 
-	csv_headder = csv_headder + '\n'
+	csv_header = csv_header + '\n'
 
-	outfile_obj.write(csv_headder)
+	outfile_obj.write(csv_header)
 
 	for isolate in isolate_list:
 		gtf_lol = input_parser(gtf_dict[isolate], parse_as='gtf')
@@ -1870,7 +1887,7 @@ def extract_pan_genome_csv(graph_obj, gtf_dict, out_file_name, hom_threshold=1.0
 				found_in_list = check_isolates_in_region(graph_obj, ent_start_pos, ent_stop_pos, isolate, threshold=hom_threshold)
 
 				if len(list(set(found_in_list) & set(added_list))) < 1:
-					line_str = csv_headder
+					line_str = csv_header
 
 					if 'ID' in entry[8].keys():
 						curr_gene = entry[8]['ID']
@@ -1902,6 +1919,7 @@ def extract_pan_genome_csv(graph_obj, gtf_dict, out_file_name, hom_threshold=1.0
 
 		added_list.append(isolate)
 
+
 def create_fasta_from_pangenome_csv(pg_csv, seq_file_dict, out_name):
 	in_pg_obj = open(pg_csv, "r")
 	out_transcriptome = open(out_name + '.fasta', "w")
@@ -1923,7 +1941,7 @@ def create_fasta_from_pangenome_csv(pg_csv, seq_file_dict, out_name):
 
 
 		if len(line) > 0:
-			out_headder = ">" + line[0] + '\n'
+			out_header = ">" + line[0] + '\n'
 
 			seq_details = all_anno_dict[line[0]].split(',')
 
@@ -1936,10 +1954,11 @@ def create_fasta_from_pangenome_csv(pg_csv, seq_file_dict, out_name):
 				out_seq = genome_dict[seq_details[0]][int(seq_details[1])-1:int(seq_details[2])]
 
 
-			out_transcriptome.write(out_headder)
+			out_transcriptome.write(out_header)
 			out_transcriptome.write(out_seq)
 			out_transcriptome.write('\n')
 			out_transcriptome.write('\n')
+
 
 def pangenome_csv_to_virtual_genome_fasta(pg_csv, seq_file_dict, out_name, chrom_name='virtChromosome'):
 	in_pg_obj = open(pg_csv, "r")
@@ -1960,8 +1979,8 @@ def pangenome_csv_to_virtual_genome_fasta(pg_csv, seq_file_dict, out_name, chrom
 
 	filler = 'NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN'
 
-	out_headder = ">" + chrom_name + '\n'
-	out_fasta.write(out_headder)
+	out_header = ">" + chrom_name + '\n'
+	out_fasta.write(out_header)
 
 	out_gff.write('##gff-version 3\n')
 
@@ -1991,10 +2010,6 @@ def pangenome_csv_to_virtual_genome_fasta(pg_csv, seq_file_dict, out_name, chrom
 			temp_seq = temp_seq + out_seq
 
 
-
-
-
-
 def extract_anno_pan_genome_csv(graph_obj, gtf_dict, out_file_name, refseq='', sim_threshold=1.0):
 
 	isolate_list = gtf_dict.keys()
@@ -2005,16 +2020,16 @@ def extract_anno_pan_genome_csv(graph_obj, gtf_dict, out_file_name, refseq='', s
 
 	outfile_obj = open(out_file_name + 'anno.csv', 'w')
 
-	csv_headder = 'gene'
+	csv_header = 'gene'
 
-	# Create headder for csv file
+	# Create header for csv file
 
 	for iso in isolate_list:
-		csv_headder = csv_headder + ',' + iso
+		csv_header = csv_header + ',' + iso
 
-	csv_headder = csv_headder + '\n'
+	csv_header = csv_header + '\n'
 
-	outfile_obj.write(csv_headder)
+	outfile_obj.write(csv_header)
 
 	for isolate in isolate_list:
 		gtf_lol = input_parser(gtf_dict[isolate])
@@ -2039,7 +2054,7 @@ def extract_anno_pan_genome_csv(graph_obj, gtf_dict, out_file_name, refseq='', s
 				logging.info(found_in_list)
 
 				if len(list(set(found_in_list) & set(added_list))) < 1:
-					line_str = csv_headder
+					line_str = csv_header
 
 					logging.info(entry[8].keys())
 
@@ -2130,6 +2145,7 @@ def extract_anno_pan_genome_csv(graph_obj, gtf_dict, out_file_name, refseq='', s
 
 		added_list.append(isolate)
 
+
 def extract_unique_sequences(pangenome_csv):
 	'''Extract the genes unique to each isolate, return a transcript file'''
 
@@ -2198,6 +2214,7 @@ def get_anno_from_coordinates(in_gtf_lol, start_pos, stop_pos, tollerence):
 	else:
 		return '1'
 
+
 def get_gene_homo_gff(graph_obj, gtf_file, reference_name):
 
 	gff_lod = input_parser(gtf_file)
@@ -2246,78 +2263,20 @@ def calc_simmilarity_matrix(graph_obj, method='node'):
 	return distMatrix / pd.DataFrame(self_matrix, index=self_matrix.keys())
 
 
-
-
 # --------------------- Sequence extraction related
 
-def extract_seq(graph_obj, seq_name):
-
-	extracted_seq = ''
-
-	pos_lol = []
-
-	test_count = 0
-
-	for node,data in graph_obj.nodes_iter(data=True):
-
-
-		left_end_name = seq_name + '_leftend'
-		right_end_name = seq_name + '_rightend'
-
-		if seq_name in data['ids']:
-			#print 'right node'
-
-			new_left_pos = data[left_end_name]
-			new_right_pos = data[right_end_name]
-
-			if int(data[left_end_name]) < 0:
-				new_left_pos = abs(int(data[left_end_name]))
-				new_right_pos = abs(int(data[right_end_name]))
-
-
-
-			if int(new_left_pos) != 0 and int(new_right_pos) != 0 or node == seq_name + '_start':
-				pos_lol.append([int(new_left_pos), int(new_right_pos), node])
-
-
-	#print pos_lol
-
-	pos_lol = sorted(pos_lol)
-
-	#for aposthing in pos_lol:
-	#	print aposthing
-	#print len(pos_lol)
-	#print 'oooo'
-	#print test_count
-
-	# REMOVE AND PUT AS TEST
-
-	last_node_line = [0,0,0]
-
-	for segment in pos_lol:
-		#print '\n'
-		#print segment
-		#print graph_obj.node[str(segment[2])]['sequence']
-
-		if segment[0] == last_node_line[1]:
-			logging.info('-')
-			logging.info(segment)
-
-		if segment[1] == last_node_line[0]:
-			logging.info('+')
-			logging.info(segment)
-
-		if segment[2].split('_')[1] != 'start':
-
-			extracted_seq = extracted_seq + graph_obj.node[str(segment[2])]['sequence']
-
-		last_node_line = segment
-
-	return extracted_seq
-
 def extract_original_seq(graph_obj, seq_name):
-
+	"""
+	Given a networkx graph object created by GenGraph, return the sequence of an individual isolate
+	as a string. This can be used to extract a genome for a particular isolate.
+	:param graph_obj: A networkx graph object created by or formatted in a similar way to GenGraph.
+	:param seq_name: The identifier of the sequence to be extracted, as was used in the sequence file and found in the
+	node attributes.
+	:return: A string.
+	"""
 	extracted_seq = ''
+
+	# A position list of lists (lol)
 	pos_lol = []
 
 	test_count = 0
@@ -2340,14 +2299,10 @@ def extract_original_seq(graph_obj, seq_name):
 				new_left_pos = abs(int(data[left_end_name]))
 				new_right_pos = abs(int(data[right_end_name]))
 
-
-
 			if int(new_left_pos) != 0 and int(new_right_pos) != 0 or node == seq_name + '_start':
 				if node != seq_name + '_stop':
 					pos_lol.append([int(new_left_pos), int(new_right_pos), node, is_negative])
 
-
-	#print pos_lol
 
 	pos_lol = sorted(pos_lol)
 
@@ -2396,15 +2351,17 @@ def extract_original_seq(graph_obj, seq_name):
 
 	return extracted_seq
 
-def extract_seq_region(graph_obj, region_start, region_stop, seq_name):
-	seq_string = extract_seq(graph_obj, seq_name)
-
-	region_start = int(region_start) - 1
-	region_stop = int(region_stop)
-
-	return seq_string[region_start:region_stop]
 
 def extract_original_seq_region(graph_obj, region_start, region_stop, seq_name):
+	"""
+	Retrieve a subsequence from the graph for an isolate given the positions. This can be used for example to extract
+	a gene given the gene start and stop positions using the normal positions found in an gff file.
+	:param graph_obj: A networkx graph object created by or formatted in a similar way to GenGraph.
+	:param region_start: The nucleotide position to start extracting from
+	:param region_stop: The nucleotide position to stop extracting from
+	:param seq_name: The identified of the sequence that the positions are associated with.
+	:return: A string
+	"""
 
 	seq_string = extract_original_seq(graph_obj, seq_name)
 
@@ -2412,6 +2369,7 @@ def extract_original_seq_region(graph_obj, region_start, region_stop, seq_name):
 	region_stop = int(region_stop)
 
 	return seq_string[region_start:region_stop]
+
 
 def extract_iso_subgraph(graph_obj, isolate):
 	iso_graph = nx.MultiDiGraph()
@@ -2510,6 +2468,7 @@ def get_neighbour_most_iso(list_of_nodes, graph_obj, weight_matrix):
 
 	return longest_list_node
 
+
 def calc_average_distance_dict(weight_matrix, a_list_of_isolates):
 	# Return the average distance from
 
@@ -2575,6 +2534,7 @@ def extract_heaviest_path(graph_obj, start_node, stop_node, weight_matrix=''):
 
 	return out_graph
 
+
 def extract_seq_heavy(graph_obj):
 
 	start_node = graph_obj.graph['start_node']
@@ -2622,6 +2582,7 @@ def levenshtein(s1, s2):
 
 # Shandu's code
 
+
 def extract_max(graph_obj, node, extract_size, region):
 	'''Extract the largest possible sequence from the beginning or end of a node.
 
@@ -2653,7 +2614,7 @@ def extract_branch_seq(graph_obj, out_file_name, extract_size):
 	#For python 3
 	#import queue
 
-	# Changed error in formatting fasta file (missing newline and extra space in the headder)
+	# Changed error in formatting fasta file (missing newline and extra space in the header)
 
 	start_node = graph_obj.graph['start_node']		# This should be an attribute of the graph_obj (currently uses the start node of new_fun_3_genome)
 
@@ -2729,8 +2690,6 @@ def extract_branch_seq(graph_obj, out_file_name, extract_size):
 	out_file.close()
 
 
-
-
 def get_branch_mapping_dict(path_to_edge_file):
 	''' Take the file generated by samtools and convert to a dict for the edge pairs '''
 	res_dict = {}
@@ -2773,6 +2732,7 @@ def find_best_aln_subpaths_old(edge_aln_dict):
 
 	return best_aln_paths
 '''
+
 
 def find_best_aln_subpaths(edge_aln_dict, coverage_threshold):
 
@@ -2845,6 +2805,7 @@ def retrieve_genomic_sequence(bp_start, bp_stop, fasta_object):
 
 
 	return a_sequence
+
 
 def create_new_graph_from_aln_paths(graph_obj, aln_path_obj, path_dict, trim=True):
 
@@ -3023,7 +2984,7 @@ def get_panTrans_stats(in_annoTransCSV):
 		is_core_gene = True
 
 		if header_line == True:
-			headder = line.split(',')[1:]
+			header = line.split(',')[1:]
 			is_core_gene = False
 			header_line = False
 		else:
@@ -3182,6 +3143,7 @@ def split_node(in_graph, node, max_length):
 	return in_graph
 
 # ---------------------------------------------------- # Testing functions
+
 
 def seq_addition_test(in_graph, node_ID, seq_fasta_paths_dict):
 
