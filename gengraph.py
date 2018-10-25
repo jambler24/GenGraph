@@ -19,9 +19,15 @@ import copy
 
 import time
 
-import pickle
+try:
+	import cPickle as pickle
+except:
+	print('cPickle not found')
+	import pickle
 
 import logging
+
+
 
 path_to_muscle = 'muscle3.8.31_i86darwin64'
 
@@ -1403,7 +1409,8 @@ def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', or
 
 
 		bline['global_pos'] = bpos_count
-		bline['relative_pos'] = copy.deepcopy(true_start)
+		#bline['relative_pos'] = copy.deepcopy(true_start)
+		bline['relative_pos'] = pickle.loads(pickle.dumps(true_start, -1))
 
 		# See if this bline is a new block / node set
 		block_list = []
