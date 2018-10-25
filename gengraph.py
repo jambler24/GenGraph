@@ -422,14 +422,14 @@ def add_missing_nodes(a_graph, input_dict):
 
 		isolate_node_list = []
 		for node,data in a_graph.nodes_iter(data=True):
-			if isolate in data['ids']:
+			if isolate in data['ids'].split(','):
 				isolate_node_list.append(node)
 
 		presorted_list = []
 		for a_node in isolate_node_list:
 			presorted_list.append((a_node, abs(a_graph.node[a_node][isolate + '_leftend']), abs(a_graph.node[a_node][isolate + '_rightend'])))
 			if abs(a_graph.node[a_node][isolate + '_leftend']) > abs(a_graph.node[a_node][isolate + '_rightend']):
-				logging.warning('problem node', a_node)
+				logging.warning('problem node' + str(a_node))
 				logging.warning(a_graph.node[a_node][isolate + '_leftend'])
 
 		sorted_list = sorted(presorted_list, key=itemgetter(1))
@@ -519,14 +519,14 @@ def refine_initGraph(a_graph):
 	for isolate in iso_list:
 		isolate_node_list = []
 		for node,data in a_graph.nodes_iter(data=True):
-			if isolate in data['ids']:
+			if isolate in data['ids'].split(','):
 				isolate_node_list.append(node)
 
 		presorted_list = []
 		for a_node in isolate_node_list:
 			presorted_list.append((a_node, abs(a_graph.node[a_node][isolate + '_leftend']), abs(a_graph.node[a_node][isolate + '_rightend'])))
 			if abs(a_graph.node[a_node][isolate + '_leftend']) > abs(a_graph.node[a_node][isolate + '_rightend']):
-				logging.warning('problem node', a_node)
+				logging.warning('problem node' + str(a_node))
 				logging.warning(a_graph.node[a_node][isolate + '_leftend'])
 
 		sorted_list = sorted(presorted_list,key=itemgetter(1))
@@ -954,7 +954,7 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 	print(reference_name)
 
 	for node,data in graph_obj.nodes_iter(data=True):
-		if reference_name in data['ids']:
+		if reference_name in data['ids'].split(','):
 
 			if int(data[node_leftend_label]) > 0:
 				#print 'positive'
@@ -1135,8 +1135,8 @@ def convert_coordinates(graph_obj, q_start, q_stop, ref_iso, query_iso):
 	query_node_left = ''
 	query_node_right = ''
 
-	for node,data in graph_obj.nodes_iter(data=True):
-		if ref_iso in data['ids'] and query_iso in data['ids']:
+	for node, data in graph_obj.nodes_iter(data=True):
+		if ref_iso in data['ids'].split(',') and query_iso in data['ids'].split(','):
 			if int(data[node_leftend_label]) < int(q_start) and int(q_stop) < int(data[node_rightend_label]):
 				#print 'local found!!!!'
 				ref_node_left = data[node_leftend_label]
@@ -1187,7 +1187,7 @@ def convert_coordinate(graph_obj, q_position, ref_iso, query_iso):
 
 		# Look at all nodes that contain both the isolates
 
-		if ref_iso in data['ids'] and query_iso in data['ids']:
+		if ref_iso in data['ids'].split(',') and query_iso in data['ids'].split(','):
 
 			# find the node
 
@@ -1310,8 +1310,16 @@ def import_gtf_dict_to_massive_dict(gtf_dict):
 
 
 def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', orientation={}, re_link_nodes=True, add_seq=False):
-	'''New and improved conversion function. Needs to be modified to work with inverted seq still'''
-	# Created 11/01/2017
+	"""
+	Conversion of a fasta alignment file from a MSA to a subnetwork that can replace a block node in the main network.
+	:param fasta_aln_file:
+	:param true_start:
+	:param node_prefix:
+	:param orientation:
+	:param re_link_nodes:
+	:param add_seq:
+	:return:
+	"""
 
 	aln_lol = input_parser(fasta_aln_file)
 
@@ -1323,9 +1331,6 @@ def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', or
 
 	for fasta_entry in aln_lol:
 
-		#print '$$$$$$'
-		#print fasta_entry
-		#print fasta_entry['gene_details']
 		strip_seq = fasta_entry['DNA_seq'].replace('-','')
 
 		seq_len_dict[fasta_entry['gene_details']] = len(strip_seq)
@@ -1335,7 +1340,6 @@ def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', or
 
 	# Setting the orientation dict for later
 	if len(orientation) == 0:
-		#print 'Orientation dict empty'
 		for a_isolate in all_isolate_list:
 			orientation[a_isolate] = '+'
 
@@ -1355,14 +1359,8 @@ def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', or
 	while count < total_len:
 
 		block_dict = {}
-		#block_dict['pos'] = count
 
 		for a_seq in aln_lol:
-
-			#offset_dict[a_seq['gene_details']] = 0
-			#gap_dict[a_seq['gene_details']] = []
-
-
 
 			current_keys = block_dict.keys()
 			if a_seq['DNA_seq'][count] in current_keys:
@@ -1391,19 +1389,17 @@ def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', or
 	bpos_count = 1
 
 	# Working along the block from here ----------------------
+	# bline is block line
 	for bline in block_list:
 
 		for an_isolate in all_isolate_list:
 
 			true_start[an_isolate] += 1
 
-
 			for base in bline.keys():
 				if base == '-' and an_isolate in bline[base]:
-					#print an_isolate
-					#print '***********'
-					true_start[an_isolate] = true_start[an_isolate] - 1
 
+					true_start[an_isolate] = true_start[an_isolate] - 1
 
 
 		bline['global_pos'] = bpos_count
@@ -1415,8 +1411,6 @@ def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', or
 			if base != '-' and base != 'global_pos' and base != 'relative_pos':
 
 				block_list.append(bline[base])
-
-				# make [ordered list [ ] ]
 
 		block_list = sorted(block_list)
 
@@ -1431,13 +1425,6 @@ def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', or
 			block_ends_list.append(last_bline)
 			block_ends_list.append(bline)
 
-
-
-
-		#print 'last line'
-		#print last_bline
-		#print 'this line'
-		#print bline
 
 		last_bline = bline
 
@@ -1460,8 +1447,7 @@ def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', or
 
 	count = 0
 	for end_block in block_ends_list:
-		#print end_block, '\t', end_block['blocklist']
-		if is_even(count) == True:
+		if is_even(count):
 			start_block_list.append(end_block)
 		else:
 			end_block_list.append(end_block)
@@ -1471,18 +1457,15 @@ def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', or
 
 	# Now we pair the stop and start
 	# Also begin adding nodes to the local_node_network
-	#print '\n'
 	count = 0
 	node_count = 1
 	while count < len(start_block_list):
-		#print start_block_list[count], end_block_list[count]
 
 		if start_block_list[count]['blocklist'] != end_block_list[count]['blocklist']:
 			logging.error("ERROR IN BLOCK LIST PAIRS")
 
 		for block_group in start_block_list[count]['blocklist']:
 			# Each of these becomes a node
-			#print block_group
 			new_node_name = node_prefix + '_' + str(node_count)
 			block_group_string = ",".join(block_group)
 
@@ -1519,22 +1502,18 @@ def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', or
 		for a_isolate in all_isolate_list:
 			local_node_network = link_nodes(local_node_network, a_isolate, node_prefix='gn')
 
-	#print '----------------'
-
 	# Here we add the seq if required
 
 	if add_seq == True:
-		#print aln_lol
 		new_fasta_list = []
 
 		for a_seq in aln_lol:
-			new_fasta_list.append({'DNA_seq':a_seq['DNA_seq'].replace('-',''),'gene_details':a_seq['gene_details']})
+			new_fasta_list.append({'DNA_seq':a_seq['DNA_seq'].replace('-', ''), 'gene_details':a_seq['gene_details']})
 
-		#print new_fasta_list
 		local_node_network = add_sequences_to_graph_fastaObj(local_node_network, new_fasta_list)
 
-
 	node_check(local_node_network)
+
 	return local_node_network
 
 
@@ -2235,7 +2214,7 @@ def calc_simmilarity_matrix(graph_obj, method='node'):
 		for other_iso in iso_list:
 			node_count = 0
 			for a_node,data in graph_obj.nodes_iter(data=True):
-				if ref_iso in data['ids'] and other_iso in data['ids']:
+				if ref_iso in data['ids'].split(',') and other_iso in data['ids'].split(','):
 					node_count += 1
 			distance_dict[ref_iso].append(float(node_count))
 
@@ -2273,14 +2252,14 @@ def extract_original_seq(graph_obj, seq_name):
 
 	test_count = 0
 
-	for node,data in graph_obj.nodes_iter(data=True):
+	for node, data in graph_obj.nodes_iter(data=True):
 
 		is_negative = False
 
 		left_end_name = seq_name + '_leftend'
 		right_end_name = seq_name + '_rightend'
 
-		if seq_name in data['ids']:
+		if seq_name in data['ids'].split(','):
 			#print 'right node'
 
 			new_left_pos = data[left_end_name]
@@ -2368,7 +2347,7 @@ def extract_iso_subgraph(graph_obj, isolate):
 	iso_graph.graph['isolate'] = 'isolate'
 
 	for node,data in graph_obj.nodes_iter(data=True):
-		if isolate in data['ids']:
+		if isolate in data['ids'].split(','):
 			#print node
 			iso_graph.add_node(node,data)
 
