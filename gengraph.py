@@ -427,7 +427,7 @@ def add_missing_nodes(a_graph, input_dict):
 		isolate_Seq = isolate_Seq[0]['DNA_seq']
 
 		isolate_node_list = []
-		for node,data in a_graph.nodes_iter(data=True):
+		for node, data in a_graph.nodes_iter(data=True):
 			if isolate in data['ids'].split(','):
 				isolate_node_list.append(node)
 
@@ -453,6 +453,8 @@ def add_missing_nodes(a_graph, input_dict):
 				node_ID = isolate + "_" + str(count)
 				#print node_ID
 				a_graph.add_node(node_ID, new_node_dict)
+				#a_graph.add_node(node_ID)
+				#nx.set_node_attributes(a_graph, {node_ID: new_node_dict})
 
 			count+=1
 
@@ -466,7 +468,7 @@ def node_check(a_graph):
 
 	for isolate in iso_list:
 		isolate_node_list = []
-		for node,data in a_graph.nodes_iter(data=True):
+		for node, data in a_graph.nodes_iter(data=True):
 			if isolate in data['ids'].split(','):
 				isolate_node_list.append(node)
 
@@ -524,7 +526,7 @@ def refine_initGraph(a_graph):
 
 	for isolate in iso_list:
 		isolate_node_list = []
-		for node,data in a_graph.nodes_iter(data=True):
+		for node, data in a_graph.nodes_iter(data=True):
 			if isolate in data['ids'].split(','):
 				isolate_node_list.append(node)
 
@@ -535,7 +537,7 @@ def refine_initGraph(a_graph):
 				logging.warning('problem node' + str(a_node))
 				logging.warning(a_graph.node[a_node][isolate + '_leftend'])
 
-		sorted_list = sorted(presorted_list,key=itemgetter(1))
+		sorted_list = sorted(presorted_list, key=itemgetter(1))
 
 		count = 0
 
@@ -667,9 +669,9 @@ def bbone_to_initGraph(bbone_file, input_dict):
 
 		node_dict['name'] = node_ID
 
-		#print node_dict
-
 		genome_network.add_node(node_ID, node_dict)
+		#genome_network.add_node(node_ID)
+		#nx.set_node_attributes(genome_network, {node_ID: node_dict})
 
 		node_count += 1
 
@@ -684,6 +686,9 @@ def bbone_to_initGraph(bbone_file, input_dict):
 					node_dict = {'ids': an_iso, an_iso + '_leftend': int(iso_largest_node[a_largest_node]) + 1, an_iso + '_rightend': int(iso_length_dict[an_iso])}
 					#print node_dict
 					genome_network.add_node(node_ID, node_dict)
+					#genome_network.add_node(node_ID)
+					#nx.set_node_attributes(genome_network, {node_ID: node_dict})
+
 					has_stop_dict[an_iso] = node_ID
 
 					node_count += 1
@@ -703,17 +708,16 @@ def realign_all_nodes(inGraph, input_dict):
 
 	iso_list = inGraph.graph['isolates'].split(',')
 
-	# Load genomes into memory - Maybe a good idea, maybe bad...
+	# Load genomes into memory
 
-	for node,data in inGraph.nodes_iter(data=True):
+	# Only need to realign nodes with more than one isolate in them
+	for node, data in inGraph.nodes_iter(data=True):
 		# print(data)
 		if len(data['ids'].split(',')) > 1:
 
-			#print node
-
 			realign_node_list.append(node)
 
-	# Realign the nodes
+	# Realign the nodes. This is where multiprocessing will come in.
 	for a_node in realign_node_list:
 
 		inGraph = local_node_realign_new(inGraph, a_node, input_dict[1])
@@ -821,7 +825,7 @@ def add_sequences_to_graph(graph_obj, paths_dict):
 
 	logging.info('Adding sequences')
 
-	for node,data in graph_obj.nodes_iter(data=True):
+	for node, data in graph_obj.nodes_iter(data=True):
 
 		seq_source = data['ids'].split(',')[0]
 		is_reversed = False
@@ -874,7 +878,7 @@ def add_sequences_to_graph_fastaObj(graph_obj, imported_fasta_object):
 
 	seqObj = reshape_fastaObj(imported_fasta_object)
 
-	for node,data in graph_obj.nodes_iter(data=True):
+	for node, data in graph_obj.nodes_iter(data=True):
 
 		seq_source = data['ids'].split(',')[0]
 		is_reversed = False
@@ -959,7 +963,7 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 	#print int(stop_pos)
 	print(reference_name)
 
-	for node,data in graph_obj.nodes_iter(data=True):
+	for node, data in graph_obj.nodes_iter(data=True):
 		if reference_name in data['ids'].split(','):
 
 			if int(data[node_leftend_label]) > 0:
@@ -1189,7 +1193,7 @@ def convert_coordinate(graph_obj, q_position, ref_iso, query_iso):
 	query_rightend_label = query_iso + '_rightend'
 
 
-	for node,data in graph_obj.nodes_iter(data=True):
+	for node, data in graph_obj.nodes_iter(data=True):
 
 		# Look at all nodes that contain both the isolates
 
@@ -1476,7 +1480,7 @@ def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', or
 			new_node_name = node_prefix + '_' + str(node_count)
 			block_group_string = ",".join(block_group)
 
-			local_node_network.add_node(new_node_name, ids = block_group_string)
+			local_node_network.add_node(new_node_name, ids=block_group_string)
 
 			# Adding start / stop for node
 			# this is where we do the +/- thing.
@@ -1676,7 +1680,7 @@ def add_graph_data(graph_obj):
 	count_dict = {}
 
 	# Add start nodes
-	for node,data in graph_obj.nodes_iter(data=True):
+	for node, data in graph_obj.nodes_iter(data=True):
 
 		logging.info(node)
 		logging.info(data)
@@ -2220,7 +2224,7 @@ def calc_simmilarity_matrix(graph_obj, method='node'):
 
 		for other_iso in iso_list:
 			node_count = 0
-			for a_node,data in graph_obj.nodes_iter(data=True):
+			for a_node, data in graph_obj.nodes_iter(data=True):
 				if ref_iso in data['ids'].split(',') and other_iso in data['ids'].split(','):
 					node_count += 1
 			distance_dict[ref_iso].append(float(node_count))
@@ -2337,7 +2341,7 @@ def extract_original_seq_region(graph_obj, region_start, region_stop, seq_name):
 	:param graph_obj: A networkx graph object created by or formatted in a similar way to GenGraph.
 	:param region_start: The nucleotide position to start extracting from
 	:param region_stop: The nucleotide position to stop extracting from
-	:param seq_name: The identified of the sequence that the positions are associated with.
+	:param seq_name: The identifier of the sequence that the positions are associated with (The isolate).
 	:return: A string
 	"""
 
@@ -2349,14 +2353,105 @@ def extract_original_seq_region(graph_obj, region_start, region_stop, seq_name):
 	return seq_string[region_start:region_stop]
 
 
+def extract_original_seq_region_fast(graph_obj, region_start, region_stop, seq_name):
+	"""
+	A Newer version of this function, attempting to find a faster way.
+	Requires testing for negative nodes.
+	Retrieve a subsequence from the graph for an isolate given the positions. This can be used for example to extract
+	a gene given the gene start and stop positions using the normal positions found in an gff file.
+	:param graph_obj: A networkx graph object created by or formatted in a similar way to GenGraph.
+	:param region_start: The nucleotide position to start extracting from
+	:param region_stop: The nucleotide position to stop extracting from
+	:param seq_name: The identifier of the sequence that the positions are associated with (The isolate).
+	:return: A string
+	"""
+
+	region_start = int(region_start)
+	region_stop = int(region_stop)
+
+	multi_node_dict = {}
+
+	for node, data in graph_obj.nodes_iter(data=True):
+
+		if seq_name in data['ids'].split(','):
+
+			node_start = abs(int(data[seq_name + '_leftend']))
+			node_stop = abs(int(data[seq_name + '_rightend']))
+
+			if int(data[seq_name + '_leftend']) < 0:
+				orientation = '-'
+			else:
+				orientation = '+'
+
+			if region_start > node_start and region_stop < node_stop:
+
+				if orientation == '-':
+					# Reverse comp seq stuff
+					print('still to code')
+					quit()
+
+				else:
+					slce_start = node_start - region_start
+					slce_end = region_stop - node_stop
+
+					return data['sequence'][slce_start:slce_end + 1]
+
+			elif node_start <= region_start <= node_stop:
+
+				print('start node')
+
+				if orientation == '-':
+					# Reverse comp seq stuff
+					print('still to code')
+					quit()
+				else:
+
+					sub_seq = data['sequence'][region_start - node_start:]
+					multi_node_dict[sub_seq] = node_start
+
+			elif node_start <= region_stop <= node_stop:
+
+				print('end node')
+
+				if orientation == '-':
+					# Reverse comp seq stuff
+					print('still to code')
+					quit()
+				else:
+
+					sub_seq = data['sequence'][0: region_stop - node_start + 1]
+					multi_node_dict[sub_seq] = node_start
+
+			elif region_start <= node_start and node_stop <= region_stop:
+
+				print('mid node')
+
+				if orientation == '-':
+					# Reverse comp seq stuff
+					print('still to code')
+					quit()
+				else:
+
+					multi_node_dict[data['sequence']] = node_start
+
+	result_string = ''
+	for key, value in sorted(multi_node_dict.iteritems(), key=lambda (k, v): (v, k)):
+		result_string += key
+
+	return result_string
+
+
 def extract_iso_subgraph(graph_obj, isolate):
 	iso_graph = nx.MultiDiGraph()
 	iso_graph.graph['isolate'] = 'isolate'
 
-	for node,data in graph_obj.nodes_iter(data=True):
+	for node, data in graph_obj.nodes_iter(data=True):
 		if isolate in data['ids'].split(','):
 			#print node
-			iso_graph.add_node(node,data)
+			iso_graph.add_node(node, data)
+			# For NetworkX 2
+			#iso_graph.add_node(node)
+			#nx.set_node_attributes(iso_graph, {node: data})
 
 	iso_graph = link_nodes(iso_graph, isolate)
 
@@ -2499,6 +2594,9 @@ def extract_heaviest_path(graph_obj, start_node, stop_node, weight_matrix=''):
 
 	for heavy_node in node_list:
 		out_graph.add_node(heavy_node, graph_obj.node[heavy_node])
+		#out_graph.add_node(heavy_node)
+		#nx.set_node_attributes(out_graph, {heavy_node: graph_obj.node[heavy_node]})
+
 
 
 	# linking nodes
@@ -2813,7 +2911,7 @@ def create_new_graph_from_aln_paths(graph_obj, aln_path_obj, path_dict, trim=Tru
 
 		remove_node_list = []
 
-		for a_Node,data in newIsoGraph.nodes_iter(data=True):
+		for a_Node, data in newIsoGraph.nodes_iter(data=True):
 			if newIsoGraph.degree(a_Node) == 3:
 				# Get neighbours
 				all_neighbours_of_node = nx.all_neighbors(newIsoGraph, a_Node)
@@ -2853,7 +2951,7 @@ def create_new_graph_from_aln_paths(graph_obj, aln_path_obj, path_dict, trim=Tru
 
 	logging.info("Add sequences")
 
-	for seqNode,data in heavy_graph.nodes_iter(data=True):
+	for seqNode, data in heavy_graph.nodes_iter(data=True):
 
 
 		heavy_graph.node[seqNode]['sequence'] = graph_obj.node[seqNode]['sequence']
@@ -2883,7 +2981,7 @@ def get_end_node_dict(graph_obj):
 	for an_isolate in graph_obj.graph['isolates'].split(','):
 		end_dict_value[an_isolate] = 0
 
-	for node,data in graph_obj.nodes_iter(data=True):
+	for node, data in graph_obj.nodes_iter(data=True):
 		for an_isolate in graph_obj.graph['isolates'].split(','):
 			if an_isolate in data['ids'].split(','):
 				if abs(int(data[an_isolate + '_rightend'])) > end_dict_value[an_isolate]:
@@ -2903,7 +3001,7 @@ def generate_ancesteral_genome(graph_obj, weight_matrix=''):
 	nx.write_graphml(out_path, 'ancestor_path.xml')
 
 	seq_string = ''
-	for node,data in out_path.nodes_iter(data=True):
+	for node, data in out_path.nodes_iter(data=True):
 		seq_string = seq_string + data['sequence']
 	#print len(seq_string)
 
@@ -2932,7 +3030,7 @@ def add_ancestral_path(old_graph_obj, anc_graph_obj):
 
 	iso_node_count = {}
 
-	for a_node,data in anc_graph_obj.nodes_iter(data=True):
+	for a_node, data in anc_graph_obj.nodes_iter(data=True):
 
 		for a_iso in old_graph_obj.node[a_node]['ids'].split(','):
 			if a_iso in iso_node_count.keys():
@@ -3107,6 +3205,8 @@ def split_node(in_graph, node, max_length):
 	for a_new_node in new_node_dict.keys():
 		#print a_new_node
 		in_graph.add_node(a_new_node, new_node_dict[a_new_node])
+		#in_graph.add_node(a_new_node)
+		#nx.set_node_attributes(in_graph, {a_new_node: new_node_dict[a_new_node]})
 
 
 	# Delete old node
@@ -3196,7 +3296,7 @@ def generate_graph_report(in_graph, out_file_name):
 
 	comp_len = 0
 
-	for n,d in in_graph.nodes_iter(data=True):
+	for n, d in in_graph.nodes_iter(data=True):
 		if 'sequence' in d.keys():
 			comp_len = comp_len + len(d['sequence'])
 
