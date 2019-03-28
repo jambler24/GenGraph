@@ -82,6 +82,8 @@ if __name__ == '__main__':
 		if args.block_aligner == 'progressiveMauve' and args.backbone_file == 'default':
 			print('Conducting progressiveMauve')
 
+			print(parsed_input_dict)
+
 			progressiveMauve_alignment(parsed_input_dict[2], args.out_file_name)
 
 		# --------------------------------------------------------------------------------- Conversion to block graph
@@ -155,15 +157,12 @@ if __name__ == '__main__':
 			nx.write_graphml(genome_aln_graph, out_filename_created)
 
 		if args.out_format[0] == 'serialize':
-			print
-			'Writing to serialized file'
+			print('Writing to serialized file')
 			pickle.dump(genome_aln_graph, open(args.out_file_name + '.pkl', 'wb'), protocol=pickle.HIGHEST_PROTOCOL)
 
 		end_time = (time.time() - start_time)
 
-		print
-		"run time: " + str(end_time)
-
+		print("run time: " + str(end_time))
 		generate_graph_report(genome_aln_graph, args.out_file_name)
 
 	if args.toolkit == 'make_graph_from_fasta':
@@ -172,13 +171,11 @@ if __name__ == '__main__':
 		# --input_file
 		# --out_file_name
 
-		print
-		'In testing'
+
 
 		fasta_object = input_parser(args.input_file)
 
-		print
-		'Adding', len(fasta_object), 'sequences'
+		print('Adding', len(fasta_object), 'sequences')
 
 		seqStartDict = {}
 
@@ -194,19 +191,15 @@ if __name__ == '__main__':
 		nx.write_graphml(new_graph, args.out_file_name + '.xml')
 
 	if args.toolkit == 'region_alignment_score':
-		print
-		args.graph_file
+
 		graph_obj = nx.read_graphml(args.graph_file)
 
-		print
-		'this is the region alignment section'
+
 		result = check_isolates_in_region(graph_obj, args.extract_sequence_range[0], args.extract_sequence_range[1],
 										  args.isolate, threshold=1.0, return_dict=True)
 
-		print
-		'result is'
-		print
-		result
+		print('result is')
+		print(result)
 
 	if args.toolkit == 'extract_fasta_file':
 
@@ -353,8 +346,7 @@ if __name__ == '__main__':
 		# --out_file_name
 		# --graph_file
 
-		print
-		"Creating branch mapping file"
+		print("Creating branch mapping file")
 
 		imported_graph_obj = nx.read_graphml(args.graph_file)
 
@@ -368,8 +360,7 @@ if __name__ == '__main__':
 		# print res
 		aln_path_list = find_best_aln_subpaths(res, 20)
 
-		print
-		str(len(aln_path_list)) + ' paths extracted'
+		print(str(len(aln_path_list)) + ' paths extracted')
 
 		imported_genome = nx.read_graphml(args.graph_file)
 

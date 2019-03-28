@@ -2398,7 +2398,7 @@ def extract_original_seq_region_fast(graph_obj, region_start, region_stop, seq_n
 
 			elif node_start <= region_start <= node_stop:
 
-				print('start node')
+				#print('start node')
 
 				if orientation == '-':
 					# Reverse comp seq stuff
@@ -2411,7 +2411,7 @@ def extract_original_seq_region_fast(graph_obj, region_start, region_stop, seq_n
 
 			elif node_start <= region_stop <= node_stop:
 
-				print('end node')
+				#print('end node')
 
 				if orientation == '-':
 					# Reverse comp seq stuff
@@ -2424,7 +2424,7 @@ def extract_original_seq_region_fast(graph_obj, region_start, region_stop, seq_n
 
 			elif region_start <= node_start and node_stop <= region_stop:
 
-				print('mid node')
+				#print('mid node')
 
 				if orientation == '-':
 					# Reverse comp seq stuff
