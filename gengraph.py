@@ -62,11 +62,57 @@ Orientation is relative to the sequence in the node, which is default the refere
 
 class GgDiGraph(nx.DiGraph):
 
-	def get_region(self, region_start, region_stop, seq_name):
+	def get_sequence(self, region_start, region_stop, seq_name):
+		'''
+		Returns the sequence found between the given coordinates for a strain.
+		:param region_start: The start coordinate
+		:param region_stop: The stop coordinate
+		:param seq_name: The ID for the sequence that the coordinates refer to. Often the isolate.
+		:return: A sequence string
+		'''
 
 		seq_string = extract_original_seq_region_fast(self, region_start, region_stop, seq_name)
 
 		return seq_string
+
+	def transfer_annotations(self, annofile, source_seq_id, target_seq_id, out_file_name, chr_name=''):
+		'''
+		Given a annotation file (GTF, GFF) for a sequence, convert the coordinates relative to another sequence.
+		:param graph: Genome graph object
+		:param annofile: The filepath to the annotation file
+		:param source_seq_id:
+		:param target_seq_id:
+		:param out_file_name:
+		:return:
+		'''
+
+		# parse the annotation file
+
+		anno_dict = input_parser(annofile)
+
+		out_file = open(out_file_name, 'w')
+		out_file.write('##gff-version 3\n')
+
+		if len(chr_name) == 0:
+			chr_name = target_seq_id
+
+		for line in anno_dict:
+
+			conv_coords = convert_coordinates(self, line[3], line[4], source_seq_id, target_seq_id)
+
+			if conv_coords is not None:
+
+				line[0] = chr_name
+				line[3] = str(conv_coords[target_seq_id + '_leftend'])
+				line[4] = str(conv_coords[target_seq_id + '_rightend'])
+				info_dict = line[8]
+				line[8] = 'ID=' + info_dict['ID'] + ';' + 'Name=' + info_dict['Name']
+
+				line_string = '\t'.join(line)
+				out_file.write(line_string)
+
+		return 'Done'
+
 
 # ---------------------------------------------------- New functions under testing
 
@@ -102,6 +148,7 @@ def get_neighbours_context(graph, source_node, label, dir='out'):
 	list_of_neighbours = list(set(list_of_neighbours)) # to remove any duplicates (like bi_correct_node)	
 		
 	return list_of_neighbours
+
 
 # ---------------------------------------------------- General functions 
 
@@ -1154,6 +1201,15 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 
 
 def convert_coordinates(graph_obj, q_start, q_stop, ref_iso, query_iso):
+	'''
+	Convert coordinates from one sequence to another
+	:param graph_obj:
+	:param q_start:
+	:param q_stop:
+	:param ref_iso:
+	:param query_iso:
+	:return:
+	'''
 
 	# Find the right node
 
