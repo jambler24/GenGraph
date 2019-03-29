@@ -71,7 +71,9 @@ class GgDiGraph(nx.DiGraph):
 		:return: A sequence string
 		'''
 
-		seq_string = extract_original_seq_region_fast(self, region_start, region_stop, seq_name)
+		#seq_string = extract_original_seq_region_fast(self, region_start, region_stop, seq_name)
+		# Change once fast version is fixed. Currently it doesn't handle inv sequence
+		seq_string = extract_original_seq_region(self, region_start, region_stop, seq_name)
 
 		return seq_string
 
