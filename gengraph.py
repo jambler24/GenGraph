@@ -56,7 +56,32 @@ Orientation is relative to the sequence in the node, which is default the refere
 - For reverse-compliment orientation 	Left(-) < Right(-)		Left -10 Right -20		GCAT
 
 '''
+
+# ---------------------------------------------------- New gg object class
+
+
+class GgDiGraph(nx.DiGraph):
+
+	def get_region(self, region_start, region_stop, seq_name):
+
+		seq_string = extract_original_seq_region_fast(self, region_start, region_stop, seq_name)
+
+		return seq_string
+
 # ---------------------------------------------------- New functions under testing
+
+
+def import_gg_graph(path):
+	'''
+	Import a GG graph
+	:param path: file path
+	:return: a GG graph genome object
+	'''
+	graph_obj = nx.read_graphml(path)
+
+	out_graph = GgDiGraph(graph_obj)
+
+	return out_graph
 
 
 def get_neighbours_context(graph, source_node, label, dir='out'):
@@ -904,16 +929,15 @@ def add_sequences_to_graph_fastaObj(graph_obj, imported_fasta_object):
 				seq_end = new_seq_end
 				seq_start = new_seq_start
 
-			if is_reversed != True:
+			if is_reversed is True:
 				seq_start = seq_start - 1
 
 			if is_reversed:
 				seq_start = seq_start
 				seq_end = seq_end + 1
 
-				logging.info(seq_start, seq_end)
+				logging.info(str(seq_start) + ' ' + str(seq_end))
 				logging.info(ref_seq[seq_start:seq_end].upper())
-
 
 			node_seq = ref_seq[seq_start:seq_end].upper()
 
@@ -1744,6 +1768,7 @@ def progressiveMauve_alignment(fasta_path_list, out_aln_name):
 	return call(progressiveMauve_call, stdout=open(os.devnull, 'wb'))
 
 # ---------------------------------------------------- Utility functions
+
 
 def nodes_connected(u, v, graph_obj):
 	return u in graph_obj.neighbors(v)
