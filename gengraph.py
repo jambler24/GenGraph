@@ -98,11 +98,16 @@ class GgDiGraph(nx.DiGraph):
 		if len(chr_name) == 0:
 			chr_name = target_seq_id
 
+		total_annos = len(anno_dict)
+		success_count = 0
+
 		for line in anno_dict:
 
 			conv_coords = convert_coordinates(self, line[3], line[4], source_seq_id, target_seq_id)
 
 			if conv_coords is not None:
+
+				success_count += 1
 
 				line[0] = chr_name
 				line[3] = str(conv_coords[target_seq_id + '_leftend'])
@@ -113,7 +118,9 @@ class GgDiGraph(nx.DiGraph):
 				line_string = '\t'.join(line)
 				out_file.write(line_string)
 
-		return 'Done'
+		res_string = str(success_count) + '/' + str(total_annos) + ' annotations transferred'
+
+		return res_string
 
 
 # ---------------------------------------------------- New functions under testing
