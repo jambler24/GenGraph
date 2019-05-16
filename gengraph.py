@@ -35,7 +35,7 @@ path_to_clustal = '/Users/panix/Dropbox/Programs/tools/genome_alignment_graph_to
 
 path_to_mafft = 'mafft'
 
-path_to_kalign = '/Users/panix/Dropbox/Programs/tools/kalign2/kalign'
+path_to_kalign = 'kalign'
 
 path_to_progressiveMauve = '/Applications/Mauve.app/Contents/MacOS/progressiveMauve'
 
@@ -122,6 +122,25 @@ class GgDiGraph(nx.DiGraph):
 
 		return res_string
 
+	def ids(self):
+		'''
+		Returns the IDs of the sequences found in the graph.
+		:return: list of ID strings
+		'''
+
+		# Need to change to ids to be consistant with graph
+		ID_list = self.graph['isolates'].split(',')
+
+		ID_list = [x.encode('UTF8') for x in ID_list]
+
+		return ID_list
+
+	def get_region_subgraph(self, region_start, region_stop, seq_name, neighbours=0):
+
+		sub_graph = extract_region_subgraph(self, region_start, region_stop, seq_name, neighbours=neighbours)
+
+		return sub_graph
+
 
 # ---------------------------------------------------- New functions under testing
 
@@ -141,9 +160,9 @@ def import_gg_graph(path):
 
 def get_neighbours_context(graph, source_node, label, dir='out'):
 	'''Retrieves neighbours of a node using only edges containing a certain label'''
-	'''Created by shandu.mulaudzi@gmail.com'''
+	'''Created by shandu mulaudzi'''
 
-	# Changes seequence to ids
+	# Changes sequence to ids
 	list_of_neighbours = []
 	in_edges = graph.in_edges(source_node, data='ids')
 	out_edges = graph.out_edges(source_node, data='ids')
@@ -157,6 +176,72 @@ def get_neighbours_context(graph, source_node, label, dir='out'):
 	list_of_neighbours = list(set(list_of_neighbours)) # to remove any duplicates (like bi_correct_node)	
 		
 	return list_of_neighbours
+
+
+def extract_region_subgraph(graph, region_start, region_stop, seq_name, neighbours=0):
+
+	sub_graph = 'this'
+
+	node_list = []
+	pre_node_list = []
+
+	for node, data in graph.nodes_iter(data=True):
+
+		if seq_name in data['ids'].split(','):
+
+			node_start = abs(int(data[seq_name + '_leftend']))
+			node_stop = abs(int(data[seq_name + '_rightend']))
+
+			# Check node orientation for sequence
+			if int(data[seq_name + '_leftend']) < 0:
+				orientation = '-'
+			else:
+				orientation = '+'
+
+			# Check if whole sequence found in one node
+			if region_start > node_start and region_stop < node_stop:
+
+				if neighbours != 0:
+					node_list.append(node)
+					for a_neighbour in graph.neighbors(node):
+						node_list.append(a_neighbour)
+						print(a_neighbour)
+					for a_neighbour in graph.predecessors(node):
+						print(a_neighbour)
+						node_list.append(a_neighbour)
+				else:
+					node_list = [node]
+
+				sub_graph = graph.subgraph(node_list)
+
+				return sub_graph
+
+			# For the middle nodes (nodes containing a whole sub-sequence)
+			elif region_start < node_start and region_stop > node_stop:
+				pre_node_list.append(node)
+
+			# For the start node
+			elif region_start < node_stop < region_stop:
+				pre_node_list.append(node)
+
+			# For the end node
+			elif region_start < node_start < region_stop:
+				pre_node_list.append(node)
+
+	# This could be better, the neighbors function also returns the query node.
+	if neighbours != 0:
+		for a_hit_node in pre_node_list:
+			node_list.append(a_hit_node)
+			for a_neighbour in graph.neighbors(a_hit_node):
+				node_list.append(a_neighbour)
+			for a_neighbour in graph.predecessors(a_hit_node):
+				node_list.append(a_neighbour)
+	else:
+		node_list = pre_node_list
+
+	sub_graph = graph.subgraph(node_list)
+
+	return sub_graph
 
 
 # ---------------------------------------------------- General functions 
@@ -2447,7 +2532,7 @@ def extract_original_seq_region_fast(graph_obj, region_start, region_stop, seq_n
 	"""
 	A Newer version of this function, attempting to find a faster way.
 	Requires testing for negative nodes.
-	Retrieve a subsequence from the graph for an isolate given the positions. This can be used for example to extract
+	Retrieve a sub-sequence from the graph for an isolate given the positions. This can be used for example to extract
 	a gene given the gene start and stop positions using the normal positions found in an gff file.
 	:param graph_obj: A networkx graph object created by or formatted in a similar way to GenGraph.
 	:param region_start: The nucleotide position to start extracting from
@@ -2468,11 +2553,13 @@ def extract_original_seq_region_fast(graph_obj, region_start, region_stop, seq_n
 			node_start = abs(int(data[seq_name + '_leftend']))
 			node_stop = abs(int(data[seq_name + '_rightend']))
 
+			# Check node orientation for sequence
 			if int(data[seq_name + '_leftend']) < 0:
 				orientation = '-'
 			else:
 				orientation = '+'
 
+			# Check if whole sequence found in one node
 			if region_start > node_start and region_stop < node_stop:
 
 				if orientation == '-':
