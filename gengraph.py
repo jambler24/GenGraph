@@ -180,7 +180,19 @@ def get_neighbours_context(graph, source_node, label, dir='out'):
 
 def extract_region_subgraph(graph, region_start, region_stop, seq_name, neighbours=0):
 
-	sub_graph = 'this'
+	'''
+	Extracts the sub-graph of a region between two coordinates for a sequence ID. An example may be
+	returning the sub-graph that represents a gene for a particular isolate. Specifying a value for
+	neighbours will result in the graph plus any adjacent nodes to be returned.
+	:param graph: A input gengraph object
+	:param region_start: The start position (bp) of the region.
+	:param region_stop: The stop position (bp) of the region.
+	:param seq_name: The sequence ID that the base positions are referencing.
+	:param neighbours: Whether to include neighbouring nodes. This currently only considers adjacent nodes, and
+	will be expanded to include neighbours of neighbours etc.
+	:return: A subgraph as a gengraph object.
+	'''
+
 
 	node_list = []
 	pre_node_list = []
@@ -3270,7 +3282,6 @@ def get_panTrans_stats(in_annoTransCSV):
 
 # ----------------------------------------------------- # Development code
 
-
 def split_all_long_nodes(a_in_graph, max_length):
 	logging.info('splitting all nodes')
 
@@ -3497,6 +3508,12 @@ def generate_graph_report(in_graph, out_file_name):
 	return nx_summary
 
 
+# ---------------------------------------------------- # read alignment
+# Functions to align reads to the GenGraph genome graph.
+
+# ------------------ Traditional approaches.
+
+# Break down into k-mers to either create a hash table, or to create de-bruijn graphs.
 
 
 
