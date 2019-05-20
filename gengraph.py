@@ -71,9 +71,11 @@ class GgDiGraph(nx.DiGraph):
 		:return: A sequence string
 		'''
 
-		#seq_string = extract_original_seq_region_fast(self, region_start, region_stop, seq_name)
-		# Change once fast version is fixed. Currently it doesn't handle inv sequence
-		seq_string = extract_original_seq_region(self, region_start, region_stop, seq_name)
+		# Old slow version
+		#seq_string = extract_original_seq_region(self, region_start, region_stop, seq_name)
+
+		# Changed to fast version
+		seq_string = extract_original_seq_region_fast(self, region_start, region_stop, seq_name)
 
 		return seq_string
 
@@ -2570,18 +2572,20 @@ def extract_original_seq_region_fast(graph_obj, region_start, region_stop, seq_n
 				orientation = '-'
 			else:
 				orientation = '+'
-
 			# Check if whole sequence found in one node
-			if region_start > node_start and region_stop < node_stop:
+			if region_start >= node_start and region_stop <= node_stop:
 
 				if orientation == '-':
 					# Reverse comp seq stuff
-					print('still to code')
-					quit()
+
+					node_seq = reverse_compliment(data['sequence'])
+					slce_start = region_start - node_start
+					slce_end = region_stop - node_start
+					return node_seq[slce_start:slce_end + 1]
 
 				else:
-					slce_start = node_start - region_start
-					slce_end = region_stop - node_stop
+					slce_start = region_start - node_start
+					slce_end = region_stop - node_start
 
 					return data['sequence'][slce_start:slce_end + 1]
 
@@ -2591,12 +2595,13 @@ def extract_original_seq_region_fast(graph_obj, region_start, region_stop, seq_n
 
 				if orientation == '-':
 					# Reverse comp seq stuff
-					print('still to code')
-					quit()
-				else:
+					rev_seq = reverse_compliment(data['sequence'])
+					sub_seq = rev_seq[region_start - node_start:]
+					multi_node_dict[node_start] = sub_seq
 
+				else:
 					sub_seq = data['sequence'][region_start - node_start:]
-					multi_node_dict[sub_seq] = node_start
+					multi_node_dict[node_start] = sub_seq
 
 			elif node_start <= region_stop <= node_stop:
 
@@ -2604,12 +2609,13 @@ def extract_original_seq_region_fast(graph_obj, region_start, region_stop, seq_n
 
 				if orientation == '-':
 					# Reverse comp seq stuff
-					print('still to code')
-					quit()
-				else:
+					rev_seq = reverse_compliment(data['sequence'])
+					sub_seq = rev_seq[0: region_stop - node_start + 1]
+					multi_node_dict[node_start] = sub_seq
 
+				else:
 					sub_seq = data['sequence'][0: region_stop - node_start + 1]
-					multi_node_dict[sub_seq] = node_start
+					multi_node_dict[node_start] = sub_seq
 
 			elif region_start <= node_start and node_stop <= region_stop:
 
@@ -2617,15 +2623,17 @@ def extract_original_seq_region_fast(graph_obj, region_start, region_stop, seq_n
 
 				if orientation == '-':
 					# Reverse comp seq stuff
-					print('still to code')
-					quit()
+					rev_seq = reverse_compliment(data['sequence'])
+					multi_node_dict[node_start] = rev_seq
+
 				else:
 
-					multi_node_dict[data['sequence']] = node_start
+					multi_node_dict[node_start] = data['sequence']
 
 	result_string = ''
-	for key, value in sorted(multi_node_dict.iteritems(), key=lambda (k, v): (v, k)):
-		result_string += key
+	print(multi_node_dict)
+	for key in sorted(multi_node_dict.keys()):
+		result_string += multi_node_dict[key]
 
 	return result_string
 
