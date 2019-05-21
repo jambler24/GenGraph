@@ -138,10 +138,36 @@ class GgDiGraph(nx.DiGraph):
 		return ID_list
 
 	def get_region_subgraph(self, region_start, region_stop, seq_name, neighbours=0):
-
+		"""
+		Return a sub-graph from a defined region with positions relative to some of the sequences.
+		:param region_start: Start position (bp)
+		:param region_stop: Stop position (bp)
+		:param seq_name: Sequence ID that the bp positions are relative to.
+		:param neighbours: Number of neighbours to be included. Currently testing, only 1 level available.
+		:return: A GenGraph sub-network representing the region.
+		"""
 		sub_graph = extract_region_subgraph(self, region_start, region_stop, seq_name, neighbours=neighbours)
 
 		return sub_graph
+
+	def plot_subgraph(self, region_start, region_stop, seq_name, neighbours=0):
+		"""
+		Return a plot of a sub-graph from a defined region with positions relative to some of the sequences.
+		:param region_start: Start position (bp)
+		:param region_stop: Stop position (bp)
+		:param seq_name: Sequence ID that the bp positions are relative to.
+		:param neighbours: Number of neighbours to be included. Currently testing, only 1 level available.
+		:return: Plots a netowrkx + matplotlib figure of the region subgraph.
+		"""
+
+		import matplotlib.pyplot as plt
+
+		sub_graph = extract_region_subgraph(self, region_start, region_stop, seq_name, neighbours=neighbours)
+		pos = nx.spring_layout(sub_graph)
+		nx.draw_networkx_nodes(sub_graph, pos, cmap=plt.get_cmap('jet'), node_size=500)
+		nx.draw_networkx_labels(sub_graph, pos)
+		nx.draw_networkx_edges(sub_graph, pos, arrows=True)
+		plt.show()
 
 
 # ---------------------------------------------------- New functions under testing
