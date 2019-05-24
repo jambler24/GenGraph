@@ -31,7 +31,7 @@ import logging
 
 path_to_muscle = 'muscle3.8.31_i86darwin64'
 
-path_to_clustal = '/Users/panix/Dropbox/Programs/tools/genome_alignment_graph_tool/clustalo'
+path_to_clustal = 'clustalo'
 
 path_to_mafft = 'mafft'
 
@@ -225,7 +225,7 @@ def extract_region_subgraph(graph, region_start, region_stop, seq_name, neighbou
 	node_list = []
 	pre_node_list = []
 
-	for node, data in graph.nodes_iter(data=True):
+	for node, data in graph.nodes(data=True):
 
 		if seq_name in data['ids'].split(','):
 
@@ -633,7 +633,7 @@ def add_missing_nodes(a_graph, input_dict):
 		isolate_Seq = isolate_Seq[0]['DNA_seq']
 
 		isolate_node_list = []
-		for node, data in a_graph.nodes_iter(data=True):
+		for node, data in a_graph.nodes(data=True):
 			if isolate in data['ids'].split(','):
 				isolate_node_list.append(node)
 
@@ -651,18 +651,16 @@ def add_missing_nodes(a_graph, input_dict):
 		while count < len(sorted_list) - 1:
 
 			if sorted_list[count][2] != sorted_list[count + 1][1] - 1:
-				#print 'gap', sorted_list[count], sorted_list[count + 1]
 				new_node_dict = {isolate + '_leftend':sorted_list[count][2] + 1, isolate + '_rightend':sorted_list[count + 1][1] - 1, 'ids':isolate}
-				#print new_node_dict
 				new_node_dict['sequence'] = isolate_Seq[sorted_list[count][2]:sorted_list[count + 1][1] - 1]
 
 				node_ID = isolate + "_" + str(count)
-				#print node_ID
-				a_graph.add_node(node_ID, new_node_dict)
-				#a_graph.add_node(node_ID)
-				#nx.set_node_attributes(a_graph, {node_ID: new_node_dict})
+				att_node_dict = {node_ID: new_node_dict}
 
-			count+=1
+				a_graph.add_node(node_ID)
+				nx.set_node_attributes(a_graph, att_node_dict)
+
+			count += 1
 
 
 def node_check(a_graph):
@@ -674,7 +672,7 @@ def node_check(a_graph):
 
 	for isolate in iso_list:
 		isolate_node_list = []
-		for node, data in a_graph.nodes_iter(data=True):
+		for node, data in a_graph.nodes(data=True):
 			if isolate in data['ids'].split(','):
 				isolate_node_list.append(node)
 
@@ -732,7 +730,7 @@ def refine_initGraph(a_graph):
 
 	for isolate in iso_list:
 		isolate_node_list = []
-		for node, data in a_graph.nodes_iter(data=True):
+		for node, data in a_graph.nodes(data=True):
 			if isolate in data['ids'].split(','):
 				isolate_node_list.append(node)
 
@@ -866,18 +864,18 @@ def bbone_to_initGraph(bbone_file, input_dict):
 			if item not in found_in_list:
 				found_in_list.append(item)
 
-		#print found_in_list
 		found_in_string = ','.join(found_in_list)
-		#print found_in_string
+
 		node_dict['ids'] = found_in_string
 
 		node_ID = 'Aln_' + str(node_count)
 
 		node_dict['name'] = node_ID
 
-		genome_network.add_node(node_ID, node_dict)
-		#genome_network.add_node(node_ID)
-		#nx.set_node_attributes(genome_network, {node_ID: node_dict})
+		# Error here from networkx
+		att_node_dict = {node_ID: node_dict}
+		genome_network.add_node(node_ID)
+		nx.set_node_attributes(genome_network, att_node_dict)
 
 		node_count += 1
 
@@ -917,7 +915,7 @@ def realign_all_nodes(inGraph, input_dict):
 	# Load genomes into memory
 
 	# Only need to realign nodes with more than one isolate in them
-	for node, data in inGraph.nodes_iter(data=True):
+	for node, data in inGraph.nodes(data=True):
 		# print(data)
 		if len(data['ids'].split(',')) > 1:
 
@@ -948,7 +946,7 @@ def link_nodes(graph_obj, sequence_name, node_prefix='gn'):
 
 	pos_lol = []
 
-	for node, data in graph_obj.nodes_iter(data=True):
+	for node, data in graph_obj.nodes(data=True):
 
 		left_end_name = sequence_name + '_leftend'
 		right_end_name = sequence_name + '_rightend'
@@ -1031,7 +1029,7 @@ def add_sequences_to_graph(graph_obj, paths_dict):
 
 	logging.info('Adding sequences')
 
-	for node, data in graph_obj.nodes_iter(data=True):
+	for node, data in graph_obj.nodes(data=True):
 
 		seq_source = data['ids'].split(',')[0]
 		is_reversed = False
@@ -1084,7 +1082,7 @@ def add_sequences_to_graph_fastaObj(graph_obj, imported_fasta_object):
 
 	seqObj = reshape_fastaObj(imported_fasta_object)
 
-	for node, data in graph_obj.nodes_iter(data=True):
+	for node, data in graph_obj.nodes(data=True):
 
 		seq_source = data['ids'].split(',')[0]
 		is_reversed = False
@@ -1168,7 +1166,7 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 	#print int(stop_pos)
 	print(reference_name)
 
-	for node, data in graph_obj.nodes_iter(data=True):
+	for node, data in graph_obj.nodes(data=True):
 		if reference_name in data['ids'].split(','):
 
 			if int(data[node_leftend_label]) > 0:
@@ -1359,7 +1357,7 @@ def convert_coordinates(graph_obj, q_start, q_stop, ref_iso, query_iso):
 	query_node_left = ''
 	query_node_right = ''
 
-	for node, data in graph_obj.nodes_iter(data=True):
+	for node, data in graph_obj.nodes(data=True):
 		if ref_iso in data['ids'].split(',') and query_iso in data['ids'].split(','):
 			if int(data[node_leftend_label]) < int(q_start) and int(q_stop) < int(data[node_rightend_label]):
 				#print 'local found!!!!'
@@ -1407,7 +1405,7 @@ def convert_coordinate(graph_obj, q_position, ref_iso, query_iso):
 	query_rightend_label = query_iso + '_rightend'
 
 
-	for node, data in graph_obj.nodes_iter(data=True):
+	for node, data in graph_obj.nodes(data=True):
 
 		# Look at all nodes that contain both the isolates
 
@@ -1894,7 +1892,7 @@ def add_graph_data(graph_obj):
 	count_dict = {}
 
 	# Add start nodes
-	for node, data in graph_obj.nodes_iter(data=True):
+	for node, data in graph_obj.nodes(data=True):
 
 		logging.info(node)
 		logging.info(data)
@@ -2031,7 +2029,7 @@ def extract_original_seq(graph_obj, seq_name):
 
 	test_count = 0
 
-	for node, data in graph_obj.nodes_iter(data=True):
+	for node, data in graph_obj.nodes(data=True):
 
 		is_negative = False
 
@@ -2139,7 +2137,7 @@ def extract_original_seq_region_fast(graph_obj, region_start, region_stop, seq_n
 
 	multi_node_dict = {}
 
-	for node, data in graph_obj.nodes_iter(data=True):
+	for node, data in graph_obj.nodes(data=True):
 
 		if seq_name in data['ids'].split(','):
 
@@ -2221,7 +2219,7 @@ def extract_iso_subgraph(graph_obj, isolate):
 	iso_graph = nx.MultiDiGraph()
 	iso_graph.graph['isolate'] = 'isolate'
 
-	for node, data in graph_obj.nodes_iter(data=True):
+	for node, data in graph_obj.nodes(data=True):
 		if isolate in data['ids'].split(','):
 			#print node
 			iso_graph.add_node(node, data)
@@ -2346,7 +2344,7 @@ def generate_graph_report(in_graph, out_file_name):
 
 	comp_len = 0
 
-	for n, d in in_graph.nodes_iter(data=True):
+	for n, d in in_graph.nodes(data=True):
 		if 'sequence' in d.keys():
 			comp_len = comp_len + len(d['sequence'])
 
