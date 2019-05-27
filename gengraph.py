@@ -2,31 +2,24 @@
 
 import networkx as nx
 
-
 # Built in
 
 from subprocess import call
-
 from operator import itemgetter
 
 import argparse
-
-import sys, os
-
+import sys
+import os
 import csv
-
 import copy
-
 import time
 
 try:
 	import cPickle as pickle
 except:
-	print('cPickle not found')
 	import pickle
 
 import logging
-
 
 
 path_to_muscle = 'muscle3.8.31_i86darwin64'
