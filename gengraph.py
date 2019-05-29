@@ -157,7 +157,7 @@ class GgDiGraph(nx.DiGraph):
 
 		sub_graph = extract_region_subgraph(self, region_start, region_stop, seq_name, neighbours=neighbours)
 		pos = nx.spring_layout(sub_graph)
-		nx.draw_networkx_nodes(sub_graph, pos, cmap=plt.get_cmap('jet'), node_size=500)
+		nx.draw_networkx_nodes(sub_graph, pos, cmap=plt.get_cmap('jet'), node_size=300)
 		nx.draw_networkx_labels(sub_graph, pos)
 		nx.draw_networkx_edges(sub_graph, pos, arrows=True)
 		plt.show()
@@ -1963,14 +1963,9 @@ def convert_transcriptome_to_aln_input(trans_fasta_path, out_name):
 
 	fasta_lol = input_parser(trans_fasta_path)
 
-	#print fasta_lol[1]
-
 	# Make masked break string
 
 	break_str = 'N' * break_length
-
-	#print break_str
-
 
 	out_file_fasta = open(out_name + '.fasta', 'w')
 	out_file_gtf = open(out_name + '.gtf', 'w')
