@@ -43,3 +43,5 @@ RUN curl -fksSL http://darlinglab.org/mauve/snapshots/2015/2015-02-13/linux-x64/
 ENTRYPOINT ["python3", "./GenGraph/gengraphTool.py"]
 
 CMD ["-h"]
+
+# docker run gengraphtoolkit make_genome_graph --out_file_name "test_docker" --seq_file multiGenome6.txt --mount source=./,target=/
