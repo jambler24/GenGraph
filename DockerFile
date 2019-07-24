@@ -20,10 +20,10 @@ RUN apt-get update --fix-missing -qq && apt-get install -y -q \
     && apt-get purge
 
 # Install networkx
-RUN pip install networkx==1.9.1
+RUN python3 -m pip install networkx GenGraph
 
 # Install NetworkX on pypy
-RUN pypy -m pip install networkx==1.9.1
+#RUN pypy -m pip install networkx==1.9.1
 
 # Install a MSA tool
 # Muscle
@@ -37,3 +37,9 @@ RUN git clone https://github.com/jambler24/GenGraph
 
 RUN curl -fksSL http://darlinglab.org/mauve/snapshots/2015/2015-02-13/linux-x64/mauve_linux_snapshot_2015-02-13.tar.gz | tar xz && \
     cp mauve_snapshot_2015-02-13/linux-x64/progressiveMauve /usr/local/bin/
+
+#CMD echo "This is where we run GG toolkit"
+
+ENTRYPOINT ["python3", "./GenGraph/gengraphTool.py"]
+
+CMD ["-h"]

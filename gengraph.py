@@ -30,8 +30,6 @@ path_to_mafft = 'mafft'
 
 path_to_kalign = 'kalign'
 
-path_to_progressiveMauve = '/Applications/Mauve.app/Contents/MacOS/progressiveMauve'
-
 global_aligner = 'progressiveMauve'
 
 local_aligner = 'mafft'
@@ -882,7 +880,7 @@ def bbone_to_initGraph(bbone_file, input_dict):
 					node_ID = 'Aln_' + str(node_count)
 					node_dict = {'ids': an_iso, an_iso + '_leftend': int(iso_largest_node[a_largest_node]) + 1, an_iso + '_rightend': int(iso_length_dict[an_iso])}
 					#print node_dict
-					genome_network.add_node(node_ID, node_dict)
+					genome_network.add_node(node_ID, **node_dict)
 					#genome_network.add_node(node_ID)
 					#nx.set_node_attributes(genome_network, {node_ID: node_dict})
 
@@ -1941,10 +1939,19 @@ def mafft_alignment(fasta_unaln_file, out_aln_name):
 	call([path_to_mafft, '--retree', '2', '--maxiterate', '2', '--quiet', '--thread', '-1', fasta_unaln_file], stdout=out_temp_fa)
 
 
-def progressiveMauve_alignment(fasta_path_list, out_aln_name):
+def progressiveMauve_alignment(path_to_progressiveMauve, fasta_path_list, out_aln_name):
+	"""
+	A wrapper for progressiveMauve for use in GenGraph for the identification of co-linear blocks
+	:param path_to_progressiveMauve: Absolute path to progressiveMauve executable
+	:param fasta_path_list: List of paths to fasta files
+	:param out_aln_name: Name for alignment file, added to mauve output
+	:return:
 
-	logging.info(path_to_progressiveMauve)
-	progressiveMauve_call = [path_to_progressiveMauve, '--output=globalAlignment_' + out_aln_name, '--scratch-path-1=/Volumes/HDD/mauveTemp', '--scratch-path-2=/Volumes/HDD/mauveTemp'] + fasta_path_list
+	"""
+	# Maybe add --skip-gapped-alignment flag?
+
+	print(path_to_progressiveMauve)
+	progressiveMauve_call = [path_to_progressiveMauve, '--output=globalAlignment_' + out_aln_name, '--scratch-path-1=./mauveTemp', '--scratch-path-2=./mauveTemp'] + fasta_path_list
 
 	return call(progressiveMauve_call, stdout=open(os.devnull, 'wb'))
 

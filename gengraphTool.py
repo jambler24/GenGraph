@@ -4,9 +4,9 @@ from gengraph import *
 
 if __name__ == '__main__':
 
-	parser = argparse.ArgumentParser(description='''Welcome to GenGraph v0.1''', epilog="""Insanity is trying the same thing over and over and expecting different results""")
+	parser = argparse.ArgumentParser(description='''Welcome to GenGraph v0.1''', epilog="""Tools for the creation and use of graph genomes""")
 
-	parser.add_argument('toolkit', type=str, default='test_mode', help='Select what you would like to do')
+	parser.add_argument('toolkit', type=str, default='test_mode', help='Select the tool you would like to use')
 
 	parser.add_argument('--out_file_name', type=str, help='Prefix of the created file')
 
@@ -17,6 +17,8 @@ if __name__ == '__main__':
 	parser.add_argument('--out_format', nargs=1, default='default', help='Format for the output')
 
 	parser.add_argument('--block_aligner', nargs=1, default='progressiveMauve', help='Block aligner to use')
+
+	parser.add_argument('--progressiveMauve_path', nargs=1, default='progressiveMauve', help='Path to progressiveMauve if not in PATH')
 
 	parser.add_argument('--node_msa_tool', nargs=1, default='mafft', help='MSA tool to use')
 
@@ -73,6 +75,8 @@ if __name__ == '__main__':
 		global_aligner = args.block_aligner
 		local_aligner = args.node_msa_tool
 
+		path_to_progressiveMauve = args.progressiveMauve_path[0]
+
 		start_time = time.time()
 
 		parsed_input_dict = parse_seq_file(args.seq_file)
@@ -82,9 +86,9 @@ if __name__ == '__main__':
 		if args.block_aligner == 'progressiveMauve' and args.backbone_file == 'default':
 			print('Conducting progressiveMauve')
 
-			print(parsed_input_dict)
+			logging.info(parsed_input_dict)
 
-			progressiveMauve_alignment(parsed_input_dict[2], args.out_file_name)
+			progressiveMauve_alignment(path_to_progressiveMauve, parsed_input_dict[2], args.out_file_name)
 
 		# --------------------------------------------------------------------------------- Conversion to block graph
 
@@ -145,7 +149,7 @@ if __name__ == '__main__':
 			make_circular(genome_aln_graph, args.make_circular)
 			print('Graph circularised')
 
-		if args.rec_check == True:
+		if args.rec_check:
 			seq_recreate_check(genome_aln_graph, parsed_input_dict)
 
 		# Saving output
