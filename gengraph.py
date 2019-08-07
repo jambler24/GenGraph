@@ -160,6 +160,43 @@ class GgDiGraph(nx.DiGraph):
 		nx.draw_networkx_edges(sub_graph, pos, arrows=True)
 		plt.show()
 
+	def region_similarity(self, region_start, region_stop, ref_name, alt_name, method='shared'):
+		"""
+		Info text
+		:param region_start:
+		:param region_stop:
+		:param ref_name:
+		:param alt_name:
+		:param method:
+		:return:
+		"""
+		if method == 'shared':
+
+			sub_graph = extract_region_subgraph(self, region_start, region_stop, ref_name, neighbours=0)
+
+			total_ref_length = region_stop - region_start
+			total_lone_ref_length = 0
+
+			for a_node in sub_graph.nodes:
+
+				if alt_name not in sub_graph.node[a_node]['ids'].split(','):
+					print(a_node)
+					print(sub_graph.node[a_node]['ids'])
+
+					total_lone_ref_length += len(sub_graph.node[a_node]['sequence'])
+
+			print(total_ref_length)
+			print(total_lone_ref_length)
+			sim_perc = (total_ref_length - total_lone_ref_length) / (total_ref_length) * 100
+
+			return sim_perc
+
+		else:
+
+			print(method + ' not implimented.')
+
+			return 0
+
 
 # ---------------------------------------------------- New functions under testing
 
@@ -980,21 +1017,25 @@ def link_nodes(graph_obj, sequence_name, node_prefix='gn'):
 
 		if (node_1, node_2) in edges_obj:
 
-			if sequence_name not in graph_obj.edge[node_1][node_2][0]['ids'].split(','):
+			print(node_1)
+			print(node_2)
+			nx.write_graphml(graph_obj, 'problemG')
+			print(graph_obj.get_edge_data(node_1, node_2))
+			print(graph_obj.get_edge_data(node_1, node_2)[0]['ids'])
+			print(graph_obj.get_edge_data(node_1, node_2)[0]['ids'].split(','))
 
+			if sequence_name not in graph_obj.get_edge_data(node_1, node_2)[0]['ids'].split(','):
 
-				new_seq_list = graph_obj.edge[node_1][node_2][0]['ids'] + ',' + sequence_name
-				#print new_seq_list
+				new_seq_list = graph_obj.get_edge_data(node_1, node_2)[0]['ids'] + ',' + sequence_name
 
 			else:
 				print('Error found.')
 				quit()
-				new_seq_list = graph_obj.edge[node_1][node_2]['ids']
-			#print new_seq_list
+				new_seq_list = graph_obj.edges[node_1][node_2]['ids']
 
-			graph_obj.edge[node_1][node_2][0]['ids'] = new_seq_list
+			nx.set_edge_attributes(graph_obj, {'ids': new_seq_list})
+			#graph_obj[node_1][node_2]['ids'] = new_seq_list
 
-			#print 'appending'
 		else:
 			#print 'new edge'
 			#print [(node_1, node_2, dict(ids=sequence_name))]
@@ -1009,6 +1050,7 @@ def link_nodes(graph_obj, sequence_name, node_prefix='gn'):
 
 
 def link_all_nodes(graph_obj):
+	print('Linking nodes')
 	logging.info('Running link_all_nodes')
 	for isolate in graph_obj.graph['isolates'].split(','):
 		logging.info(isolate)
