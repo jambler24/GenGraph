@@ -20,7 +20,7 @@ RUN apt-get update --fix-missing -qq && apt-get install -y -q \
     && apt-get purge
 
 # Install networkx
-RUN python3 -m pip install networkx GenGraph
+RUN python3 -m pip install networkx GenGraph numpy
 
 # Install NetworkX on pypy
 #RUN pypy -m pip install networkx==1.9.1
