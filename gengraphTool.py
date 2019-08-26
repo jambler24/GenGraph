@@ -16,7 +16,7 @@ if __name__ == '__main__':
 
 	parser.add_argument('--out_format', nargs=1, default='default', help='Format for the output')
 
-	parser.add_argument('--block_aligner', nargs=1, default='progressiveMauve', help='Block aligner to use')
+	parser.add_argument('--block_aligner', nargs=1, default=['progressiveMauve'], help='Block aligner to use')
 
 	parser.add_argument('--progressiveMauve_path', nargs=1, default='progressiveMauve', help='Path to progressiveMauve if not in PATH')
 
@@ -62,7 +62,6 @@ if __name__ == '__main__':
 		print("Test functions here")
 
 	if args.toolkit == 'make_genome_graph':
-
 		# Requires:
 		# --out_file_name
 		# --seq_file
@@ -75,7 +74,7 @@ if __name__ == '__main__':
 		global_aligner = args.block_aligner
 		local_aligner = args.node_msa_tool
 
-		path_to_progressiveMauve = args.progressiveMauve_path
+		path_to_progressiveMauve = args.progressiveMauve_path[0]
 
 		start_time = time.time()
 

@@ -13,6 +13,7 @@ import os
 import csv
 import copy
 import time
+import numpy
 
 try:
 	import cPickle as pickle
@@ -343,7 +344,7 @@ def input_parser(file_path, parse_as='default'):
 		sequence = sequence.replace("\n","")
 		sequence = sequence.replace(" ","")
 		
-		gene_ID_dict = {"gene_details" : sequence_details[1:], "DNA_seq" : sequence}
+		gene_ID_dict = {"gene_details": sequence_details[1:], "DNA_seq" : sequence}
 
 		output_list.append(gene_ID_dict)
 
@@ -356,13 +357,13 @@ def input_parser(file_path, parse_as='default'):
 	if file_path[-4:] == ".csv":
 		data_table = csv.reader(open(file_path, 'r'), delimiter=',')
 		data_matrix = list(data_table)
-		result=numpy.array(data_matrix)
+		result = numpy.array(data_matrix)
 		return result
 
 	if file_path[-4:] == ".ssv":
 		data_table = csv.reader(open(file_path, 'r'), delimiter=';')
 		data_matrix = list(data_table)
-		result=numpy.array(data_matrix)
+		result = numpy.array(data_matrix)
 		return result
 		
 	if file_path[-4:] == ".txt":
