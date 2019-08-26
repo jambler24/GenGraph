@@ -75,7 +75,7 @@ if __name__ == '__main__':
 		global_aligner = args.block_aligner
 		local_aligner = args.node_msa_tool
 
-		path_to_progressiveMauve = args.progressiveMauve_path[0]
+		path_to_progressiveMauve = args.progressiveMauve_path
 
 		start_time = time.time()
 
