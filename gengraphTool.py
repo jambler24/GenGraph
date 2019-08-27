@@ -10,6 +10,8 @@ if __name__ == '__main__':
 
 	parser.add_argument('--out_file_name', type=str, help='Prefix of the created file')
 
+	parser.add_argument('--out_file_path', type=str, default='./', help='Output file destination')
+
 	parser.add_argument('--alignment_file', nargs=1, help='The path to the alignment file')
 
 	parser.add_argument('--backbone_file', nargs=1, default='default', help='The path to the backbone file')
@@ -152,21 +154,23 @@ if __name__ == '__main__':
 			seq_recreate_check(genome_aln_graph, parsed_input_dict)
 
 		# Saving output
+		out_put_dir = args.out_file_path
+		if args.out_file_path[-1] != '/':
+			out_put_dir += '/'
 
 		if args.out_format == 'default':
-			print
-			'Writing to GraphML'
-			out_filename_created = args.out_file_name + '.xml'
+
+			out_filename_created = out_put_dir + args.out_file_name + '.xml'
 			nx.write_graphml(genome_aln_graph, out_filename_created)
 
 		if args.out_format[0] == 'serialize':
 			print('Writing to serialized file')
-			pickle.dump(genome_aln_graph, open(args.out_file_name + '.pkl', 'wb'), protocol=pickle.HIGHEST_PROTOCOL)
+			pickle.dump(genome_aln_graph, open(out_put_dir + args.out_file_name + '.pkl', 'wb'), protocol=pickle.HIGHEST_PROTOCOL)
 
 		end_time = (time.time() - start_time)
 
 		print("run time: " + str(end_time))
-		generate_graph_report(genome_aln_graph, args.out_file_name)
+		generate_graph_report(genome_aln_graph, out_put_dir + args.out_file_name)
 
 	if args.toolkit == 'make_graph_from_fasta':
 
