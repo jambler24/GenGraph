@@ -82,7 +82,7 @@ if __name__ == '__main__':
 
 		# --------------------------------------------------------------------------------- Initial global alignment
 
-		if args.block_aligner == 'progressiveMauve' and args.backbone_file == 'default':
+		if args.block_aligner[0] == 'progressiveMauve' and args.backbone_file == 'default':
 			print('Conducting progressiveMauve')
 
 			logging.info(parsed_input_dict)
