@@ -18,7 +18,7 @@ if __name__ == '__main__':
 
 	parser.add_argument('--block_aligner', nargs=1, default=['progressiveMauve'], help='Block aligner to use')
 
-	parser.add_argument('--progressiveMauve_path', nargs=1, default='progressiveMauve', help='Path to progressiveMauve if not in PATH')
+	parser.add_argument('--progressiveMauve_path', nargs=1, default=['progressiveMauve'], help='Path to progressiveMauve if not in PATH')
 
 	parser.add_argument('--node_msa_tool', nargs=1, default='mafft', help='MSA tool to use')
 
