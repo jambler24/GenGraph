@@ -7,7 +7,7 @@ Please refer to the [wiki](https://github.com/jambler24/GenGraph/wiki) for insta
 
 ## Quickstart 
 
-    python ./gengraphTool.py make_genome_graph --seq_file <sequence_file.txt> --out_file_name <filename> --recreate_check
+    python3 ./gengraphTool.py make_genome_graph --seq_file <sequence_file.txt> --out_file_name <filename> --recreate_check
 
 A Docker file is also available that will contain everything you need for your first run. 
 
