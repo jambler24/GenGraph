@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/jambler24/GenGraph.svg?branch=master)](https://travis-ci.org/jambler24/GenGraph)
+
 # GenGraph
 A repository for the GenGraph toolkit for the creation and manipulation of graph genomes
 
