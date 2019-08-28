@@ -6,3 +6,5 @@ services:
 before_install:
 - docker pull jambler24/gengraph
 
+script:
+  - ls
