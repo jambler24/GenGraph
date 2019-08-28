@@ -1,4 +1,6 @@
 [![Build Status](https://travis-ci.org/jambler24/GenGraph.svg?branch=master)](https://travis-ci.org/jambler24/GenGraph)
+[![Docker](https://img.shields.io/docker/automated/jambler24/gengraph.svg)](https://hub.docker.com/r/jambler24/gengraph)
+
 
 # GenGraph
 A repository for the GenGraph toolkit for the creation and manipulation of graph genomes
