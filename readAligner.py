@@ -286,7 +286,7 @@ class Aligner(nx.DiGraph):
 
 
 if __name__ == '__main__':
-    graph_obj = import_gg_graph('./test_kmer.xml')
+    graph_obj = import_gg_graph('./TestGraphs/test_kmer.xml')
     alignerGraph = Aligner(graph_obj)
     print(graph_obj.nodes['Aln_1_1']['sequence'])
     print(graph_obj.nodes['Aln_1_2']['sequence'])
@@ -299,7 +299,7 @@ if __name__ == '__main__':
     #print(alignerGraph.kmers_of_node('Aln_1_1'))
     #print(alignerGraph.create_query_kmers('TTGACCGATGACCCCGGTT', 3))
     print(alignerGraph.debruin_read_alignment('TTGACCTGACCCGCTTCACCAGTGGAAC',5))
-    #nx.draw(graph_obj, with_labels=True)
-    #plt.show()
+    nx.draw(graph_obj, with_labels=True)
+    plt.show()
 
 
