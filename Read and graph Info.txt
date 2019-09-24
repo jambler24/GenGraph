@@ -1,0 +1,36 @@
+No Mutation
+
+	First 1000 of H37Rv 
+	All 3 isolates the same
+	noMutationRead is from pos 100 to 199 of all 3 isolates
+
+One Substitution
+
+	Changed an A to a C in poition 40 of H37Rv_One_Sub
+	both reads from pos 30 to 129 
+
+One Deletion
+	T deleted at Position 50 of H37Rv_One_Deletion
+	both reads from 30 to 129
+	
+One Insertion
+	G inserted at pos 62 of H37Rv_One_Insertion
+	both reads from 30 to 129
+
+300bp Reverse Compliment
+	Reverse compliment from position 100 to 399
+	read from 50 to 149
+
+300bp Reverse Compliment with One SNP
+	Reverse compliment from position 100 to 399
+	SNP Position at pos 110 changed a G to a T
+	read from 50 to 149
+	
+Mix of SNPS
+	A to C at pos 4
+	C to G at pos 32
+	C to A at pos 118
+	A to C at pos 166
+	C to G at pos 240
+	A to T at pos 993
+	read from 0 to 99

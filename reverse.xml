@@ -1,0 +1,2954 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+  <key attr.name="ids" attr.type="string" for="edge" id="d13" />
+  <key attr.name="sequence" attr.type="string" for="node" id="d12" />
+  <key attr.name="H37Rv_2_rightend" attr.type="long" for="node" id="d11" />
+  <key attr.name="H37Rv_2_leftend" attr.type="long" for="node" id="d10" />
+  <key attr.name="H37Rv_Reverse_rightend" attr.type="long" for="node" id="d9" />
+  <key attr.name="H37Rv_Reverse_leftend" attr.type="long" for="node" id="d8" />
+  <key attr.name="H37Rv_rightend" attr.type="long" for="node" id="d7" />
+  <key attr.name="H37Rv_leftend" attr.type="long" for="node" id="d6" />
+  <key attr.name="ids" attr.type="string" for="node" id="d5" />
+  <key attr.name="start_node" attr.type="string" for="graph" id="d4" />
+  <key attr.name="H37Rv_2_startnode" attr.type="string" for="graph" id="d3" />
+  <key attr.name="H37Rv_Reverse_startnode" attr.type="string" for="graph" id="d2" />
+  <key attr.name="H37Rv_startnode" attr.type="string" for="graph" id="d1" />
+  <key attr.name="isolates" attr.type="string" for="graph" id="d0" />
+  <graph edgedefault="directed">
+    <node id="Aln_1_1">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">1</data>
+      <data key="d7">100</data>
+      <data key="d8">1</data>
+      <data key="d9">100</data>
+      <data key="d10">1</data>
+      <data key="d11">100</data>
+      <data key="d12">TTGACCGATGACCCCGGTTCAGGCTTCACCACAGTGTGGAACGCGGTCGTCTCCGAACTTAACGGCGACCCTAAGGTTGACGACGGACCCAGCAGTGATG</data>
+    </node>
+    <node id="Aln_1_2">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">101</data>
+      <data key="d7">101</data>
+      <data key="d10">101</data>
+      <data key="d11">101</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_3">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">101</data>
+      <data key="d9">101</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_4">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">102</data>
+      <data key="d7">102</data>
+      <data key="d8">102</data>
+      <data key="d9">102</data>
+      <data key="d10">102</data>
+      <data key="d11">102</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_5">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">103</data>
+      <data key="d7">103</data>
+      <data key="d10">103</data>
+      <data key="d11">103</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_6">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">103</data>
+      <data key="d9">103</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_7">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">104</data>
+      <data key="d7">104</data>
+      <data key="d8">104</data>
+      <data key="d9">104</data>
+      <data key="d10">104</data>
+      <data key="d11">104</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_8">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">105</data>
+      <data key="d7">107</data>
+      <data key="d10">105</data>
+      <data key="d11">107</data>
+      <data key="d12">TCT</data>
+    </node>
+    <node id="Aln_1_9">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">105</data>
+      <data key="d9">107</data>
+      <data key="d12">GAG</data>
+    </node>
+    <node id="Aln_1_10">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">108</data>
+      <data key="d7">111</data>
+      <data key="d8">108</data>
+      <data key="d9">111</data>
+      <data key="d10">108</data>
+      <data key="d11">111</data>
+      <data key="d12">CAGC</data>
+    </node>
+    <node id="Aln_1_11">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">112</data>
+      <data key="d9">119</data>
+      <data key="d12">AACAGCCA</data>
+    </node>
+    <node id="Aln_1_12">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">112</data>
+      <data key="d7">112</data>
+      <data key="d10">112</data>
+      <data key="d11">112</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_13">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">120</data>
+      <data key="d9">120</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_14">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">113</data>
+      <data key="d7">113</data>
+      <data key="d8">121</data>
+      <data key="d9">121</data>
+      <data key="d10">113</data>
+      <data key="d11">113</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_15">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">114</data>
+      <data key="d7">114</data>
+      <data key="d10">114</data>
+      <data key="d11">114</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_16">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">122</data>
+      <data key="d9">122</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_17">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">115</data>
+      <data key="d7">116</data>
+      <data key="d8">123</data>
+      <data key="d9">124</data>
+      <data key="d10">115</data>
+      <data key="d11">116</data>
+      <data key="d12">CC</data>
+    </node>
+    <node id="Aln_1_18">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">117</data>
+      <data key="d7">117</data>
+      <data key="d10">117</data>
+      <data key="d11">117</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_19">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">125</data>
+      <data key="d9">125</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_20">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">118</data>
+      <data key="d7">118</data>
+      <data key="d8">126</data>
+      <data key="d9">126</data>
+      <data key="d10">118</data>
+      <data key="d11">118</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_21">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">119</data>
+      <data key="d7">119</data>
+      <data key="d10">119</data>
+      <data key="d11">119</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_22">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">127</data>
+      <data key="d9">127</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_23">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">120</data>
+      <data key="d7">123</data>
+      <data key="d8">128</data>
+      <data key="d9">131</data>
+      <data key="d10">120</data>
+      <data key="d11">123</data>
+      <data key="d12">GACC</data>
+    </node>
+    <node id="Aln_1_24">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">124</data>
+      <data key="d7">124</data>
+      <data key="d10">124</data>
+      <data key="d11">124</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_25">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">132</data>
+      <data key="d9">132</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_26">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">125</data>
+      <data key="d7">126</data>
+      <data key="d8">133</data>
+      <data key="d9">134</data>
+      <data key="d10">125</data>
+      <data key="d11">126</data>
+      <data key="d12">CT</data>
+    </node>
+    <node id="Aln_1_27">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">127</data>
+      <data key="d7">129</data>
+      <data key="d10">127</data>
+      <data key="d11">129</data>
+      <data key="d12">CAG</data>
+    </node>
+    <node id="Aln_1_28">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">135</data>
+      <data key="d9">137</data>
+      <data key="d12">ACA</data>
+    </node>
+    <node id="Aln_1_29">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">130</data>
+      <data key="d7">130</data>
+      <data key="d8">138</data>
+      <data key="d9">138</data>
+      <data key="d10">130</data>
+      <data key="d11">130</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_30">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">131</data>
+      <data key="d7">131</data>
+      <data key="d10">131</data>
+      <data key="d11">131</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_31">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">139</data>
+      <data key="d9">139</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_32">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">132</data>
+      <data key="d7">132</data>
+      <data key="d8">140</data>
+      <data key="d9">140</data>
+      <data key="d10">132</data>
+      <data key="d11">132</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_33">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">133</data>
+      <data key="d7">134</data>
+      <data key="d10">133</data>
+      <data key="d11">134</data>
+      <data key="d12">AG</data>
+    </node>
+    <node id="Aln_1_34">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">141</data>
+      <data key="d9">142</data>
+      <data key="d12">TC</data>
+    </node>
+    <node id="Aln_1_35">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">135</data>
+      <data key="d7">135</data>
+      <data key="d8">143</data>
+      <data key="d9">143</data>
+      <data key="d10">135</data>
+      <data key="d11">135</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_36">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">136</data>
+      <data key="d7">136</data>
+      <data key="d10">136</data>
+      <data key="d11">136</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_37">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">144</data>
+      <data key="d9">144</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_38">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">137</data>
+      <data key="d7">137</data>
+      <data key="d8">145</data>
+      <data key="d9">145</data>
+      <data key="d10">137</data>
+      <data key="d11">137</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_39">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">138</data>
+      <data key="d7">138</data>
+      <data key="d10">138</data>
+      <data key="d11">138</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_40">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">146</data>
+      <data key="d9">146</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_41">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">139</data>
+      <data key="d7">139</data>
+      <data key="d8">147</data>
+      <data key="d9">147</data>
+      <data key="d10">139</data>
+      <data key="d11">139</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_42">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">140</data>
+      <data key="d7">146</data>
+      <data key="d10">140</data>
+      <data key="d11">146</data>
+      <data key="d12">GGCTCAA</data>
+    </node>
+    <node id="Aln_1_43">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">148</data>
+      <data key="d9">154</data>
+      <data key="d12">AAAAGCC</data>
+    </node>
+    <node id="Aln_1_44">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">147</data>
+      <data key="d7">147</data>
+      <data key="d8">155</data>
+      <data key="d9">155</data>
+      <data key="d10">147</data>
+      <data key="d11">147</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_45">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">148</data>
+      <data key="d7">149</data>
+      <data key="d10">148</data>
+      <data key="d11">149</data>
+      <data key="d12">CT</data>
+    </node>
+    <node id="Aln_1_46">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">156</data>
+      <data key="d9">157</data>
+      <data key="d12">TC</data>
+    </node>
+    <node id="Aln_1_47">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">150</data>
+      <data key="d7">151</data>
+      <data key="d8">158</data>
+      <data key="d9">159</data>
+      <data key="d10">150</data>
+      <data key="d11">151</data>
+      <data key="d12">CG</data>
+    </node>
+    <node id="Aln_1_48">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">152</data>
+      <data key="d7">152</data>
+      <data key="d10">152</data>
+      <data key="d11">152</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_49">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">160</data>
+      <data key="d9">160</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_50">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">153</data>
+      <data key="d7">153</data>
+      <data key="d8">161</data>
+      <data key="d9">161</data>
+      <data key="d10">153</data>
+      <data key="d11">153</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_51">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">154</data>
+      <data key="d7">155</data>
+      <data key="d10">154</data>
+      <data key="d11">155</data>
+      <data key="d12">CA</data>
+    </node>
+    <node id="Aln_1_52">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">162</data>
+      <data key="d9">163</data>
+      <data key="d12">GT</data>
+    </node>
+    <node id="Aln_1_53">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">156</data>
+      <data key="d7">160</data>
+      <data key="d8">164</data>
+      <data key="d9">168</data>
+      <data key="d10">156</data>
+      <data key="d11">160</data>
+      <data key="d12">GCCAT</data>
+    </node>
+    <node id="Aln_1_54">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">161</data>
+      <data key="d7">161</data>
+      <data key="d10">161</data>
+      <data key="d11">161</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_55">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">169</data>
+      <data key="d9">169</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_56">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">162</data>
+      <data key="d7">162</data>
+      <data key="d10">162</data>
+      <data key="d11">162</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_57">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">163</data>
+      <data key="d7">164</data>
+      <data key="d8">170</data>
+      <data key="d9">171</data>
+      <data key="d10">163</data>
+      <data key="d11">164</data>
+      <data key="d12">AC</data>
+    </node>
+    <node id="Aln_1_58">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">165</data>
+      <data key="d7">168</data>
+      <data key="d10">165</data>
+      <data key="d11">168</data>
+      <data key="d12">CATC</data>
+    </node>
+    <node id="Aln_1_59">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">172</data>
+      <data key="d9">175</data>
+      <data key="d12">AGCA</data>
+    </node>
+    <node id="Aln_1_60">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">169</data>
+      <data key="d7">169</data>
+      <data key="d8">176</data>
+      <data key="d9">176</data>
+      <data key="d10">169</data>
+      <data key="d11">169</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_61">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">170</data>
+      <data key="d7">170</data>
+      <data key="d10">170</data>
+      <data key="d11">170</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_62">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">177</data>
+      <data key="d9">177</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_63">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">171</data>
+      <data key="d7">173</data>
+      <data key="d8">178</data>
+      <data key="d9">180</data>
+      <data key="d10">171</data>
+      <data key="d11">173</data>
+      <data key="d12">CGA</data>
+    </node>
+    <node id="Aln_1_64">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">181</data>
+      <data key="d9">187</data>
+      <data key="d12">AGCAGCC</data>
+    </node>
+    <node id="Aln_1_65">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">174</data>
+      <data key="d7">174</data>
+      <data key="d10">174</data>
+      <data key="d11">174</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_66">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">188</data>
+      <data key="d9">188</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_67">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">175</data>
+      <data key="d7">175</data>
+      <data key="d8">189</data>
+      <data key="d9">189</data>
+      <data key="d10">175</data>
+      <data key="d11">175</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_68">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">176</data>
+      <data key="d7">176</data>
+      <data key="d10">176</data>
+      <data key="d11">176</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_69">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">190</data>
+      <data key="d9">190</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_70">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">177</data>
+      <data key="d7">177</data>
+      <data key="d8">191</data>
+      <data key="d9">191</data>
+      <data key="d10">177</data>
+      <data key="d11">177</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_71">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">178</data>
+      <data key="d7">180</data>
+      <data key="d10">178</data>
+      <data key="d11">180</data>
+      <data key="d12">TTT</data>
+    </node>
+    <node id="Aln_1_72">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">192</data>
+      <data key="d9">194</data>
+      <data key="d12">GCC</data>
+    </node>
+    <node id="Aln_1_73">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">181</data>
+      <data key="d7">182</data>
+      <data key="d8">195</data>
+      <data key="d9">196</data>
+      <data key="d10">181</data>
+      <data key="d11">182</data>
+      <data key="d12">GC</data>
+    </node>
+    <node id="Aln_1_74">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">183</data>
+      <data key="d7">185</data>
+      <data key="d10">183</data>
+      <data key="d11">185</data>
+      <data key="d12">TCT</data>
+    </node>
+    <node id="Aln_1_75">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">197</data>
+      <data key="d9">199</data>
+      <data key="d12">CTC</data>
+    </node>
+    <node id="Aln_1_76">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">186</data>
+      <data key="d7">186</data>
+      <data key="d8">200</data>
+      <data key="d9">200</data>
+      <data key="d10">186</data>
+      <data key="d11">186</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_77">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">187</data>
+      <data key="d7">187</data>
+      <data key="d10">187</data>
+      <data key="d11">187</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_78">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">201</data>
+      <data key="d9">201</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_79">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">188</data>
+      <data key="d7">189</data>
+      <data key="d8">202</data>
+      <data key="d9">203</data>
+      <data key="d10">188</data>
+      <data key="d11">189</data>
+      <data key="d12">TA</data>
+    </node>
+    <node id="Aln_1_80">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">190</data>
+      <data key="d7">191</data>
+      <data key="d10">190</data>
+      <data key="d11">191</data>
+      <data key="d12">TC</data>
+    </node>
+    <node id="Aln_1_81">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">204</data>
+      <data key="d9">205</data>
+      <data key="d12">CG</data>
+    </node>
+    <node id="Aln_1_82">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">192</data>
+      <data key="d7">192</data>
+      <data key="d8">206</data>
+      <data key="d9">206</data>
+      <data key="d10">192</data>
+      <data key="d11">192</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_83">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">193</data>
+      <data key="d7">193</data>
+      <data key="d10">193</data>
+      <data key="d11">193</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_84">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">207</data>
+      <data key="d9">207</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_85">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">194</data>
+      <data key="d7">195</data>
+      <data key="d8">208</data>
+      <data key="d9">209</data>
+      <data key="d10">194</data>
+      <data key="d11">195</data>
+      <data key="d12">TG</data>
+    </node>
+    <node id="Aln_1_86">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">196</data>
+      <data key="d7">197</data>
+      <data key="d10">196</data>
+      <data key="d11">197</data>
+      <data key="d12">CC</data>
+    </node>
+    <node id="Aln_1_87">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">210</data>
+      <data key="d9">211</data>
+      <data key="d12">GG</data>
+    </node>
+    <node id="Aln_1_88">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">198</data>
+      <data key="d7">198</data>
+      <data key="d8">212</data>
+      <data key="d9">212</data>
+      <data key="d10">198</data>
+      <data key="d11">198</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_89">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">199</data>
+      <data key="d7">200</data>
+      <data key="d10">199</data>
+      <data key="d11">200</data>
+      <data key="d12">AG</data>
+    </node>
+    <node id="Aln_1_90">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">213</data>
+      <data key="d9">214</data>
+      <data key="d12">CT</data>
+    </node>
+    <node id="Aln_1_91">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">201</data>
+      <data key="d7">202</data>
+      <data key="d8">215</data>
+      <data key="d9">216</data>
+      <data key="d10">201</data>
+      <data key="d11">202</data>
+      <data key="d12">CA</data>
+    </node>
+    <node id="Aln_1_92">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">203</data>
+      <data key="d7">203</data>
+      <data key="d10">203</data>
+      <data key="d11">203</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_93">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">217</data>
+      <data key="d9">217</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_94">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">204</data>
+      <data key="d7">204</data>
+      <data key="d8">218</data>
+      <data key="d9">218</data>
+      <data key="d10">204</data>
+      <data key="d11">204</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_95">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">205</data>
+      <data key="d7">205</data>
+      <data key="d10">205</data>
+      <data key="d11">205</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_96">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">219</data>
+      <data key="d9">219</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_97">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">206</data>
+      <data key="d7">206</data>
+      <data key="d8">220</data>
+      <data key="d9">220</data>
+      <data key="d10">206</data>
+      <data key="d11">206</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_98">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">207</data>
+      <data key="d7">207</data>
+      <data key="d10">207</data>
+      <data key="d11">207</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_99">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">221</data>
+      <data key="d9">221</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_100">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">208</data>
+      <data key="d7">208</data>
+      <data key="d8">222</data>
+      <data key="d9">222</data>
+      <data key="d10">208</data>
+      <data key="d11">208</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_101">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">209</data>
+      <data key="d7">209</data>
+      <data key="d10">209</data>
+      <data key="d11">209</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_102">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">223</data>
+      <data key="d9">223</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_103">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">210</data>
+      <data key="d7">210</data>
+      <data key="d8">224</data>
+      <data key="d9">224</data>
+      <data key="d10">210</data>
+      <data key="d11">210</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_104">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">211</data>
+      <data key="d7">211</data>
+      <data key="d10">211</data>
+      <data key="d11">211</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_105">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">225</data>
+      <data key="d9">225</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_106">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">212</data>
+      <data key="d7">212</data>
+      <data key="d8">226</data>
+      <data key="d9">226</data>
+      <data key="d10">212</data>
+      <data key="d11">212</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_107">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">213</data>
+      <data key="d7">213</data>
+      <data key="d10">213</data>
+      <data key="d11">213</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_108">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">227</data>
+      <data key="d9">227</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_109">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">214</data>
+      <data key="d7">214</data>
+      <data key="d8">228</data>
+      <data key="d9">228</data>
+      <data key="d10">214</data>
+      <data key="d11">214</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_110">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">215</data>
+      <data key="d7">237</data>
+      <data key="d10">215</data>
+      <data key="d11">237</data>
+      <data key="d12">ACGAAATCGAGCGCCATCTGCGG</data>
+    </node>
+    <node id="Aln_1_111">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">238</data>
+      <data key="d7">238</data>
+      <data key="d8">229</data>
+      <data key="d9">229</data>
+      <data key="d10">238</data>
+      <data key="d11">238</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_112">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">239</data>
+      <data key="d7">239</data>
+      <data key="d10">239</data>
+      <data key="d11">239</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_113">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">230</data>
+      <data key="d9">230</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_114">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">240</data>
+      <data key="d7">240</data>
+      <data key="d8">231</data>
+      <data key="d9">231</data>
+      <data key="d10">240</data>
+      <data key="d11">240</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_115">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">241</data>
+      <data key="d7">241</data>
+      <data key="d10">241</data>
+      <data key="d11">241</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_116">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">232</data>
+      <data key="d9">232</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_117">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">242</data>
+      <data key="d7">242</data>
+      <data key="d8">233</data>
+      <data key="d9">233</data>
+      <data key="d10">242</data>
+      <data key="d11">242</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_118">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">243</data>
+      <data key="d7">247</data>
+      <data key="d10">243</data>
+      <data key="d11">247</data>
+      <data key="d12">GATTA</data>
+    </node>
+    <node id="Aln_1_119">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">234</data>
+      <data key="d9">238</data>
+      <data key="d12">AGCCG</data>
+    </node>
+    <node id="Aln_1_120">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">248</data>
+      <data key="d7">252</data>
+      <data key="d8">239</data>
+      <data key="d9">243</data>
+      <data key="d10">248</data>
+      <data key="d11">252</data>
+      <data key="d12">CCGAC</data>
+    </node>
+    <node id="Aln_1_121">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">253</data>
+      <data key="d7">253</data>
+      <data key="d10">253</data>
+      <data key="d11">253</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_122">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">244</data>
+      <data key="d9">244</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_123">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">254</data>
+      <data key="d7">256</data>
+      <data key="d8">245</data>
+      <data key="d9">247</data>
+      <data key="d10">254</data>
+      <data key="d11">256</data>
+      <data key="d12">CTC</data>
+    </node>
+    <node id="Aln_1_124">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">257</data>
+      <data key="d7">257</data>
+      <data key="d10">257</data>
+      <data key="d11">257</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_125">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">248</data>
+      <data key="d9">248</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_126">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">258</data>
+      <data key="d7">262</data>
+      <data key="d8">249</data>
+      <data key="d9">253</data>
+      <data key="d10">258</data>
+      <data key="d11">262</data>
+      <data key="d12">CAGCC</data>
+    </node>
+    <node id="Aln_1_127">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">263</data>
+      <data key="d7">267</data>
+      <data key="d10">263</data>
+      <data key="d11">267</data>
+      <data key="d12">GCCGA</data>
+    </node>
+    <node id="Aln_1_128">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">254</data>
+      <data key="d9">258</data>
+      <data key="d12">ATTAG</data>
+    </node>
+    <node id="Aln_1_129">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">268</data>
+      <data key="d7">268</data>
+      <data key="d8">259</data>
+      <data key="d9">259</data>
+      <data key="d10">268</data>
+      <data key="d11">268</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_130">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">269</data>
+      <data key="d7">269</data>
+      <data key="d10">269</data>
+      <data key="d11">269</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_131">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">260</data>
+      <data key="d9">260</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_132">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">270</data>
+      <data key="d7">270</data>
+      <data key="d8">261</data>
+      <data key="d9">261</data>
+      <data key="d10">270</data>
+      <data key="d11">270</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_133">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">271</data>
+      <data key="d7">271</data>
+      <data key="d10">271</data>
+      <data key="d11">271</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_134">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">262</data>
+      <data key="d9">262</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_135">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">272</data>
+      <data key="d7">272</data>
+      <data key="d8">263</data>
+      <data key="d9">263</data>
+      <data key="d10">272</data>
+      <data key="d11">272</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_136">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">264</data>
+      <data key="d9">286</data>
+      <data key="d12">GGCGTCTACCGCGAGCTAAAGCA</data>
+    </node>
+    <node id="Aln_1_137">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">273</data>
+      <data key="d7">273</data>
+      <data key="d8">287</data>
+      <data key="d9">287</data>
+      <data key="d10">273</data>
+      <data key="d11">273</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_138">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">274</data>
+      <data key="d7">274</data>
+      <data key="d10">274</data>
+      <data key="d11">274</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_139">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">288</data>
+      <data key="d9">288</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_140">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">275</data>
+      <data key="d7">275</data>
+      <data key="d8">289</data>
+      <data key="d9">289</data>
+      <data key="d10">275</data>
+      <data key="d11">275</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_141">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">276</data>
+      <data key="d7">276</data>
+      <data key="d10">276</data>
+      <data key="d11">276</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_142">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">290</data>
+      <data key="d9">290</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_143">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">277</data>
+      <data key="d7">277</data>
+      <data key="d8">291</data>
+      <data key="d9">291</data>
+      <data key="d10">277</data>
+      <data key="d11">277</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_144">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">278</data>
+      <data key="d7">278</data>
+      <data key="d10">278</data>
+      <data key="d11">278</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_145">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">292</data>
+      <data key="d9">292</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_146">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">279</data>
+      <data key="d7">279</data>
+      <data key="d8">293</data>
+      <data key="d9">293</data>
+      <data key="d10">279</data>
+      <data key="d11">279</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_147">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">280</data>
+      <data key="d7">280</data>
+      <data key="d10">280</data>
+      <data key="d11">280</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_148">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">294</data>
+      <data key="d9">294</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_149">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">281</data>
+      <data key="d7">281</data>
+      <data key="d8">295</data>
+      <data key="d9">295</data>
+      <data key="d10">281</data>
+      <data key="d11">281</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_150">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">282</data>
+      <data key="d7">282</data>
+      <data key="d10">282</data>
+      <data key="d11">282</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_151">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">296</data>
+      <data key="d9">296</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_152">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">283</data>
+      <data key="d7">283</data>
+      <data key="d8">297</data>
+      <data key="d9">297</data>
+      <data key="d10">283</data>
+      <data key="d11">283</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_153">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">284</data>
+      <data key="d7">284</data>
+      <data key="d10">284</data>
+      <data key="d11">284</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_154">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">298</data>
+      <data key="d9">298</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_155">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">285</data>
+      <data key="d7">286</data>
+      <data key="d8">299</data>
+      <data key="d9">300</data>
+      <data key="d10">285</data>
+      <data key="d11">286</data>
+      <data key="d12">AC</data>
+    </node>
+    <node id="Aln_1_156">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">287</data>
+      <data key="d7">288</data>
+      <data key="d10">287</data>
+      <data key="d11">288</data>
+      <data key="d12">TC</data>
+    </node>
+    <node id="Aln_1_157">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">301</data>
+      <data key="d9">302</data>
+      <data key="d12">GA</data>
+    </node>
+    <node id="Aln_1_158">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">289</data>
+      <data key="d7">289</data>
+      <data key="d8">303</data>
+      <data key="d9">303</data>
+      <data key="d10">289</data>
+      <data key="d11">289</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_159">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">290</data>
+      <data key="d7">291</data>
+      <data key="d10">290</data>
+      <data key="d11">291</data>
+      <data key="d12">GG</data>
+    </node>
+    <node id="Aln_1_160">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">304</data>
+      <data key="d9">305</data>
+      <data key="d12">CC</data>
+    </node>
+    <node id="Aln_1_161">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">292</data>
+      <data key="d7">293</data>
+      <data key="d8">306</data>
+      <data key="d9">307</data>
+      <data key="d10">292</data>
+      <data key="d11">293</data>
+      <data key="d12">GT</data>
+    </node>
+    <node id="Aln_1_162">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">294</data>
+      <data key="d7">294</data>
+      <data key="d10">294</data>
+      <data key="d11">294</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_163">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">308</data>
+      <data key="d9">308</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_164">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">295</data>
+      <data key="d7">295</data>
+      <data key="d8">309</data>
+      <data key="d9">309</data>
+      <data key="d10">295</data>
+      <data key="d11">295</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_165">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">296</data>
+      <data key="d7">297</data>
+      <data key="d10">296</data>
+      <data key="d11">297</data>
+      <data key="d12">GC</data>
+    </node>
+    <node id="Aln_1_166">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">310</data>
+      <data key="d9">311</data>
+      <data key="d12">CT</data>
+    </node>
+    <node id="Aln_1_167">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">298</data>
+      <data key="d7">299</data>
+      <data key="d8">312</data>
+      <data key="d9">313</data>
+      <data key="d10">298</data>
+      <data key="d11">299</data>
+      <data key="d12">AT</data>
+    </node>
+    <node id="Aln_1_168">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">300</data>
+      <data key="d7">300</data>
+      <data key="d10">300</data>
+      <data key="d11">300</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_169">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">314</data>
+      <data key="d9">314</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_170">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">301</data>
+      <data key="d7">301</data>
+      <data key="d8">315</data>
+      <data key="d9">315</data>
+      <data key="d10">301</data>
+      <data key="d11">301</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_171">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">302</data>
+      <data key="d7">304</data>
+      <data key="d10">302</data>
+      <data key="d11">304</data>
+      <data key="d12">CTC</data>
+    </node>
+    <node id="Aln_1_172">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">316</data>
+      <data key="d9">318</data>
+      <data key="d12">TCT</data>
+    </node>
+    <node id="Aln_1_173">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">305</data>
+      <data key="d7">306</data>
+      <data key="d8">319</data>
+      <data key="d9">320</data>
+      <data key="d10">305</data>
+      <data key="d11">306</data>
+      <data key="d12">CG</data>
+    </node>
+    <node id="Aln_1_174">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">307</data>
+      <data key="d7">309</data>
+      <data key="d10">307</data>
+      <data key="d11">309</data>
+      <data key="d12">CCG</data>
+    </node>
+    <node id="Aln_1_175">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">321</data>
+      <data key="d9">323</data>
+      <data key="d12">TTT</data>
+    </node>
+    <node id="Aln_1_176">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">310</data>
+      <data key="d7">310</data>
+      <data key="d8">324</data>
+      <data key="d9">324</data>
+      <data key="d10">310</data>
+      <data key="d11">310</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_177">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">311</data>
+      <data key="d7">317</data>
+      <data key="d10">311</data>
+      <data key="d11">317</data>
+      <data key="d12">CGACCGA</data>
+    </node>
+    <node id="Aln_1_178">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">318</data>
+      <data key="d7">318</data>
+      <data key="d10">318</data>
+      <data key="d11">318</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_179">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">325</data>
+      <data key="d9">325</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_180">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">319</data>
+      <data key="d7">319</data>
+      <data key="d8">326</data>
+      <data key="d9">326</data>
+      <data key="d10">319</data>
+      <data key="d11">319</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_181">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">320</data>
+      <data key="d7">320</data>
+      <data key="d10">320</data>
+      <data key="d11">320</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_182">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">327</data>
+      <data key="d9">327</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_183">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">321</data>
+      <data key="d7">323</data>
+      <data key="d8">328</data>
+      <data key="d9">330</data>
+      <data key="d10">321</data>
+      <data key="d11">323</data>
+      <data key="d12">AGC</data>
+    </node>
+    <node id="Aln_1_184">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">324</data>
+      <data key="d7">324</data>
+      <data key="d10">324</data>
+      <data key="d11">324</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_185">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">331</data>
+      <data key="d9">331</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_186">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">325</data>
+      <data key="d7">325</data>
+      <data key="d8">332</data>
+      <data key="d9">332</data>
+      <data key="d10">325</data>
+      <data key="d11">325</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_187">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">326</data>
+      <data key="d7">329</data>
+      <data key="d10">326</data>
+      <data key="d11">329</data>
+      <data key="d12">ACGA</data>
+    </node>
+    <node id="Aln_1_188">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">333</data>
+      <data key="d9">336</data>
+      <data key="d12">CTAC</data>
+    </node>
+    <node id="Aln_1_189">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">330</data>
+      <data key="d7">331</data>
+      <data key="d8">337</data>
+      <data key="d9">338</data>
+      <data key="d10">330</data>
+      <data key="d11">331</data>
+      <data key="d12">CA</data>
+    </node>
+    <node id="Aln_1_190">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">339</data>
+      <data key="d9">339</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_191">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">332</data>
+      <data key="d7">332</data>
+      <data key="d10">332</data>
+      <data key="d11">332</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_192">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">340</data>
+      <data key="d9">340</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_193">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">333</data>
+      <data key="d7">337</data>
+      <data key="d8">341</data>
+      <data key="d9">345</data>
+      <data key="d10">333</data>
+      <data key="d11">337</data>
+      <data key="d12">TACCG</data>
+    </node>
+    <node id="Aln_1_194">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">338</data>
+      <data key="d7">339</data>
+      <data key="d10">338</data>
+      <data key="d11">339</data>
+      <data key="d12">TG</data>
+    </node>
+    <node id="Aln_1_195">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">346</data>
+      <data key="d9">347</data>
+      <data key="d12">AC</data>
+    </node>
+    <node id="Aln_1_196">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">340</data>
+      <data key="d7">340</data>
+      <data key="d8">348</data>
+      <data key="d9">348</data>
+      <data key="d10">340</data>
+      <data key="d11">340</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_197">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">341</data>
+      <data key="d7">341</data>
+      <data key="d10">341</data>
+      <data key="d11">341</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_198">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">349</data>
+      <data key="d9">349</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_199">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">342</data>
+      <data key="d7">343</data>
+      <data key="d8">350</data>
+      <data key="d9">351</data>
+      <data key="d10">342</data>
+      <data key="d11">343</data>
+      <data key="d12">GC</data>
+    </node>
+    <node id="Aln_1_200">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">344</data>
+      <data key="d7">345</data>
+      <data key="d10">344</data>
+      <data key="d11">345</data>
+      <data key="d12">CT</data>
+    </node>
+    <node id="Aln_1_201">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">352</data>
+      <data key="d9">353</data>
+      <data key="d12">TC</data>
+    </node>
+    <node id="Aln_1_202">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">346</data>
+      <data key="d7">346</data>
+      <data key="d8">354</data>
+      <data key="d9">354</data>
+      <data key="d10">346</data>
+      <data key="d11">346</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_203">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">347</data>
+      <data key="d7">353</data>
+      <data key="d10">347</data>
+      <data key="d11">353</data>
+      <data key="d12">CCGAAAA</data>
+    </node>
+    <node id="Aln_1_204">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">355</data>
+      <data key="d9">361</data>
+      <data key="d12">AACTCGG</data>
+    </node>
+    <node id="Aln_1_205">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">354</data>
+      <data key="d7">354</data>
+      <data key="d8">362</data>
+      <data key="d9">362</data>
+      <data key="d10">354</data>
+      <data key="d11">354</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_206">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">355</data>
+      <data key="d7">355</data>
+      <data key="d10">355</data>
+      <data key="d11">355</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_207">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">363</data>
+      <data key="d9">363</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_208">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">356</data>
+      <data key="d7">356</data>
+      <data key="d8">364</data>
+      <data key="d9">364</data>
+      <data key="d10">356</data>
+      <data key="d11">356</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_209">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">357</data>
+      <data key="d7">357</data>
+      <data key="d10">357</data>
+      <data key="d11">357</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_210">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">365</data>
+      <data key="d9">365</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_211">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">358</data>
+      <data key="d7">358</data>
+      <data key="d8">366</data>
+      <data key="d9">366</data>
+      <data key="d10">358</data>
+      <data key="d11">358</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_212">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">359</data>
+      <data key="d7">360</data>
+      <data key="d10">359</data>
+      <data key="d11">360</data>
+      <data key="d12">CT</data>
+    </node>
+    <node id="Aln_1_213">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">367</data>
+      <data key="d9">368</data>
+      <data key="d12">GA</data>
+    </node>
+    <node id="Aln_1_214">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">361</data>
+      <data key="d7">361</data>
+      <data key="d8">369</data>
+      <data key="d9">369</data>
+      <data key="d10">361</data>
+      <data key="d11">361</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_215">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">362</data>
+      <data key="d7">362</data>
+      <data key="d10">362</data>
+      <data key="d11">362</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_216">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">370</data>
+      <data key="d9">370</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_217">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">363</data>
+      <data key="d7">363</data>
+      <data key="d8">371</data>
+      <data key="d9">371</data>
+      <data key="d10">363</data>
+      <data key="d11">363</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_218">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">364</data>
+      <data key="d7">366</data>
+      <data key="d10">364</data>
+      <data key="d11">366</data>
+      <data key="d12">ACA</data>
+    </node>
+    <node id="Aln_1_219">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">372</data>
+      <data key="d9">374</data>
+      <data key="d12">GAC</data>
+    </node>
+    <node id="Aln_1_220">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">367</data>
+      <data key="d7">368</data>
+      <data key="d8">375</data>
+      <data key="d9">376</data>
+      <data key="d10">367</data>
+      <data key="d11">368</data>
+      <data key="d12">TC</data>
+    </node>
+    <node id="Aln_1_221">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">369</data>
+      <data key="d7">369</data>
+      <data key="d10">369</data>
+      <data key="d11">369</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_222">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">377</data>
+      <data key="d9">377</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_223">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">370</data>
+      <data key="d7">373</data>
+      <data key="d8">378</data>
+      <data key="d9">381</data>
+      <data key="d10">370</data>
+      <data key="d11">373</data>
+      <data key="d12">CCAG</data>
+    </node>
+    <node id="Aln_1_224">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">374</data>
+      <data key="d7">374</data>
+      <data key="d10">374</data>
+      <data key="d11">374</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_225">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">382</data>
+      <data key="d9">382</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_226">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">375</data>
+      <data key="d7">375</data>
+      <data key="d8">383</data>
+      <data key="d9">383</data>
+      <data key="d10">375</data>
+      <data key="d11">375</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_227">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">376</data>
+      <data key="d7">376</data>
+      <data key="d10">376</data>
+      <data key="d11">376</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_228">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">384</data>
+      <data key="d9">384</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_229">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">377</data>
+      <data key="d7">378</data>
+      <data key="d8">385</data>
+      <data key="d9">386</data>
+      <data key="d10">377</data>
+      <data key="d11">378</data>
+      <data key="d12">CC</data>
+    </node>
+    <node id="Aln_1_230">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">379</data>
+      <data key="d7">379</data>
+      <data key="d10">379</data>
+      <data key="d11">379</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_231">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">387</data>
+      <data key="d9">387</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_232">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">380</data>
+      <data key="d7">380</data>
+      <data key="d8">388</data>
+      <data key="d9">388</data>
+      <data key="d10">380</data>
+      <data key="d11">380</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_233">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">381</data>
+      <data key="d7">388</data>
+      <data key="d10">381</data>
+      <data key="d11">388</data>
+      <data key="d12">AACCGACA</data>
+    </node>
+    <node id="Aln_1_234">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">389</data>
+      <data key="d7">389</data>
+      <data key="d10">389</data>
+      <data key="d11">389</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_235">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">389</data>
+      <data key="d9">389</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_236">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">390</data>
+      <data key="d7">393</data>
+      <data key="d8">390</data>
+      <data key="d9">393</data>
+      <data key="d10">390</data>
+      <data key="d11">393</data>
+      <data key="d12">CGAC</data>
+    </node>
+    <node id="Aln_1_237">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">394</data>
+      <data key="d7">396</data>
+      <data key="d10">394</data>
+      <data key="d11">396</data>
+      <data key="d12">GAG</data>
+    </node>
+    <node id="Aln_1_238">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">394</data>
+      <data key="d9">396</data>
+      <data key="d12">TCT</data>
+    </node>
+    <node id="Aln_1_239">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">397</data>
+      <data key="d7">397</data>
+      <data key="d8">397</data>
+      <data key="d9">397</data>
+      <data key="d10">397</data>
+      <data key="d11">397</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_240">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">398</data>
+      <data key="d7">398</data>
+      <data key="d10">398</data>
+      <data key="d11">398</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_241">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">398</data>
+      <data key="d9">398</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_242">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">399</data>
+      <data key="d7">399</data>
+      <data key="d8">399</data>
+      <data key="d9">399</data>
+      <data key="d10">399</data>
+      <data key="d11">399</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_243">
+      <data key="d5">H37Rv,H37Rv_2</data>
+      <data key="d6">400</data>
+      <data key="d7">400</data>
+      <data key="d10">400</data>
+      <data key="d11">400</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_244">
+      <data key="d5">H37Rv_Reverse</data>
+      <data key="d8">400</data>
+      <data key="d9">400</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_245">
+      <data key="d5">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+      <data key="d6">401</data>
+      <data key="d7">1000</data>
+      <data key="d8">401</data>
+      <data key="d9">1000</data>
+      <data key="d10">401</data>
+      <data key="d11">1000</data>
+      <data key="d12">ATGACAGCGCTGCGGCACGGGGCGATAACCAGCACAGTTGGCCAAGTTACTTCACCGAGCGCCCGCACAATACCGATTCCGCTACCGCTGGCGTAACCAGCCTTAACCGTCGCTACACCTTTGATACGTTCGTTATCGGCGCCTCCAACCGGTTCGCGCACGCCGCCGCCTTGGCGATCGCAGAAGCACCCGCCCGCGCTTACAACCCCCTGTTCATCTGGGGCGAGTCCGGTCTCGGCAAGACACACCTGCTACACGCGGCAGGCAACTATGCCCAACGGTTGTTCCCGGGAATGCGGGTCAAATATGTCTCCACCGAGGAATTCACCAACGACTTCATTAACTCGCTCCGCGATGACCGCAAGGTCGCATTCAAACGCAGCTACCGCGACGTAGACGTGCTGTTGGTCGACGACATCCAATTCATTGAAGGCAAAGAGGGTATTCAAGAGGAGTTCTTCCACACCTTCAACACCTTGCACAATGCCAACAAGCAAATCGTCATCTCATCTGACCGCCCACCCAAGCAGCTCGCCACCCTCGAGGACCGGCTGAGAACCCGCTTTGAGTGGGGGCTGATCACTGACGTACAACCACCCG</data>
+    </node>
+    <edge id="0" source="Aln_1_1" target="Aln_1_2">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_1" target="Aln_1_3">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_2" target="Aln_1_4">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_3" target="Aln_1_4">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_4" target="Aln_1_5">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_4" target="Aln_1_6">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_5" target="Aln_1_7">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_6" target="Aln_1_7">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_7" target="Aln_1_8">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_7" target="Aln_1_9">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_8" target="Aln_1_10">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_9" target="Aln_1_10">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_10" target="Aln_1_12">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_10" target="Aln_1_11">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_11" target="Aln_1_13">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_12" target="Aln_1_14">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_13" target="Aln_1_14">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_14" target="Aln_1_15">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_14" target="Aln_1_16">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_15" target="Aln_1_17">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_16" target="Aln_1_17">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_17" target="Aln_1_18">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_17" target="Aln_1_19">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_18" target="Aln_1_20">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_19" target="Aln_1_20">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_20" target="Aln_1_21">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_20" target="Aln_1_22">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_21" target="Aln_1_23">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_22" target="Aln_1_23">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_23" target="Aln_1_24">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_23" target="Aln_1_25">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_24" target="Aln_1_26">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_25" target="Aln_1_26">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_26" target="Aln_1_27">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_26" target="Aln_1_28">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_27" target="Aln_1_29">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_28" target="Aln_1_29">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_29" target="Aln_1_30">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_29" target="Aln_1_31">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_30" target="Aln_1_32">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_31" target="Aln_1_32">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_32" target="Aln_1_33">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_32" target="Aln_1_34">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_33" target="Aln_1_35">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_34" target="Aln_1_35">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_35" target="Aln_1_36">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_35" target="Aln_1_37">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_36" target="Aln_1_38">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_37" target="Aln_1_38">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_38" target="Aln_1_39">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_38" target="Aln_1_40">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_39" target="Aln_1_41">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_40" target="Aln_1_41">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_41" target="Aln_1_42">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_41" target="Aln_1_43">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_42" target="Aln_1_44">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_43" target="Aln_1_44">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_44" target="Aln_1_45">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_44" target="Aln_1_46">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_45" target="Aln_1_47">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_46" target="Aln_1_47">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_47" target="Aln_1_48">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_47" target="Aln_1_49">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_48" target="Aln_1_50">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_49" target="Aln_1_50">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_50" target="Aln_1_51">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_50" target="Aln_1_52">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_51" target="Aln_1_53">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_52" target="Aln_1_53">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_53" target="Aln_1_54">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_53" target="Aln_1_55">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_54" target="Aln_1_56">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_55" target="Aln_1_57">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_56" target="Aln_1_57">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_57" target="Aln_1_58">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_57" target="Aln_1_59">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_58" target="Aln_1_60">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_59" target="Aln_1_60">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_60" target="Aln_1_61">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_60" target="Aln_1_62">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_61" target="Aln_1_63">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_62" target="Aln_1_63">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_63" target="Aln_1_65">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_63" target="Aln_1_64">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_64" target="Aln_1_66">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_65" target="Aln_1_67">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_66" target="Aln_1_67">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_67" target="Aln_1_68">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_67" target="Aln_1_69">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_68" target="Aln_1_70">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_69" target="Aln_1_70">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_70" target="Aln_1_71">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_70" target="Aln_1_72">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_71" target="Aln_1_73">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_72" target="Aln_1_73">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_73" target="Aln_1_74">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_73" target="Aln_1_75">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_74" target="Aln_1_76">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_75" target="Aln_1_76">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_76" target="Aln_1_77">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_76" target="Aln_1_78">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_77" target="Aln_1_79">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_78" target="Aln_1_79">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_79" target="Aln_1_80">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_79" target="Aln_1_81">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_80" target="Aln_1_82">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_81" target="Aln_1_82">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_82" target="Aln_1_83">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_82" target="Aln_1_84">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_83" target="Aln_1_85">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_84" target="Aln_1_85">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_85" target="Aln_1_86">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_85" target="Aln_1_87">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_86" target="Aln_1_88">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_87" target="Aln_1_88">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_88" target="Aln_1_89">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_88" target="Aln_1_90">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_89" target="Aln_1_91">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_90" target="Aln_1_91">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_91" target="Aln_1_92">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_91" target="Aln_1_93">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_92" target="Aln_1_94">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_93" target="Aln_1_94">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_94" target="Aln_1_95">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_94" target="Aln_1_96">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_95" target="Aln_1_97">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_96" target="Aln_1_97">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_97" target="Aln_1_98">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_97" target="Aln_1_99">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_98" target="Aln_1_100">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_99" target="Aln_1_100">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_100" target="Aln_1_101">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_100" target="Aln_1_102">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_101" target="Aln_1_103">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_102" target="Aln_1_103">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_103" target="Aln_1_104">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_103" target="Aln_1_105">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_104" target="Aln_1_106">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_105" target="Aln_1_106">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_106" target="Aln_1_107">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_106" target="Aln_1_108">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_107" target="Aln_1_109">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_108" target="Aln_1_109">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_109" target="Aln_1_110">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_109" target="Aln_1_111">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_110" target="Aln_1_111">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_111" target="Aln_1_112">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_111" target="Aln_1_113">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_112" target="Aln_1_114">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_113" target="Aln_1_114">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_114" target="Aln_1_115">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_114" target="Aln_1_116">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_115" target="Aln_1_117">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_116" target="Aln_1_117">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_117" target="Aln_1_118">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_117" target="Aln_1_119">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_118" target="Aln_1_120">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_119" target="Aln_1_120">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_120" target="Aln_1_121">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_120" target="Aln_1_122">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_121" target="Aln_1_123">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_122" target="Aln_1_123">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_123" target="Aln_1_124">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_123" target="Aln_1_125">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_124" target="Aln_1_126">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_125" target="Aln_1_126">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_126" target="Aln_1_127">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_126" target="Aln_1_128">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_127" target="Aln_1_129">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_128" target="Aln_1_129">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_129" target="Aln_1_130">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_129" target="Aln_1_131">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_130" target="Aln_1_132">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_131" target="Aln_1_132">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_132" target="Aln_1_133">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_132" target="Aln_1_134">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_133" target="Aln_1_135">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_134" target="Aln_1_135">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_135" target="Aln_1_137">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_135" target="Aln_1_136">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_136" target="Aln_1_137">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_137" target="Aln_1_138">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_137" target="Aln_1_139">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_138" target="Aln_1_140">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_139" target="Aln_1_140">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_140" target="Aln_1_141">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_140" target="Aln_1_142">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_141" target="Aln_1_143">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_142" target="Aln_1_143">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_143" target="Aln_1_144">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_143" target="Aln_1_145">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_144" target="Aln_1_146">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_145" target="Aln_1_146">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_146" target="Aln_1_147">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_146" target="Aln_1_148">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_147" target="Aln_1_149">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_148" target="Aln_1_149">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_149" target="Aln_1_150">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_149" target="Aln_1_151">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_150" target="Aln_1_152">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_151" target="Aln_1_152">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_152" target="Aln_1_153">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_152" target="Aln_1_154">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_153" target="Aln_1_155">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_154" target="Aln_1_155">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_155" target="Aln_1_156">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_155" target="Aln_1_157">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_156" target="Aln_1_158">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_157" target="Aln_1_158">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_158" target="Aln_1_159">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_158" target="Aln_1_160">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_159" target="Aln_1_161">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_160" target="Aln_1_161">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_161" target="Aln_1_162">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_161" target="Aln_1_163">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_162" target="Aln_1_164">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_163" target="Aln_1_164">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_164" target="Aln_1_165">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_164" target="Aln_1_166">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_165" target="Aln_1_167">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_166" target="Aln_1_167">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_167" target="Aln_1_168">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_167" target="Aln_1_169">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_168" target="Aln_1_170">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_169" target="Aln_1_170">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_170" target="Aln_1_171">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_170" target="Aln_1_172">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_171" target="Aln_1_173">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_172" target="Aln_1_173">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_173" target="Aln_1_174">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_173" target="Aln_1_175">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_174" target="Aln_1_176">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_175" target="Aln_1_176">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_176" target="Aln_1_177">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_176" target="Aln_1_179">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_177" target="Aln_1_178">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_178" target="Aln_1_180">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_179" target="Aln_1_180">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_180" target="Aln_1_181">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_180" target="Aln_1_182">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_181" target="Aln_1_183">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_182" target="Aln_1_183">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_183" target="Aln_1_184">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_183" target="Aln_1_185">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_184" target="Aln_1_186">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_185" target="Aln_1_186">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_186" target="Aln_1_187">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_186" target="Aln_1_188">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_187" target="Aln_1_189">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_188" target="Aln_1_189">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_189" target="Aln_1_191">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_189" target="Aln_1_190">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_190" target="Aln_1_192">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_191" target="Aln_1_193">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_192" target="Aln_1_193">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_193" target="Aln_1_194">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_193" target="Aln_1_195">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_194" target="Aln_1_196">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_195" target="Aln_1_196">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_196" target="Aln_1_197">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_196" target="Aln_1_198">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_197" target="Aln_1_199">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_198" target="Aln_1_199">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_199" target="Aln_1_200">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_199" target="Aln_1_201">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_200" target="Aln_1_202">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_201" target="Aln_1_202">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_202" target="Aln_1_203">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_202" target="Aln_1_204">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_203" target="Aln_1_205">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_204" target="Aln_1_205">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_205" target="Aln_1_206">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_205" target="Aln_1_207">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_206" target="Aln_1_208">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_207" target="Aln_1_208">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_208" target="Aln_1_209">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_208" target="Aln_1_210">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_209" target="Aln_1_211">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_210" target="Aln_1_211">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_211" target="Aln_1_212">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_211" target="Aln_1_213">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_212" target="Aln_1_214">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_213" target="Aln_1_214">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_214" target="Aln_1_215">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_214" target="Aln_1_216">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_215" target="Aln_1_217">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_216" target="Aln_1_217">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_217" target="Aln_1_218">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_217" target="Aln_1_219">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_218" target="Aln_1_220">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_219" target="Aln_1_220">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_220" target="Aln_1_221">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_220" target="Aln_1_222">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_221" target="Aln_1_223">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_222" target="Aln_1_223">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_223" target="Aln_1_224">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_223" target="Aln_1_225">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_224" target="Aln_1_226">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_225" target="Aln_1_226">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_226" target="Aln_1_227">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_226" target="Aln_1_228">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_227" target="Aln_1_229">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_228" target="Aln_1_229">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_229" target="Aln_1_230">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_229" target="Aln_1_231">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_230" target="Aln_1_232">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_231" target="Aln_1_232">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_232" target="Aln_1_233">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_232" target="Aln_1_235">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_233" target="Aln_1_234">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_234" target="Aln_1_236">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_235" target="Aln_1_236">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_236" target="Aln_1_237">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_236" target="Aln_1_238">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_237" target="Aln_1_239">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_238" target="Aln_1_239">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_239" target="Aln_1_240">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_239" target="Aln_1_241">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_240" target="Aln_1_242">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_241" target="Aln_1_242">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_242" target="Aln_1_243">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_242" target="Aln_1_244">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <edge id="0" source="Aln_1_243" target="Aln_1_245">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_244" target="Aln_1_245">
+      <data key="d13">H37Rv_Reverse</data>
+    </edge>
+    <data key="d0">H37Rv,H37Rv_Reverse,H37Rv_2</data>
+    <data key="d1">Aln_1_1</data>
+    <data key="d2">Aln_1_1</data>
+    <data key="d3">Aln_1_1</data>
+    <data key="d4">Aln_1_1</data>
+  </graph>
+</graphml>
