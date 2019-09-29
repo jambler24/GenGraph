@@ -2,7 +2,7 @@ from gengraph import *
 from gengraphTool import *
 import networkx as nx
 import matplotlib.pyplot as plt
-
+import difflib
 
 
 class Aligner(nx.DiGraph):
@@ -114,6 +114,7 @@ class Aligner(nx.DiGraph):
                 startPos += 1
         return queryKmers
 
+    # need to fix readgaps. It is sometimes still not giving the correct values for gaps in between
     def readGaps(self,nodeNeighbours, query, firstReadInfo, secondReadInfo, distanceBetween):
         #print(distanceBetween)
         global dist
@@ -133,10 +134,18 @@ class Aligner(nx.DiGraph):
                 self.readGaps(newNeighbours, query,firstReadInfo, secondReadInfo, distanceBetween)
             else:
                 return distanceBetween
-        return self.dist
+        return distanceBetween
 
 
     def debruin_read_alignment(self , query, kmerLength):
+        '''
+        Running this Function will also print out blocks of information on the aligned read. Each block of 6 lines will correspond to a single aligned read.
+        :param query: This is the read, as a string, that you want to try and align to the graph.
+        :param kmerLength:
+        :return: returns a dictionary with the sequences that align, x's represent sections of the sequence that doesnt correctly align
+                It also returns the nodes that the sequence aligns to and the position on the first node the sequence starts aligning to and the position on the last node that the sequence ends aligning to.
+                These positions are in string positions, so the first base pair is position 0.
+        '''
         queryKmerDict = self.create_query_kmers(query, kmerLength)
         referenceKmerDict = self.fast_kmer_create(kmerLength)
         finalkmerGroups = []
@@ -201,6 +210,7 @@ class Aligner(nx.DiGraph):
                         tempFinal = tempFinal + list(set(p) - set(tempFinal))
                 finalkmerGroups.append(tempFinal)
         AlignNumber = 1
+        #print(finalkmerGroups)
         for n in finalkmerGroups:
             matchedSquence = ''
             nodesCovered = []
@@ -232,10 +242,15 @@ class Aligner(nx.DiGraph):
                     matchedSquence = matchedSquence + kmerseq
                 else:
                     matchedSquence = matchedSquence + kmerseq[-1]
-            tempValues = {'sequence': matchedSquence, 'nodescoveredbyread': nodesCovered, 'alignmentstartpositioninfirstnode': startpos, 'alignementendpositioninlastnode':endpos}
-            tempAlign = {'Aligned_Read_' + str(AlignNumber): tempValues}
-            AlignNumber += 1
-            finalAlignedReads.update(tempAlign)
+            match = False
+            for s in finalAlignedReads:
+                if matchedSquence in str(finalAlignedReads[s]['sequence']) and set(nodesCovered).issubset(finalAlignedReads[s]['nodescoveredbyread']):
+                    match = True
+            if match == False:
+                tempValues = {'sequence': matchedSquence, 'nodescoveredbyread': nodesCovered, 'alignmentstartpositioninfirstnode': startpos, 'alignementendpositioninlastnode':endpos}
+                tempAlign = {'Aligned_Read_' + str(AlignNumber): tempValues}
+                AlignNumber += 1
+                finalAlignedReads.update(tempAlign)
         # At the moment this returns reads that matched that are any size larger than one kmer length.
         print(finalAlignedReads)
         # finalAlignedReads Are all reads that map 100 percent accurately
@@ -245,61 +260,182 @@ class Aligner(nx.DiGraph):
 
         for z in finalAlignedReads:
             endNode = finalAlignedReads[z]['nodescoveredbyread'][-1]
-            connectedToEndNode = list(self[endNode].keys())
             for c in finalAlignedReads:
                 distanceBetween = 0
-                gapNodes = [endNode]
-                continueTest = True
-                while continueTest == True:
-                    if z != c and list(finalAlignedReads.keys()).index(z) < list(finalAlignedReads.keys()).index(c):
-                        if gapNodes[-1] in finalAlignedReads[c]['nodescoveredbyread'][0]:
-                            distanceBetween = distanceBetween + (finalAlignedReads[c]['alignmentstartpositioninfirstnode'] - 1 - finalAlignedReads[z]['alignementendpositioninlastnode'])
-                            continueTest = False
-                        else:
-                            self.firstPath = True
-                            dist = self.readGaps(list(self[gapNodes[-1]]), query, finalAlignedReads[z], finalAlignedReads[c], distanceBetween)
-                            #print(dist)
-                            distanceBetween = dist
-                            continueTest = False
-                    else:
-                        continueTest = False
-                if distanceBetween < len(query) and distanceBetween != 0:
+                startNode = finalAlignedReads[c]['nodescoveredbyread'][0]
+                if z!=c and list(finalAlignedReads.keys()).index(z) < list(finalAlignedReads.keys()).index(c):
                     if int(z[13:]) + 1 == int(c[13:]):
-                        readGroups.append([z,distanceBetween, c])
-        # May have issues with completing the code at this stage. Double check program exits correctly
-        print(readGroups)
+                        if endNode == startNode:
+                            distanceBetween = finalAlignedReads[c]['alignmentstartpositioninfirstnode'] - finalAlignedReads[z]['alignementendpositioninlastnode']
+                        else:
+                            if nx.has_path(self,endNode,startNode):
+                                path = nx.all_shortest_paths(self,endNode,startNode)
+                                pathList = list(path)
+                                for v in range(len(pathList)):
+                                    tdistanceBetween = 0
+                                    pointer = v
+                                    startDist = 0
+                                    for x in pathList[v]:
+                                        if x == pathList[v][0]:
+                                            startDist = len(self.nodes[x]['sequence']) - finalAlignedReads[z]['alignementendpositioninlastnode'] -1
+                                            tdistanceBetween = tdistanceBetween + startDist
+                                        elif x == pathList[v][-1]:
+                                            tdistanceBetween = tdistanceBetween + finalAlignedReads[c]['alignmentstartpositioninfirstnode']
+                                        else:
+                                            tdistanceBetween = tdistanceBetween + len(self.nodes[x]['sequence'])
+                                    if distanceBetween == 0:
+                                        distanceBetween = tdistanceBetween
+                                    elif tdistanceBetween < distanceBetween and distanceBetween != 0:
+                                        distanceBetween = tdistanceBetween
+                        if distanceBetween < len(query) and distanceBetween != 0:
+                            readGroups.append([z, distanceBetween, c])
+        #print(readGroups)
+
 
         #Alignement read groups will shop the start and end point of the reads but will hva egaps in between that can be larger then gaps between the sections in the reads
         finalReadGroups = []
+        intfinalReadGroups = []
         tempReadGroups = []
 
         for u in readGroups:
             temp =[u[0], u[-1]]
             tempReadGroups.append(temp)
+        #print(tempReadGroups)
+        out = []
+        while len(tempReadGroups) > 0:
+            first, *rest = tempReadGroups
+            first = set(first)
 
-        print(tempReadGroups)
+            lf = -1
+            while len(first) > lf:
+                lf = len(first)
+
+                rest2 = []
+                for r in rest:
+                    if len(first.intersection(set(r))) > 0:
+                        first |= set(r)
+                    else:
+                        rest2.append(r)
+                rest = rest2
+
+            out.append(first)
+            tempReadGroups = rest
+
+        for h in out:
+            readNo = []
+            intermediate = []
+            for y in h:
+                readNo.append(int(y[str(y).rfind('_') + 1:]))
+            readNo.sort()
+            for o in readNo:
+                for p in h:
+                    if o == int(p[str(p).rfind('_') + 1:]):
+                        intermediate.append(p)
+            intfinalReadGroups.append(intermediate)
+        #print(intfinalReadGroups)
+
+        for x in intfinalReadGroups:
+            readsWithDist = []
+            for c in range(len(x)-1):
+                for z in readGroups:
+                    if z[0] == x[c] and z[-1] == x[c+1]:
+                        if c == 0:
+                            readsWithDist.append(x[c])
+                            readsWithDist.append(z[1])
+                            readsWithDist.append(x[c+1])
+                        else:
+                            readsWithDist.append(z[1])
+                            readsWithDist.append(x[c+1])
+            finalReadGroups.append(readsWithDist)
+
         print(finalReadGroups)
 
+        allAlignedReads = {}
+        AlignNo = 1
+        for z in finalReadGroups:
+            sequence = ''
+            checkPercentSeq = ''
+            xCounter = 0
+            nodesCoveredByRead = []
+            startAlignPos = 0
+            endAlignPos = 0
+            percentOfQuery = 0
+            percentAligned = 0
+            for i in range(len(z)):
+                if i == 0:
+                    readInfo = finalAlignedReads[z[i]]
+                    startAlignPos = readInfo['alignmentstartpositioninfirstnode']
+                    sequence = sequence + str(readInfo['sequence'])
+                    checkPercentSeq = checkPercentSeq + str(readInfo['sequence'])
+                    nodesCoveredByRead.extend(x for x in readInfo['nodescoveredbyread'] if x not in nodesCoveredByRead)
+                elif i == len(z) - 1:
+                    readInfo = finalAlignedReads[z[i]]
+                    endAlignPos = readInfo['alignementendpositioninlastnode']
+                    sequence = sequence + str(readInfo['sequence'])
+                    checkPercentSeq = checkPercentSeq + str(readInfo['sequence'])
+                    nodesCoveredByRead.extend(x for x in readInfo['nodescoveredbyread'] if x not in nodesCoveredByRead)
+                elif i%2 == 0:
+                    readInfo = finalAlignedReads[z[i]]
+                    sequence = sequence + str(readInfo['sequence'])
+                    checkPercentSeq = checkPercentSeq + str(readInfo['sequence'])
+                    nodesCoveredByRead.extend(x for x in readInfo['nodescoveredbyread'] if x not in nodesCoveredByRead)
+                else:
+                    for v in range(int(z[i])):
+                        xCounter += 1
+                        sequence = sequence + 'x'
+            nodeNos = []
+            newNodesCoveredByRead = []
+            for r in nodesCoveredByRead:
+                nodeNos.append(r[str(r).rfind('_') + 1:])
+            for a in nodeNos:
+                for b in nodesCoveredByRead:
+                    if a == b[str(b).rfind('_') + 1:]:
+                        newNodesCoveredByRead.append(b)
 
+            percentOfQuery = difflib.SequenceMatcher(None, query, checkPercentSeq).ratio() * 100
+            percentAligned = (len(sequence)-xCounter)/len(sequence)*100
+            tempVal = {'sequence':sequence, 'nodescoveredbyread':newNodesCoveredByRead, 'alignmentstartpositioninfirstnode':startAlignPos, 'alignementendpositioninlastnode':endAlignPos,
+                       'percentageofqueryaligned':percentOfQuery,'percentageofalignedreadtograph':percentAligned}
+            key = {'Alignment_'+str(AlignNo):tempVal}
+            AlignNo += 1
+            allAlignedReads.update(key)
+        print(allAlignedReads)
+        print('6 line block format for each aligned read')
+        print('Line 1: The Aligned read sequence ')
+        print('Line 2: The Nodes that the aligned read covers')
+        print('Line 3: The starting alignment position on the first node involved in the alignment')
+        print('Line 4: The ending alignment position on the last node involved in the alignment')
+        print('Line 5: Percentage of the initial query that has aligned to the graph')
+        print('Line 6:Percentage of the aligned read that has successfully aligned to the graph')
+        print()
 
+        for t in list(allAlignedReads.keys()):
+            print(allAlignedReads[t]['sequence'])
+            print(allAlignedReads[t]['nodescoveredbyread'])
+            print(allAlignedReads[t]['alignmentstartpositioninfirstnode'])
+            print(allAlignedReads[t]['alignementendpositioninlastnode'])
+            print(allAlignedReads[t]['percentageofqueryaligned'])
+            print(allAlignedReads[t]['percentageofalignedreadtograph'])
+            print()
 
+        return allAlignedReads
 
 
 if __name__ == '__main__':
     graph_obj = import_gg_graph('./TestGraphs/test_kmer.xml')
     alignerGraph = Aligner(graph_obj)
-    print(graph_obj.nodes['Aln_1_1']['sequence'])
-    print(graph_obj.nodes['Aln_1_2']['sequence'])
-    print(graph_obj.nodes['Aln_1_4']['sequence'])
-    print(graph_obj.nodes['Aln_1_5']['sequence'])
-    print(graph_obj.nodes['Aln_1_7']['sequence'])
-    print(graph_obj.nodes['Aln_1_8']['sequence'])
-    print(graph_obj.nodes['Aln_1_10']['sequence'])
+    #print(graph_obj.nodes['Aln_1_1']['sequence'])
+    #print(graph_obj.nodes['Aln_1_2']['sequence'])
+    #print(graph_obj.nodes['Aln_1_4']['sequence'])
+    #print(graph_obj.nodes['Aln_1_5']['sequence'])
+    #print(graph_obj.nodes['Aln_1_7']['sequence'])
+    #print(graph_obj.nodes['Aln_1_8']['sequence'])
+    #print(graph_obj.nodes['Aln_1_10']['sequence'])
     #print(alignerGraph.fast_kmer_create(4))
     #print(alignerGraph.kmers_of_node('Aln_1_1'))
     #print(alignerGraph.create_query_kmers('TTGACCGATGACCCCGGTT', 3))
-    print(alignerGraph.debruin_read_alignment('TTGACCTGACCCGCTTCACCAGTGGAAC',5))
-    nx.draw(graph_obj, with_labels=True)
-    plt.show()
+    alignerGraph.debruin_read_alignment('TTGACCTGACCCGCTTCACCAGTGGAAC',4)
+    #nx.draw(graph_obj, with_labels=True)
+    #plt.show()
 
 
