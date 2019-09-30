@@ -201,6 +201,12 @@ class GgDiGraph(nx.DiGraph):
 
 # ---------------------------------------------------- New functions under testing
 
+	#Sequence_Homology_Functions - Liam
+	
+#-----------------------------------------------------"SequenceHomology" functions will be added soon
+
+	
+
 
 def import_gg_graph(path):
 	'''
