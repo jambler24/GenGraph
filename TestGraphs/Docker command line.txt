@@ -1,1 +1,1 @@
-docker run -ti -v C:/Users/Campbell/Documents/Work/GengraphProject/GenGraph:/infiles -v C:/Users/Campbell/Documents/Work/GengraphProject/GenGraph:/genomes ggimage make_genome_graph --seq_file /infiles/sequences.txt --out_file_name no_mutation --out_file_path /genomes
+docker run -ti -v C:/Users/Campbell/Documents/Work/GengraphProject/GenGraph/TestGraphs:/infiles -v C:/Users/Campbell/Documents/Work/GengraphProject/GenGraph/TestGraphs:/genomes ggimage make_genome_graph --seq_file /infiles/sequences.txt --out_file_name no_mutation --out_file_path /genomes
