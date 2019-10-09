@@ -209,7 +209,7 @@ class GgDiGraph(nx.DiGraph):
 #-----------------------------------------------------"SequenceHomology" functions added below
 
 	def nucleotide_sequence_alignment(pos1, pos2, path, isolate1, isolate2):
-		"""
+		"""Extracts the same gene sequence from two different isolates and performs a pairwise alignment
 	    :param pos1: start position of gene in isolate1
 	    :param pos2: end position of gene in isolate1
 	    :param path: path to annotation file containing isolate1 and isolate2
@@ -259,7 +259,8 @@ class GgDiGraph(nx.DiGraph):
 	    return subseq1, subseq2_coords, subseq2, score, nucleotide_alignment, nucleotide_matrix, ancestral, derived
 	
 	def protein_sequence_alignment(pos1, pos2, path, isolate1, isolate2):
-		"""
+		"""converts extracted gene sequences in "nucleotide_alignment" to protein sequences and performs a
+    		protein pairwise alignment
 	    :param pos1: start position of gene in isolate1
 	    :param pos2: end position of gene in isolate1
 	    :param path: path to annotation file containing isolate1 and isolate2
@@ -439,7 +440,8 @@ class GgDiGraph(nx.DiGraph):
 
 	def substitution_detection(pos1, pos2, path, isolate1, isolate2):
 
-	    """
+	    """Uses the nucleotide and protein pairwise alignments to detect substitutions and any codon/amino acid changes that occur
+	    and reports them in a Pandas dataframe in VCF format
 	    :param pos1: start position of gene in isolate1
 	    :param pos2: end position of gene in isolate1
 	    :param path: path to annotation file containing isolate1 and isolate2
@@ -686,7 +688,7 @@ class GgDiGraph(nx.DiGraph):
 
 	def insertion_detection(pos1, pos2, path, isolate1, isolate2):
 
-	    """
+	    """uses the nucleotide alignment to detect insertions and reports them in a Pandas dataframe in VCF format
 	    :param pos1: start position of gene in isolate1
 	    :param pos2: end position of gene in isolate1
 	    :param path: path to annotation file containing isolate1 and isolate2
@@ -824,7 +826,7 @@ class GgDiGraph(nx.DiGraph):
 	
 	def deletion_detection(pos1, pos2, path, isolate1, isolate2):
 
-	    """
+	    """uses the nucleotide alignment to detect deletions and reports them in a Pandas dataframe in VCF format
 	    :param pos1: start position of gene in isolate1
 	    :param pos2: end position of gene in isolate1
 	    :param path: path to annotation file containing isolate1 and isolate2
@@ -988,7 +990,8 @@ class GgDiGraph(nx.DiGraph):
 
 	def scoring_matrix(pos1, pos2, path, isolate1, isolate2):
 
-	    """
+	    """gene classification function that uses protein sequence similarity of the same gene from two different isolates 
+    		to determine whether a gene is core, accessory or unique
 	    :param pos1: start position of gene in isolate1
 	    :param pos2: end position of gene in isolate1
 	    :param path: path to annotation file containing isolate1 and isolate2
