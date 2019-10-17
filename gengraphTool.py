@@ -1,7 +1,6 @@
 
 from gengraph import *
 
-
 if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser(description='''Welcome to GenGraph v0.1''', epilog="""Tools for the creation and use of graph genomes""")
