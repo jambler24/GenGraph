@@ -209,76 +209,121 @@ class GgDiGraph(nx.DiGraph):
 #-----------------------------------------------------"SequenceHomology" functions added below
 
 	def nucleotide_sequence_alignment(pos1, pos2, path, isolate1, isolate2):
-		"""Extracts the same gene sequence from two different isolates and performs a pairwise alignment
-	    :param pos1: start position of gene in isolate1
-	    :param pos2: end position of gene in isolate1
-	    :param path: path to annotation file containing isolate1 and isolate2
-	    :param isolate1: ancestral strain (i.e. H37Rv)
-	    :param isolate2: derived strain (e.g. H37Ra)
-	    :return:
+		
+		"""extracts the same gene sequences from two isolates and performs a pairwise alignment
+	    	:param pos1: start position of gene in isolate1
+	    	:param pos2: end position of gene in isolate1
+	    	:param path: path to genome graph contained within XML file containing isolate1 and isolate2
+	    	:param isolate1: the first strain from the genome graph being compared (i.e. H37Rv in this case since it is being used as a reference)
+	    	:param isolate2: the second strain from the genome graph being compared (i.e. H37Ra strain)
+	    	:return:
 
-	    subseq1 - nucleotide sequence string of gene found in isolate1
-	    subseq2_coords - the converted coordinates to allow extraction of the same gene sequence in isolate2
-	    subseq2 - nucleotide sequence string of gene found in isolate2
-	    score - the similarity score of the two gene sequences
-	    nucleotide_alignment - the pairwise alignment of the two nucleotide alignments
-	    nucleotide_matrix - a NumPy array version of the pairwise alignment to allow iteration for mutation detection in later functions
-	    ancestral - the NumPy array version of "subseq1"
-	    derived - the NumPy array version of "subseq2"
-	    """
+	    	subseq1 - nucleotide sequence string of gene found in isolate1
+	    	subseq2_coords - the converted coordinates to allow extraction of the same gene sequence in isolate2
+	    	subseq2 - nucleotide sequence string of gene found in isolate2
+	    	score - the similarity score of the two gene sequences
+	    	nucleotide_alignment - the pairwise alignment of the two nucleotide alignments
+	    	nucleotide_matrix - a NumPy array version of the pairwise alignment to allow iteration for mutation detection in later functions
+	    	isolate1_gene - the alignment array version of "subseq1"
+	    	isolate2_gene - the alignment array version of "subseq2"
 
-	    # IMPORT .XML FILE AND EXTRACT GENE SEQUENCE FROM THE DIFFERENT STRAINS
+	    	NOTES
+	    	-------------
 
-	    graph_obj = import_gg_graph(path)
-	    # extract subgraphs from both isolates you want to compare for a specified nucleotide range
-	    # isolate1 needs to be the ancestral strain and isolate2 the derived strain in order for this function to work
-	    subseq1 = extract_original_seq_region_fast(graph_obj, pos1, pos2, isolate1)
-	    # "pos1" and "pos2" are relative to ancestral strain and so need to convert coords to get correct sequence in derived strain
-	    # so that similar regions are being compared between the strains
-	    subseq2_coords = convert_coordinates(graph_obj, pos1, pos2, isolate1, isolate2)
-	    subseq2_coords = list(subseq2_coords.values())
-	    subseq2 = extract_original_seq_region_fast(graph_obj, subseq2_coords[0], subseq2_coords[1], isolate2)
+	    	this function is only able to align two similar sequences and doesn't allow for multiple sequence alignment needed for
+	    	sequence homology assessment. Future work should be directed toward adding this capability to the function.
 
-	    # PERFORM NUCLEOTIDE ALIGNMENT using Biopython module
+	    	EXAMPLE
+	    	-------------
 
-	    aligner = Align.PairwiseAligner()
-	    aligner.mode = 'local'
-	    aligner.open_gap_score = -0.5
-	    #aligner.mismatch_score = -1
-	    #aligner.extend_gap_score = -1
-	    nucleotide_alignment = aligner.align(subseq1, subseq2)[0]# produces many different alignments for the same two sequences, of which the first one will be chosen
-	    list_alignment = list(str(nucleotide_alignment).splitlines())# convert alignment to string to be able to be to loop through each nucleotide - 'PairwiseAlign is not iterable'
-	    # create an array where each character in alignment gets its own index
-	    ancestral = np.array(list(list_alignment[0]))
-	    derived = np.array(list(list_alignment[2]))
-	    aligned = np.array(list(list_alignment[1]))
-	    nucleotide_matrix = np.row_stack((ancestral, aligned, derived))
-	    matches = sum(np.char.count(aligned, '|'))
-	    score = "Similarity = %.1f:" % (matches / (len(subseq1)) * 100)
+	    	comparing the carB gene sequence from the H37Rv and H37Ra strains extracted from an XML file named "H37R_pangenome.xml"
 
-	    return subseq1, subseq2_coords, subseq2, score, nucleotide_alignment, nucleotide_matrix, ancestral, derived
+			nucleotide_sequence_alignment(1557101, 1560448, './H37R_pangenome.xml', 'H37Rv', 'H37Ra')
+
+
+	    	"""
+
+	    	# IMPORT .XML FILE AND EXTRACT GENE SEQUENCE FROM THE DIFFERENT STRAINS
+
+	    	graph_obj = import_gg_graph(path)
+	    	# extract subgraphs from both isolates you want to compare for a specified nucleotide range
+	    	# isolate1 needs to be the ancestral strain and isolate2 the derived strain in order for this function to work
+	    	subseq1 = extract_original_seq_region_fast(graph_obj, pos1, pos2, isolate1)
+	    	# "pos1" and "pos2" are relative to ancestral strain and so need to convert coords to get correct sequence in derived strain
+	    	# so that similar regions are being compared between the strains
+	    	subseq2_coords = convert_coordinates(graph_obj, pos1, pos2, isolate1, isolate2)
+	    	subseq2_coords = list(subseq2_coords.values())
+	    	subseq2 = extract_original_seq_region_fast(graph_obj, subseq2_coords[0], subseq2_coords[1], isolate2)
+
+	    	#mimic deletion in carB gene for "deletion_detection" function example
+
+	    	#subseq2 = subseq2.replace('CCC', '', 1)
+
+	    	#mimic insertion in carB gene for "insertion_detection" function example
+
+	    	#subseq1 = subseq1.replace('CCC', '', 1)
+
+	    	#mimic SNP in carB gene for "substitution_detection" function example
+
+	    	#subseq1 = subseq1.replace('T', 'C', 1)
+
+	    	# PERFORM NUCLEOTIDE ALIGNMENT using Biopython module
+
+	    	aligner = Align.PairwiseAligner()
+	    	aligner.mode = 'local'
+	    	aligner.open_gap_score = -0.5
+		nucleotide_alignment = aligner.align(subseq1, subseq2)[0]# produces many different alignments for the same two sequences, of which the first one will be chosen
+	    	list_alignment = list(str(nucleotide_alignment).splitlines())# convert alignment to string to be able to be to loop through each nucleotide - 'PairwiseAlign is not iterable'
+	    	# create an array where each character in alignment gets its own index
+	    	isolate1_gene = np.array(list(list_alignment[0]))
+	    	isolate2_gene = np.array(list(list_alignment[2]))
+	    	aligned = np.array(list(list_alignment[1]))
+	    	nucleotide_matrix = np.row_stack((isolate1_gene, aligned, isolate2_gene))
+	    	matches = sum(np.char.count(aligned, '|'))
+	    	score = "Similarity = %.1f:" % (matches / (len(subseq1)) * 100)
+
+	    	return subseq1, subseq2_coords, subseq2, score, nucleotide_alignment, nucleotide_matrix, isolate1_gene, isolate2_gene
+
 	
 	def protein_sequence_alignment(pos1, pos2, path, isolate1, isolate2):
-		"""converts extracted gene sequences in "nucleotide_alignment" to protein sequences and performs a
-    		protein pairwise alignment
+
+		"""converts extracted gene sequences in "nucleotide_alignment" to protein sequences and performs protein pairwise alignment
 	    :param pos1: start position of gene in isolate1
 	    :param pos2: end position of gene in isolate1
-	    :param path: path to annotation file containing isolate1 and isolate2
-	    :param isolate1: ancestral strain (i.e. H37Rv)
-	    :param isolate2: derived strain (e.g. H37Ra)
+	    :param path: path to genome graph contained within XML file containing isolate1 and isolate2
+	    :param isolate1: the first strain from the genome graph being compared(i.e. H37Rv in this case since it is being used as a reference)
+	    :param isolate2: the second strain from the genome graph being compared (i.e. H37Ra strain)
 	    :return:
 	    protein_alignment: the pairwise alignment of the amino acid sequences converted from the nucleotide sequences
 	    of "subseq1" (ancestral protein) and "subseq2" (derived protein)
 	    protein_matrix: a NumPy array version of the pairwise alignment to allow iteration for amino acid change detection
-	    ancestral_protein: a Numpy array version of the ancestral protein - the first row of "protein_matrix"
+	    isolate1_protein: a Numpy array version of the ancestral protein - the first row of "protein_matrix"
 	    aligned_protein: a NumPy array version of the alignment of the two proteins - the second row of "protein_matrix"
-	    derived_protein: a NumPy array version of the derived protein - the third row of "protein_matrix"
+	    isolate2_protein: a NumPy array version of the derived protein - the third row of "protein_matrix"
 	    protein1_amino_acids: a list version of "ancestral_protein"
 	    protein2_amino_acids: a list version of "derived_protein"
+
+	    NOTES
+	    -----------------
+
+	    this function is only able to align two similar protein sequences and doesn't allow for multiple sequence alignment needed for
+	    sequence homology assessment. Future work should be directed toward adding this capability to the function.
+
+	    An original aligner was developed to allow for protein pairwise alignment but may presents bugs as unit testing was
+	    not done
+
+	    EXAMPLE
+	    -----------------
+
+	    comparing the translated versions of the carB gene sequences from the H37Rv and H37Ra strains extracted from an XML file named "H37R_pangenome.xml"
+
+		protein_sequence_alignment(1557101, 1560448, './H37R_pangenome.xml', 'H37Rv', 'H37Ra')
+
 	    """
 
-	    subseq1, subseq2_coords, subseq2, score, nucleotide_alignment, nucleotide_matrix, ancestral, derived = nucleotide_sequence_alignment(pos1, pos2, path, isolate1, isolate2)
-
+	    subseq1, subseq2_coords, subseq2, score, nucleotide_alignment, nucleotide_matrix, isolate1_gene, isolate2_gene = nucleotide_sequence_alignment(pos1, pos2, path, isolate1, isolate2)
+	    print(isolate1_gene)
+	    print(isolate2_gene)
 	    # ALIGNMENT - Protein sequence
 
 	    # create protein sequences from nucleotide sequences "subseq1" and "subseq2"
@@ -302,24 +347,29 @@ class GgDiGraph(nx.DiGraph):
 		'TAC': 'Y', 'TAT': 'Y', 'TAA': '_', 'TAG': '_',
 		'TGC': 'C', 'TGT': 'C', 'TGA': '_', 'TGG': 'W',
 	    }
+
 	    protein1 = ""
 	    protein2 = ""
-	    if len(subseq1) % 3 == 0:
-		for i in range(0, len(subseq1), 3):
-		    codon = subseq1[i:i + 3]
-		    protein1 += table[codon]
-	    if len(subseq2) % 3 == 0:
-		for i in range(0, len(subseq2), 3):
-		    codon = subseq2[i:i + 3]
-		    protein2 += table[codon]
+	    subseq1_codons = [subseq1[i:i + 3] for i in range(0, len(subseq1), 3)]
+	    subseq2_codons = [subseq2[i:i + 3] for i in range(0, len(subseq2), 3)]
+
+	    for i in range(len(subseq1_codons)):
+		if len(subseq1_codons[i]) % 3 == 0:
+		    protein1 += table[subseq1_codons[i]]
+		else:
+		    protein1 += '-'
+
+	    for i in range(len(subseq2_codons)):
+		if len(subseq2) % 3 == 0:
+		    protein2 += table[subseq2_codons[i]]
+		else:
+		    protein2 += '-'
 
 	    protein1_amino_acids = list(protein1)
 	    protein2_amino_acids = list(protein2)
-	    #print(protein1)
-	    #print(protein2)
 
-	    # tried to perform protein pairwise alignment using Biopython but was very buggy - created an alignment tool below
-	    # to perform that function
+	    # tried to perform protein pairwise alignment using Biopython but presented a lot of bugs - created an alignment tool below
+	    # the commented-out code
 
 	    # perform protein pairwise alignment - #since we are looking at coding regions, let's take the two protein sequences and align them to see which amino acids are different between them
 	    #aligner = Align.PairwiseAligner()
@@ -363,7 +413,7 @@ class GgDiGraph(nx.DiGraph):
 			    pointerTwo += 1
 
 			elif pointerOne > 0 and pointerTwo > 0 and stringOne[pointerOne - 1] == stringTwo[pointerTwo - 1]:
-			    if stringOne[pointerOne + 1] == stringTwo[pointerTwo + 1]:
+			    if stringOne[pointerOne + 1] == stringTwo[pointerTwo + 1] and stringOne[pointerOne + 1] != stringTwo[pointerTwo] and stringOne[pointerOne] != stringTwo[pointerTwo + 1]:
 				finalStringOne = finalStringOne + str(stringOne[pointerOne])
 				finalStringTwo = finalStringTwo + str(stringTwo[pointerTwo])
 				middleString = middleString + 'X'
@@ -431,69 +481,99 @@ class GgDiGraph(nx.DiGraph):
 
 	    protein_alignment = finalStringOne + '\n' + middleString + '\n' + finalStringTwo
 
-	    ancestral_protein = np.array(list(finalStringOne))
+	    isolate1_protein = np.array(list(finalStringOne))
 	    aligned_protein = np.array(list(middleString))
-	    derived_protein = np.array(list(finalStringTwo))
-	    protein_matrix = np.row_stack((ancestral_protein, aligned_protein, derived_protein))
+	    isolate2_protein = np.array(list(finalStringTwo))
+	    protein_matrix = np.row_stack((isolate1_protein, aligned_protein, isolate2_protein))
 
-	    return protein_alignment, protein_matrix, ancestral_protein, aligned_protein, derived_protein, protein1_amino_acids, protein2_amino_acids
+	    return protein_alignment, protein_matrix, isolate1_protein, aligned_protein, isolate2_protein, protein1_amino_acids, protein2_amino_acids
+
 
 	def substitution_detection(pos1, pos2, path, isolate1, isolate2):
 
-	    """Uses the nucleotide and protein pairwise alignments to detect substitutions and any codon/amino acid changes that occur
-	    and reports them in a Pandas dataframe in VCF format
+    	"""uses the nucleotide and protein pairwise alignments to detect substitutions and any codon/amino acid changes that occur
 	    :param pos1: start position of gene in isolate1
 	    :param pos2: end position of gene in isolate1
-	    :param path: path to annotation file containing isolate1 and isolate2
-	    :param isolate1: ancestral strain (i.e. H37Rv)
-	    :param isolate2: derived strain (e.g. H37Ra)
+	    :param path: path to genome graph contained within XML file containing isolate1 and isolate2
+	    :param isolate1: the first strain from the genome graph being compared(i.e. H37Rv in this case since it is being used as a reference)
+	    :param isolate2: the second strain from the genome graph being compared (i.e. H37Ra strain)
 	    :return:
-	    df_substitutions: Pandas dataframe reporting any substitutions that occurred between the ancestral and derived
+	    df_substitutions: Pandas DataFrame reporting any substitutions that occurred between the "isolate1" and "isolate2"
 	    versions of the gene
+
+	    NOTES
+	    -------------
+
+	    This function allows for detection of substitutions and the effects these substitutions have on coding sequences.
+	    However, in order to assess the biological significance of these substitutions, the ability for
+	    multiple sequence alignment to be performed in the function is needed.
+
+	    This function identifies any amino acid changes that occur due to substitutions.
+	    This function can't discern whether an amino acid change is conserved or not
+	    (i.e. a SNP that leads to an amino acid change from leucine to isoleucine represents a conservative mutation)
+
+	    positions where substitutions occur are reported relative to "isolate1" which will most likely be the H37Rv since it
+	    is used as a reference
+
+	    EXAMPLE
+	    -------------
+
+	    using the carB gene sequences from "isolate1" and "isolate2" as an example:
+
+		substitution_detection(1557101, 1560448, './H37R_pangenome.xml', 'H37Rv', 'H37Ra')
+
+		this will return "no substitutions in the coding sequence (CDS)" since these sequences are the same in both strains
+
+	    now let's mimic a SNP that occurs between the H37Rv and H37Ra carB genes:
+
+		search for "mimic SNP in carB gene" in the "nucleotide_sequence_alignment" function and use code below comment
+		to mimic SNP. Run code to show how SNP that occurs between two gene sequences is identified and displayed in Pandas
+		DataFrame
+
 	    """
 
-	    subseq1, subseq2_coords, subseq2, score, nucleotide_alignment, nucleotide_matrix, ancestral, derived = nucleotide_sequence_alignment(pos1, pos2, path, isolate1, isolate2)
-	    protein_alignment, protein_matrix, ancestral_protein, aligned_protein, derived_protein, protein1_amino_acids, protein2_amino_acids = protein_sequence_alignment(pos1, pos2, path, isolate1, isolate2)
+	    subseq1, subseq2_coords, subseq2, score, nucleotide_alignment, nucleotide_matrix, isolate1_gene, isolate2_gene = nucleotide_sequence_alignment(pos1, pos2, path, isolate1, isolate2)
+	    protein_alignment, protein_matrix, isolate1_protein, aligned_protein, isolate2_protein, protein1_amino_acids, protein2_amino_acids = protein_sequence_alignment(pos1, pos2, path, isolate1, isolate2)
 
 	    # positions
 	    # the position of a nucleotide in the alignment and in the genome are different
 	    # need to get the position from the alignment and minus the number of gaps that have occurred during the alignment to get actual position
 
 	    substitution_positions = []
-	    for i in range(len(ancestral)):
+	    for i in range(len(isolate1_gene)):
 		if nucleotide_matrix[1][i] == 'X' or nucleotide_matrix[1][i] == '.' and nucleotide_matrix[0][i] != '.':
-		    v = list(nucleotide_matrix[1][:i])
-		    u = v.count('-')
-		    substitution_positions.append(pos1 + i - u)
+		    alignment_symbols = list(nucleotide_matrix[1][:i])
+		    gaps = alignment_symbols.count('-')
+		    substitution_positions.append(pos1 + i - gaps)
 
 	    #nucleotides at those positions
 
-	    substitution_nucleotides_ref = [nucleotide_matrix[0][j] for j in range(len(ancestral)) if nucleotide_matrix[1][j] == 'X' or nucleotide_matrix[1][j] == '.' and nucleotide_matrix[0][j] != '.']
-	    substitution_nucleotides_alt = [nucleotide_matrix[2][j] for j in range(len(ancestral)) if nucleotide_matrix[1][j] == 'X' or nucleotide_matrix[1][j] == '.' and nucleotide_matrix[0][j] != '.']
+	    substitution_nucleotides_ref = [nucleotide_matrix[0][j] for j in range(len(isolate1_gene)) if nucleotide_matrix[1][j] == 'X' or nucleotide_matrix[1][j] == '.' and nucleotide_matrix[0][j] != '.']
+	    substitution_nucleotides_alt = [nucleotide_matrix[2][j] for j in range(len(isolate1_gene)) if nucleotide_matrix[1][j] == 'X' or nucleotide_matrix[1][j] == '.' and nucleotide_matrix[0][j] != '.']
 
 	    #codon change and amino acid change detection
 	    #create codons to detect codon changes from mutations
 
-	    ancestral = np.ndarray.tolist(ancestral)
-	    ancestral = ''.join([x for x in ancestral])
-	    codon_ancestral = [ancestral[i:i + 3] for i in range(0, len(subseq1), 3)]
+	    isolate1_gene = np.ndarray.tolist(isolate1_gene)
+	    isolate1_gene = ''.join([x for x in isolate1_gene])
+	    codon_isolate1_gene = [isolate1_gene[i:i + 3] for i in range(0, len(subseq1), 3)]
 
-	    derived = np.ndarray.tolist(derived)
-	    derived = ''.join([x for x in derived])
-	    codon_derived = [derived[i:i + 3] for i in range(0, len(subseq2), 3)]
+	    isolate2_gene = np.ndarray.tolist(isolate2_gene)
+	    isolate2_gene = ''.join([x for x in isolate2_gene])
+	    codon_isolate2_gene = [isolate2_gene[i:i + 3] for i in range(0, len(subseq2), 3)]
 
 	    codons = []
 	    codon_mutations_ref = []
 	    codon_mutations_alt = []
 	    amino_acids = []
-	    for i in range(len(codon_ancestral)):
-		for j in range(len(codon_ancestral[i])):
-		    if codon_ancestral[i][j] != codon_derived[i][j]:
-			codon_mutations_ref.append(codon_ancestral[i][j])
-			codon_mutations_alt.append(codon_derived[i][j])
-			codons.append(codon_ancestral[i] + '/' + codon_derived[i])
-			if ancestral_protein[i] != derived_protein[i]:
-			    amino_acids.append(ancestral_protein[i] + '/' + derived_protein[i])
+	    for i in range(len(codon_isolate1_gene)):
+		for j in range(len(codon_isolate1_gene[i])):
+		    if codon_isolate1_gene[i][j] != codon_isolate2_gene[i][j]:
+			codon_mutations_ref.append(codon_isolate1_gene[i][j])
+			codon_mutations_alt.append(codon_isolate2_gene[i][j])
+			codons.append(codon_isolate1_gene[i] + '/' + codon_isolate2_gene[i])
+			if isolate1_protein[i] != isolate2_protein[i]:
+			    amino_acids.append(isolate1_protein[i] + '/' + isolate2_protein[i])
 			else:
 			    amino_acids.append('synonymous_coding')
 
@@ -684,36 +764,63 @@ class GgDiGraph(nx.DiGraph):
 		df_substitutions = pd.DataFrame(substitutions_data)
 		return df_substitutions
 	    else:
-		print('no substitutions in this CDS')
+		return 'no substitutions in this CDS'
 
 	def insertion_detection(pos1, pos2, path, isolate1, isolate2):
 
-	    """uses the nucleotide alignment to detect insertions and reports them in a Pandas dataframe in VCF format
+    	"""uses the nucleotide alignment to detect insertions and reports them in a Pandas dataframe in VCF format
 	    :param pos1: start position of gene in isolate1
 	    :param pos2: end position of gene in isolate1
-	    :param path: path to annotation file containing isolate1 and isolate2
-	    :param isolate1: ancestral strain (i.e. H37Rv)
-	    :param isolate2: derived strain (e.g. H37Ra)
+	    :param path: path to genome graph contained within XML file containing isolate1 and isolate2
+	    :param isolate1: the first strain from the genome graph being compared(i.e. H37Rv in this case since it is being used as a reference)
+	    :param isolate2: the second strain from the genome graph being compared (i.e. H37Ra strain)
 	    :return:
-	    df_insertions: Pandas dataframe reporting any insertions that occurred between the ancestral and derived
+	    df_insertions: Pandas DataFrame reporting any insertions that occurred between the "isolate1" and "isolate2"
 	    versions of the gene
+
+	    NOTES
+	    ------------------
+
+	    This function allows for the detection of insertions that occur between similar gene sequences extracted from a genome graph
+	    However, this function can only compare two similar sequences and thus in order to understand the biological significance
+	    of the insertions that may occur, the ability to perform a multiple sequence alignment within the function will be required
+
+	    positions of insertions are reported relative to "isolate2" in the Pandas DataFrame since insertions will occur across
+	    a position range in "isolate2" and not "isolate1"
+	    It is important to note that InDels are identified relative to "isolate1"
+	    (i.e. a deletion is where a nucleotide from "isolate1" is removed in "isolate2" and an insertion is where a nucleotide is
+	    added to "isolate2" that is not present in "isolate1" - this is determined by looking at the nucleotide pairwise alignment)
+
+	    EXAMPLE
+	    ------------------
+
+	    Using the carB gene sequences from "isolate1" and "isolate2" as an example:
+
+		insertion_detection(1557101, 1560448, './H37R_pangenome.xml', 'H37Rv', 'H37Ra')
+
+		this will return "no insertions in the coding sequence (CDS)" since these sequences are the same in both strains
+
+	    now let's mimic a three-nucleotide insertion that occurs between the H37Rv and H37Ra carB genes:
+
+		search for "mimic insertion in carB gene" in the "nucleotide_sequence_alignment" function and use code below comment
+		to mimic the insertion. Run code to show how an insertion that occurs between two gene sequences is identified and
+		displayed in Pandas DataFrame
 	    """
 
-	    subseq1, subseq2_coords, subseq2, score, nucleotide_alignment, nucleotide_matrix, ancestral, derived = nucleotide_sequence_alignment(pos1, pos2, path, isolate1, isolate2)
-	    protein_alignment, protein_matrix, ancestral_protein, aligned_protein, derived_protein, protein1_amino_acids, protein2_amino_acids = protein_sequence_alignment(pos1, pos2, path, isolate1, isolate2)
+	    subseq1, subseq2_coords, subseq2, score, nucleotide_alignment, nucleotide_matrix, isolate1_gene, isolate2_gene = nucleotide_sequence_alignment(pos1, pos2, path, isolate1, isolate2)
 
 	    #determine positions where insertions occurred
 
 	    insertion_positions = []
-	    for i in range(len(ancestral)):
+	    for i in range(len(isolate1_gene)):
 		if nucleotide_matrix[0][i] == '-' or nucleotide_matrix[0][i] == '.':
-		    v = list(nucleotide_matrix[0][:i])
-		    u = v.count('-')
-		    insertion_positions.append(subseq2_coords[0] + i - u - 1)  # zero indexed so add 1, minus u to remove dashes and get actual position
+		    alignment_symbols = list(nucleotide_matrix[0][:i])
+		    gaps = alignment_symbols.count('-')
+		    insertion_positions.append(subseq2_coords[0] + i)  # zero indexed so add 1, minus gaps to remove dashes and get actual position
 
 	    #nucleotides that have been inserted
 
-	    insertion_nucleotides = [nucleotide_matrix[2][j] for j in range(len(ancestral)) if nucleotide_matrix[0][j] == '-' or nucleotide_matrix[0][j] == '.']
+	    insertion_nucleotides = [nucleotide_matrix[2][j] for j in range(len(isolate1_gene)) if nucleotide_matrix[0][j] == '-' or nucleotide_matrix[0][j] == '.']
 
 	    #group consecutive positions and their respective nucleotides for insertions > 1 nucleotide
 
@@ -816,8 +923,6 @@ class GgDiGraph(nx.DiGraph):
 				  'alternate allele': insert_nucleotide,
 				  'mutation type': 'insertion',
 				  'frameshift': '-', #frameshift_insertions,
-				  #'old codon/new codon': '-',
-				  #'old AA/new AA': '-'
 				  }
 		df_insertions = pd.DataFrame(insertion_data)
 		return df_insertions
@@ -826,32 +931,60 @@ class GgDiGraph(nx.DiGraph):
 	
 	def deletion_detection(pos1, pos2, path, isolate1, isolate2):
 
-	    """uses the nucleotide alignment to detect deletions and reports them in a Pandas dataframe in VCF format
+    	"""uses the nucleotide alignment to detect deletions and reports them in a Pandas dataframe in VCF format
 	    :param pos1: start position of gene in isolate1
 	    :param pos2: end position of gene in isolate1
-	    :param path: path to annotation file containing isolate1 and isolate2
-	    :param isolate1: ancestral strain (i.e. H37Rv)
-	    :param isolate2: derived strain (e.g. H37Ra)
+	    :param path: path to genome graph contained within XML file containing isolate1 and isolate2
+	    :param isolate1: the first strain from the genome graph being compared(i.e. H37Rv in this case since it is being used as a reference)
+	    :param isolate2: the second strain from the genome graph being compared (i.e. H37Ra strain)
 	    :return:
-	    df_deletions: Pandas dataframe reporting any deletions that occurred between the ancestral and derived
+	    df_deletions: Pandas dataframe reporting any deletions that occurred between the "isolate1" and "isolate2"
 	    versions of the gene
+
+	    NOTES
+	    -------------------
+
+	    This function allows for the detection of deletions that occur between similar gene sequences extracted from a genome graph
+	    However, this function can only compare two similar sequences and thus in order to understand the biological significance
+	    of the deletions that may occur, the ability to perform a multiple sequence alignment within the function will be required
+
+	    positions of deletions are reported relative to "isolate1" in the Pandas DataFrame since insertions will occur across
+	    a position range in "isolate1" and not "isolate2"
+	    It is important to note that InDels are identified relative to "isolate1"
+	    (i.e. a deletion is where a nucleotide from "isolate1" is removed in "isolate2" and an insertion is where a nucleotide is
+	    added to "isolate2" that is not present in "isolate1" - this is determined by looking at the nucleotide pairwise alignment)
+
+	    EXAMPLE
+	    -------------------
+
+	    Using the carB gene sequences from "isolate1" and "isolate2" as an example:
+
+		insertion_detection(1557101, 1560448, './H37R_pangenome.xml', 'H37Rv', 'H37Ra')
+
+		this will return "no insertions in the coding sequence (CDS)" since these sequences are the same in both strains
+
+	    now let's mimic a three-nucleotide deletion that occurs in the H37Ra carB gene:
+
+		search for "mimic deletion in carB gene" in the "nucleotide_sequence_alignment" function and use code below comment
+		to mimic the deletion. Run code to show how an deletion that occurs between two gene sequences is identified and
+		displayed in Pandas DataFrame
+
 	    """
 
-	    subseq1, subseq2_coords, subseq2, score, nucleotide_alignment, nucleotide_matrix, ancestral, derived = nucleotide_sequence_alignment(pos1, pos2, path, isolate1, isolate2)
-	    protein_alignment, protein_matrix, ancestral_protein, aligned_protein, derived_protein, protein1_amino_acids, protein2_amino_acids = protein_sequence_alignment(pos1, pos2, path, isolate1, isolate2)
+	    subseq1, subseq2_coords, subseq2, score, nucleotide_alignment, nucleotide_matrix, isolate1_gene, isolate2_gene = nucleotide_sequence_alignment(pos1, pos2, path, isolate1, isolate2)
 
 	    #positions in CDS where deletions occur
 
 	    deletion_positions = []
-	    for i in range(len(ancestral)):
+	    for i in range(len(isolate1_gene)):
 		if nucleotide_matrix[2][i] == '-' or nucleotide_matrix[2][i] == '.':
-		    v = list(nucleotide_matrix[0][:i])
-		    u = v.count('-')
-		    deletion_positions.append(pos1 + i - u)
+		    alignment_symbols = list(nucleotide_matrix[0][:i])
+		    gaps = alignment_symbols.count('-')
+		    deletion_positions.append(pos1 + i - gaps)
 
 	    #deleted nucleotides
 
-	    deletion_nucleotides = [nucleotide_matrix[0][j] for j in range(len(ancestral)) if nucleotide_matrix[2][j] == '-' or nucleotide_matrix[2][j] == '.']
+	    deletion_nucleotides = [nucleotide_matrix[0][j] for j in range(len(isolate1_gene)) if nucleotide_matrix[2][j] == '-' or nucleotide_matrix[2][j] == '.']
 
 	    #group MN deletion positions and the nucleotides associated with them
 
@@ -975,8 +1108,6 @@ class GgDiGraph(nx.DiGraph):
 				 'alternate allele': '-',
 				 'mutation type': 'deletion',
 				 'frameshift': frameshift_deletions,
-				 #'old codon/new codon': '-',
-				 #'old AA/new AA': '-'
 				 }
 		df_deletions = pd.DataFrame(deletion_data)
 		return df_deletions
@@ -990,37 +1121,67 @@ class GgDiGraph(nx.DiGraph):
 
 	def scoring_matrix(pos1, pos2, path, isolate1, isolate2):
 
-	    """gene classification function that uses protein sequence similarity of the same gene from two different isolates 
-    		to determine whether a gene is core, accessory or unique
+	    """gene classification function that uses protein sequence similarity of the same gene from two different isolates
+	    to determine whether a gene is core, accessory or unique
 	    :param pos1: start position of gene in isolate1
 	    :param pos2: end position of gene in isolate1
-	    :param path: path to annotation file containing isolate1 and isolate2
-	    :param isolate1: ancestral strain (i.e. H37Rv)
-	    :param isolate2: derived strain (e.g. H37Ra)
+	    :param path: path to genome graph contained within XML file containing isolate1 and isolate2
+	    :param isolate1: the first strain from the genome graph being compared(i.e. H37Rv in this case since it is being used as a reference)
+	    :param isolate2: the second strain from the genome graph being compared (i.e. H37Ra strain)
 	    :return:
 	    score: the amino acid sequence similarity score of the two protein sequences
 
-	    gene classification is based on protein sequence similarity score - this function will return either "core gene", "accessory gene"
-	    or "unique gene" based on whether the score falls within a certain threshold
+	    NOTES
+	    --------------------
+
+	    Gene classification is based on protein sequence similarity score - this function will return whether the gene being assessed
+	    is likely to be characterised as either a "core gene", "accessory gene" or "unique gene" using percentage identity cut-off values
+
+	    Since only two sequences can be compared at once within the function, gene classification will not be accurate since
+	    the definitions of core genes (present in all strains), accessory genes (present in more than two strains) and unique
+	    genes (specific to a certain strain) require that multiple similar genes from different isolate be compared within a
+	    multiple sequence alignment. Adding this capability to the function will allow for more accurate classification of genes
+
+	    The scoring system of this function is similar to that of a bit score but is not able to discern conservative amino acid
+	    changes that occur which would lead to a mismatch occurring instead of a match. Gaps and mismatches are also given the
+	    same score which may be lead to more inaccuracy of the scoring matrix.
+	    However, this function does allow for a prediction of where a gene would be classified in the pan-genome via comparing
+	    similar protein sequences from genome graphs and may be able to make more accurate predictions once multiple sequence
+	    alignment and an improved scoring system can be added to the function.
+
+
+	    EXAMPLE
+	    --------------------
+
+	    Using the carB gene sequences from "isolate1" and "isolate2" as an example:
+
+		scoring_matrix(1557101, 1560448, './H37R_pangenome.xml', 'H37Rv', 'H37Ra')
+
+		since these genes are very similar, this gene may be essential to the survival of these M. tuberculosis strains
+		and may therefore be considered a core gene - this prediction would become more accurate once multiple gene sequences
+		can be compared
+
 	    """
 
-	    protein_alignment, protein_matrix, ancestral_protein, aligned_protein, derived_protein, protein1_amino_acids, protein2_amino_acids = protein_sequence_alignment(pos1, pos2, path, isolate1, isolate2)
+	    protein_alignment, protein_matrix, isolate1_protein, aligned_protein, isolate2_protein, protein1_amino_acids, protein2_amino_acids = protein_sequence_alignment(pos1, pos2, path, isolate1, isolate2)
 
 	    score = []
-	    for i in range(len(protein1_amino_acids)):
-		if protein1_amino_acids[i] == protein2_amino_acids[i]:
+	    for i in range(len(isolate1_protein)):
+		if isolate1_protein[i] == isolate2_protein[i]:
 		    score.append(1)
 		else:
-		    score.append(0)
-	    score = 100 * (sum(score) / len(protein1_amino_acids))
+		    score.append(-1)
+	    score = 100 * (sum(score) / len(isolate1_protein))
 	    if 95 <= score <= 100:
-		print('core gene')
+		print(score)
+		print('this gene is possibly a core gene')
 	    elif 90 <= score < 95:
-		print('accessory gene')
+		print(score)
+		print('this gene is possibly an accessory gene')
 	    else:
-		print('unique gene')
+		print(score)
+		print('this gene is possibly a unique gene')
 
-	    return score
    
 #-----------------------------------------------------Sequece_Homology Functions end here
 
