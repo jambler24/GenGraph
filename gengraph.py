@@ -231,7 +231,7 @@ class GgDiGraph(nx.DiGraph):
 	    	-------------
 
 	    	this function is only able to align two similar sequences and doesn't allow for multiple sequence alignment needed for
-	    	sequence homology assessment. Future work should be directed toward adding this capability to the function.
+	    	sequence similarity assessment. Future work should be directed toward adding this capability to the function.
 
 	    	EXAMPLE
 	    	-------------
@@ -249,7 +249,7 @@ class GgDiGraph(nx.DiGraph):
 	    	# extract subgraphs from both isolates you want to compare for a specified nucleotide range
 	    	# isolate1 needs to be the ancestral strain and isolate2 the derived strain in order for this function to work
 	    	subseq1 = extract_original_seq_region_fast(graph_obj, pos1, pos2, isolate1)
-	    	# "pos1" and "pos2" are relative to ancestral strain and so need to convert coords to get correct sequence in derived strain
+	    	# "pos1" and "pos2" are relative to "isolate1" and so need to convert coords to get gene sequence in "isolate2"
 	    	# so that similar regions are being compared between the strains
 	    	subseq2_coords = convert_coordinates(graph_obj, pos1, pos2, isolate1, isolate2)
 	    	subseq2_coords = list(subseq2_coords.values())
@@ -295,22 +295,22 @@ class GgDiGraph(nx.DiGraph):
 	    :param isolate2: the second strain from the genome graph being compared (i.e. H37Ra strain)
 	    :return:
 	    protein_alignment: the pairwise alignment of the amino acid sequences converted from the nucleotide sequences
-	    of "subseq1" (ancestral protein) and "subseq2" (derived protein)
+	    of "subseq1" ("isolate1" protein) and "subseq2" ("isolate2" protein)
 	    protein_matrix: a NumPy array version of the pairwise alignment to allow iteration for amino acid change detection
-	    isolate1_protein: a Numpy array version of the ancestral protein - the first row of "protein_matrix"
+	    isolate1_protein: a Numpy array version of the "isolate1" protein - the first row of "protein_matrix"
 	    aligned_protein: a NumPy array version of the alignment of the two proteins - the second row of "protein_matrix"
-	    isolate2_protein: a NumPy array version of the derived protein - the third row of "protein_matrix"
-	    protein1_amino_acids: a list version of "ancestral_protein"
-	    protein2_amino_acids: a list version of "derived_protein"
+	    isolate2_protein: a NumPy array version of the "isolate2" protein - the third row of "protein_matrix"
+	    protein1_amino_acids: a list version of "isolate1_protein"
+	    protein2_amino_acids: a list version of "isolate2_protein"
 
 	    NOTES
 	    -----------------
 
 	    this function is only able to align two similar protein sequences and doesn't allow for multiple sequence alignment needed for
-	    sequence homology assessment. Future work should be directed toward adding this capability to the function.
+	    sequence similarity assessment. Future work should be directed toward adding this capability to the function.
 
-	    An original aligner was developed to allow for protein pairwise alignment but may presents bugs as unit testing was
-	    not done
+	    An original aligner was developed to allow for protein pairwise alignment but may presents bug as unit testing has
+	    not been done
 
 	    EXAMPLE
 	    -----------------
@@ -473,11 +473,7 @@ class GgDiGraph(nx.DiGraph):
 		    elif stringOne[-1] == stringTwo[-1]:
 			finalStringOne = finalStringOne + str(stringOne[-1])
 			finalStringTwo = finalStringTwo + str(stringTwo[-1])
-			middleString = middleString + '|'
-
-	    #print(finalStringOne)
-	    #print(middleString)
-	    #print(finalStringTwo)
+			middleString = m
 
 	    protein_alignment = finalStringOne + '\n' + middleString + '\n' + finalStringTwo
 
@@ -510,7 +506,7 @@ class GgDiGraph(nx.DiGraph):
 
 	    This function identifies any amino acid changes that occur due to substitutions.
 	    This function can't discern whether an amino acid change is conserved or not
-	    (i.e. a SNP that leads to an amino acid change from leucine to isoleucine represents a conservative mutation)
+	    (i.e. a SNP that leads to an amino acid change from leucine to isoleucine represents a conservative mutation and is seen as a mismatch)
 
 	    positions where substitutions occur are reported relative to "isolate1" which will most likely be the H37Rv since it
 	    is used as a reference
@@ -526,8 +522,8 @@ class GgDiGraph(nx.DiGraph):
 
 	    now let's mimic a SNP that occurs between the H37Rv and H37Ra carB genes:
 
-		search for "mimic SNP in carB gene" in the "nucleotide_sequence_alignment" function and use code below comment
-		to mimic SNP. Run code to show how SNP that occurs between two gene sequences is identified and displayed in Pandas
+		search for "mimic SNP in carB gene" in the "nucleotide_sequence_alignment" function and run code below comment
+		to mimic SNP and to show how a SNP that occurs between two gene sequences is identified and displayed in Pandas
 		DataFrame
 
 	    """
@@ -583,7 +579,7 @@ class GgDiGraph(nx.DiGraph):
 
 	    substitution_codons = [codons[i] if substitution_nucleotides_ref[i] == codon_mutations_ref[i] and substitution_nucleotides_alt[i] == codon_mutations_alt[i] else 'No change' for i in range(len(substitution_nucleotides_ref))]
 
-	    #group positions and nucleotides of MNPs and append to new lists
+	    #group positions and nucleotides of MNPs and append to new lists below - creates list of lists in each empty list below 
 
 	    sub_pos_range = []
 	    sub_nucleotide_ref = []
@@ -747,7 +743,7 @@ class GgDiGraph(nx.DiGraph):
 		    sub_amino_acids[i] = list(set(sub_amino_acids[i]))
 
 	    #joining together positions and the nucleotides associated with those positions
-	    #the list comprehension below joins the nucleotides for the positions ranges together to report them as a single nucleotide string
+	    #the list comprehensions below joins the reference and alternate nucleotides for the positions ranges together to report them as a single nucleotide string
 
 	    sub_nucleotide_ref = [''.join(sub_nucleotide_ref[i][0:]) if len(sub_nucleotide_ref[i]) != 1 else ", ".join(map(str, sub_nucleotide_ref[i])) for i in range(len(sub_nucleotide_ref))]
 	    sub_nucleotide_alt = [''.join(sub_nucleotide_alt[i][0:]) if len(sub_nucleotide_alt[i]) != 1 else ", ".join(map(str, sub_nucleotide_alt[i])) for i in range(len(sub_nucleotide_alt))]
@@ -802,8 +798,8 @@ class GgDiGraph(nx.DiGraph):
 
 	    now let's mimic a three-nucleotide insertion that occurs between the H37Rv and H37Ra carB genes:
 
-		search for "mimic insertion in carB gene" in the "nucleotide_sequence_alignment" function and use code below comment
-		to mimic the insertion. Run code to show how an insertion that occurs between two gene sequences is identified and
+		search for "mimic insertion in carB gene" in the "nucleotide_sequence_alignment" function and run code below comment
+		to mimic the insertion to show how an insertion that occurs between two gene sequences is identified and
 		displayed in Pandas DataFrame
 	    """
 
@@ -816,7 +812,7 @@ class GgDiGraph(nx.DiGraph):
 		if nucleotide_matrix[0][i] == '-' or nucleotide_matrix[0][i] == '.':
 		    alignment_symbols = list(nucleotide_matrix[0][:i])
 		    gaps = alignment_symbols.count('-')
-		    insertion_positions.append(subseq2_coords[0] + i)  # zero indexed so add 1, minus gaps to remove dashes and get actual position
+		    insertion_positions.append(subseq2_coords[0] + i) #get position of insertion in "isolate2"
 
 	    #nucleotides that have been inserted
 
@@ -922,7 +918,7 @@ class GgDiGraph(nx.DiGraph):
 				  'reference allele': '-',
 				  'alternate allele': insert_nucleotide,
 				  'mutation type': 'insertion',
-				  'frameshift': '-', #frameshift_insertions,
+				  'frameshift': frameshift_insertions,
 				  }
 		df_insertions = pd.DataFrame(insertion_data)
 		return df_insertions
@@ -948,11 +944,13 @@ class GgDiGraph(nx.DiGraph):
 	    However, this function can only compare two similar sequences and thus in order to understand the biological significance
 	    of the deletions that may occur, the ability to perform a multiple sequence alignment within the function will be required
 
-	    positions of deletions are reported relative to "isolate1" in the Pandas DataFrame since insertions will occur across
-	    a position range in "isolate1" and not "isolate2"
-	    It is important to note that InDels are identified relative to "isolate1"
+	    positions of deletions are reported relative to "isolate1" in the Pandas DataFrame 
 	    (i.e. a deletion is where a nucleotide from "isolate1" is removed in "isolate2" and an insertion is where a nucleotide is
 	    added to "isolate2" that is not present in "isolate1" - this is determined by looking at the nucleotide pairwise alignment)
+	    
+	    It is important to note that InDels are identified relative to "isolate1" but that deletions are reported relative to "isolate1" 
+	    and insertions are reported relative "isolate2"
+	    
 
 	    EXAMPLE
 	    -------------------
@@ -986,7 +984,7 @@ class GgDiGraph(nx.DiGraph):
 
 	    deletion_nucleotides = [nucleotide_matrix[0][j] for j in range(len(isolate1_gene)) if nucleotide_matrix[2][j] == '-' or nucleotide_matrix[2][j] == '.']
 
-	    #group MN deletion positions and the nucleotides associated with them
+	    #group MN deletion positions and the nucleotides associated with them (MN = multiple nucleotide)
 
 	    del_pos_range = []
 	    del_nucleotide = []
@@ -1074,9 +1072,6 @@ class GgDiGraph(nx.DiGraph):
 		    if del_pos_range[-2] == del_pos_range[-1]:
 			del_pos_range.pop(-1)
 
-		# del_pos_range.append(tempLast_pos)
-		# del_nucleotide.append(tempLast_nucl)
-
 	    #concatenate nucleotides together for MN deletions
 
 	    deletion_nucleotides = [''.join(del_nucleotide[i][0:]) if len(del_pos_range[i]) != 1 else ", ".join(map(str, del_nucleotide[i])) for i in range(len(del_pos_range))]
@@ -1090,7 +1085,7 @@ class GgDiGraph(nx.DiGraph):
 		else:
 		    frameshift_deletions.append('-')
 
-	    # code to neaten up deletions when many deletions occur in the coding sequence
+	    # code to join together nucleotides of MN deletions
 	    for i in range(len(del_pos_range)):
 		if len(del_pos_range[i]) != 1:
 		    ",".join(map(str, del_pos_range[i]))
@@ -1135,20 +1130,18 @@ class GgDiGraph(nx.DiGraph):
 	    --------------------
 
 	    Gene classification is based on protein sequence similarity score - this function will return whether the gene being assessed
-	    is likely to be characterised as either a "core gene", "accessory gene" or "unique gene" using percentage identity cut-off values
+	    is likely to be characterised as either a "core gene", "accessory gene" or "unique gene" using sequence similarity cut-off values
 
 	    Since only two sequences can be compared at once within the function, gene classification will not be accurate since
 	    the definitions of core genes (present in all strains), accessory genes (present in more than two strains) and unique
-	    genes (specific to a certain strain) require that multiple similar genes from different isolate be compared within a
+	    genes (specific to a certain strain) require that multiple similar genes from different isolates be compared within a
 	    multiple sequence alignment. Adding this capability to the function will allow for more accurate classification of genes
 
-	    The scoring system of this function is similar to that of a bit score but is not able to discern conservative amino acid
-	    changes that occur which would lead to a mismatch occurring instead of a match. Gaps and mismatches are also given the
-	    same score which may be lead to more inaccuracy of the scoring matrix.
-	    However, this function does allow for a prediction of where a gene would be classified in the pan-genome via comparing
-	    similar protein sequences from genome graphs and may be able to make more accurate predictions once multiple sequence
-	    alignment and an improved scoring system can be added to the function.
-
+	    The scoring system of this function is simple (match = 1, mismatch/gap = -1) and can be changed to suit needs of user. 
+	    The scoring system has a limitation in that but is not able to discern conservative amino acid changes that occur 
+	    which would lead to a mismatch occurring instead of a match. Gaps and mismatches are also given the same score which may 
+	    be lead to more inaccuracy of the scoring matrix and therefore these could be improved upon.
+	    
 
 	    EXAMPLE
 	    --------------------
@@ -1159,7 +1152,7 @@ class GgDiGraph(nx.DiGraph):
 
 		since these genes are very similar, this gene may be essential to the survival of these M. tuberculosis strains
 		and may therefore be considered a core gene - this prediction would become more accurate once multiple gene sequences
-		can be compared
+		can be compared (may be classified an accessory gene after multiple sequence alignment)
 
 	    """
 
