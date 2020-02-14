@@ -229,12 +229,10 @@ if __name__ == '__main__':
 	if args.toolkit == 'extract_region':
 		imported_genome = nx.read_graphml(args.graph_file)
 
-		print
-		"Extracting from " + str(args.extract_sequence_range[0]) + " to " + str(args.extract_sequence_range[1])
+		print("Extracting from " + str(args.extract_sequence_range[0]) + " to " + str(args.extract_sequence_range[1]))
 
-		print
-		extract_original_seq_region(imported_genome, args.extract_sequence_range[0], args.extract_sequence_range[1],
-									args.isolate)
+		print(extract_original_seq_region(imported_genome, args.extract_sequence_range[0], args.extract_sequence_range[1],
+									args.isolate))
 
 	if args.toolkit == 'extract_ancesteral_genome':
 
@@ -242,8 +240,7 @@ if __name__ == '__main__':
 		# --out_file_name
 		# --graph_file
 
-		print
-		"CHANGES MADE TO THE MATRIX ARE PROBLEMATIC AND WILL CAUSE A INCORRECT TREE TO BE MADE"
+		print("CHANGES MADE TO THE MATRIX ARE PROBLEMATIC AND WILL CAUSE A INCORRECT TREE TO BE MADE")
 
 		imported_genome = nx.read_graphml(args.graph_file)
 
@@ -254,11 +251,9 @@ if __name__ == '__main__':
 		plotDend = True
 		add_to_GG = True
 
-		print
-		sim_matrix.index.values.tolist()
+		print(sim_matrix.index.values.tolist())
 
-		print
-		sim_matrix.as_matrix()
+		print(sim_matrix.as_matrix())
 
 		if plotDend == True:
 			from scipy.cluster import hierarchy
@@ -270,8 +265,7 @@ if __name__ == '__main__':
 			dn = hierarchy.dendrogram(Z, labels=sim_matrix.index.values.tolist())
 			plt.show()
 
-		print
-		sim_matrix
+		print(sim_matrix)
 
 		quit()
 
@@ -297,8 +291,7 @@ if __name__ == '__main__':
 		# --seq_file
 		# --out_file_name
 
-		print
-		'Extracting...'
+		print('Extracting...')
 
 		parsed_input_dict = parse_seq_file(args.seq_file)
 
@@ -312,14 +305,11 @@ if __name__ == '__main__':
 			ref_isolate = args.isolate
 
 		# Extracting the csv from the graph
-		print
-		'Extracting annotated pan genome csv'
+		print('Extracting annotated pan genome csv')
 		extract_anno_pan_genome_csv(graph_obj, test_gtf_dict, args.out_file_name, sim_threshold=0.95)
-		print
-		'Extracting pan genome csv'
+		print('Extracting pan genome csv')
 		extract_pan_genome_csv(graph_obj, test_gtf_dict, args.out_file_name, hom_threshold=0.95, refseq=ref_isolate)
-		print
-		'Extracting pan genome transcriptome'
+		print('Extracting pan genome transcriptome')
 		create_fasta_from_pangenome_csv(args.out_file_name + '.csv', test_gtf_dict, parsed_input_dict,
 										args.out_file_name)
 
@@ -338,15 +328,13 @@ if __name__ == '__main__':
 		gene_name = args.locus_ID
 		create_fasta_file = False
 
-		print
-		'Here we go'
+		print('Here we go')
 
 		parsed_seq_obj = parse_seq_file(args.seq_file)
 
 		imp_genome_obj = nx.read_graphml(args.graph_file)
 
-		print
-		extract_gene(gene_name, gene_isolate, imp_genome_obj, parsed_seq_obj)
+		print(extract_gene(gene_name, gene_isolate, imp_genome_obj, parsed_seq_obj))
 
 	if args.toolkit == 'map_to_graph':
 		# Requires:
