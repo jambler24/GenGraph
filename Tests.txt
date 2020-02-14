@@ -1,0 +1,10 @@
+No Mutation:
+	Done
+One Deletion:
+	Done
+One Substitution:
+	Done
+Mix Of SNPS:
+	Done
+inversion:
+	Done

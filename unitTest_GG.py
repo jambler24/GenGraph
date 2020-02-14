@@ -26,6 +26,7 @@ from gengraph import *
 
 ''' Basic tests '''
 
+
 class BasicFunctionsTestCase(unittest.TestCase):
 	"""Tests for basic functions in `phil_0_4.py`."""
 
@@ -45,11 +46,9 @@ class BasicFunctionsTestCase(unittest.TestCase):
 		"""Is the string correctly complimented?"""
 		self.assertEqual(compliment_DNA('ATGTTA'),'TACAAT')
 
-
 	def test_reverse_compliment(self):
 		"""Is the string correctly reverse complimented?"""
 		self.assertEqual(reverse_compliment('ATGTTA'),'TAACAT')
-
 
 	def test_is_even(self):
 		"""Is the int even?"""
@@ -57,6 +56,7 @@ class BasicFunctionsTestCase(unittest.TestCase):
 		self.assertFalse(is_even(7))
 		self.assertTrue(is_even(-8))
 		self.assertFalse(is_even(-7))
+
 
 ''' Graph utility function tests'''
 
@@ -122,8 +122,6 @@ class GraphGeneratingFunctionsTestCase(unittest.TestCase):
 			print 'seq3 fails'		
 
 		self.assertTrue(does_pass)
-
-
 
 	def test_create_genome_alignment_graph(self):
 		"""Is the correct block graph created?"""
@@ -261,9 +259,8 @@ class GraphGeneratingFunctionsTestCase(unittest.TestCase):
 
 		self.assertTrue(test_pass)
 '''
-	
-
 
 
 if __name__ == '__main__':
-    unittest.main()
+	unittest.main()
+

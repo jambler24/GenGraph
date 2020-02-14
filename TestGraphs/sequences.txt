@@ -1,0 +1,4 @@
+seq_name	aln_name	seq_path	annotation_path
+H37Rv	seq0	/genomes/H37Rv.fa	NA
+H37Rv1	seq1	/genomes/H37Rv1.fa	Na
+H37Rv2	seq2	/genomes/H37Rv2.fa	Na

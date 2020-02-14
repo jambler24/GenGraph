@@ -1,0 +1,188 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+  <key attr.name="ids" attr.type="string" for="edge" id="d13" />
+  <key attr.name="sequence" attr.type="string" for="node" id="d12" />
+  <key attr.name="H37Rv2_rightend" attr.type="long" for="node" id="d11" />
+  <key attr.name="H37Rv2_leftend" attr.type="long" for="node" id="d10" />
+  <key attr.name="H37Rv1_rightend" attr.type="long" for="node" id="d9" />
+  <key attr.name="H37Rv1_leftend" attr.type="long" for="node" id="d8" />
+  <key attr.name="H37Rv_rightend" attr.type="long" for="node" id="d7" />
+  <key attr.name="H37Rv_leftend" attr.type="long" for="node" id="d6" />
+  <key attr.name="ids" attr.type="string" for="node" id="d5" />
+  <key attr.name="start_node" attr.type="string" for="graph" id="d4" />
+  <key attr.name="H37Rv2_startnode" attr.type="string" for="graph" id="d3" />
+  <key attr.name="H37Rv1_startnode" attr.type="string" for="graph" id="d2" />
+  <key attr.name="H37Rv_startnode" attr.type="string" for="graph" id="d1" />
+  <key attr.name="isolates" attr.type="string" for="graph" id="d0" />
+  <graph edgedefault="directed">
+    <node id="Aln_1_1">
+      <data key="d5">H37Rv,H37Rv1,H37Rv2</data>
+      <data key="d6">1</data>
+      <data key="d7">4</data>
+      <data key="d8">1</data>
+      <data key="d9">4</data>
+      <data key="d10">1</data>
+      <data key="d11">4</data>
+      <data key="d12">TTGA</data>
+    </node>
+    <node id="Aln_1_2">
+      <data key="d5">H37Rv,H37Rv2</data>
+      <data key="d6">5</data>
+      <data key="d7">5</data>
+      <data key="d10">5</data>
+      <data key="d11">5</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_3">
+      <data key="d5">H37Rv1</data>
+      <data key="d8">5</data>
+      <data key="d9">5</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_4">
+      <data key="d5">H37Rv,H37Rv1,H37Rv2</data>
+      <data key="d6">6</data>
+      <data key="d7">9</data>
+      <data key="d8">6</data>
+      <data key="d9">9</data>
+      <data key="d10">6</data>
+      <data key="d11">9</data>
+      <data key="d12">CGAT</data>
+    </node>
+    <node id="Aln_1_5">
+      <data key="d5">H37Rv,H37Rv2</data>
+      <data key="d6">10</data>
+      <data key="d7">10</data>
+      <data key="d10">10</data>
+      <data key="d11">10</data>
+      <data key="d12">G</data>
+    </node>
+    <node id="Aln_1_6">
+      <data key="d5">H37Rv1</data>
+      <data key="d8">10</data>
+      <data key="d9">10</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_7">
+      <data key="d5">H37Rv,H37Rv1,H37Rv2</data>
+      <data key="d6">11</data>
+      <data key="d7">19</data>
+      <data key="d8">11</data>
+      <data key="d9">19</data>
+      <data key="d10">11</data>
+      <data key="d11">19</data>
+      <data key="d12">ACCCCGGTT</data>
+    </node>
+    <node id="Aln_1_8">
+      <data key="d5">H37Rv,H37Rv1</data>
+      <data key="d6">20</data>
+      <data key="d7">20</data>
+      <data key="d8">20</data>
+      <data key="d9">20</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_9">
+      <data key="d5">H37Rv2</data>
+      <data key="d10">20</data>
+      <data key="d11">20</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_10">
+      <data key="d5">H37Rv,H37Rv1,H37Rv2</data>
+      <data key="d6">21</data>
+      <data key="d7">58</data>
+      <data key="d8">21</data>
+      <data key="d9">58</data>
+      <data key="d10">21</data>
+      <data key="d11">58</data>
+      <data key="d12">AGGCTTCACCACAGTGTGGAACGCGGTCGTCTCCGAAC</data>
+    </node>
+    <node id="Aln_1_11">
+      <data key="d5">H37Rv</data>
+      <data key="d6">59</data>
+      <data key="d7">59</data>
+      <data key="d12">T</data>
+    </node>
+    <node id="Aln_1_12">
+      <data key="d5">H37Rv1</data>
+      <data key="d8">59</data>
+      <data key="d9">59</data>
+      <data key="d12">C</data>
+    </node>
+    <node id="Aln_1_13">
+      <data key="d5">H37Rv2</data>
+      <data key="d10">59</data>
+      <data key="d11">59</data>
+      <data key="d12">A</data>
+    </node>
+    <node id="Aln_1_14">
+      <data key="d5">H37Rv,H37Rv1,H37Rv2</data>
+      <data key="d6">60</data>
+      <data key="d7">63</data>
+      <data key="d8">60</data>
+      <data key="d9">63</data>
+      <data key="d10">60</data>
+      <data key="d11">63</data>
+      <data key="d12">TAAC</data>
+    </node>
+    <edge id="0" source="Aln_1_1" target="Aln_1_2">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_1" target="Aln_1_3">
+      <data key="d13">H37Rv1</data>
+    </edge>
+    <edge id="0" source="Aln_1_2" target="Aln_1_4">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_3" target="Aln_1_4">
+      <data key="d13">H37Rv1</data>
+    </edge>
+    <edge id="0" source="Aln_1_4" target="Aln_1_5">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_4" target="Aln_1_6">
+      <data key="d13">H37Rv1</data>
+    </edge>
+    <edge id="0" source="Aln_1_5" target="Aln_1_7">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_6" target="Aln_1_7">
+      <data key="d13">H37Rv1</data>
+    </edge>
+    <edge id="0" source="Aln_1_7" target="Aln_1_8">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_7" target="Aln_1_9">
+      <data key="d13">H37Rv2</data>
+    </edge>
+    <edge id="0" source="Aln_1_8" target="Aln_1_10">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_9" target="Aln_1_10">
+      <data key="d13">H37Rv2</data>
+    </edge>
+    <edge id="0" source="Aln_1_10" target="Aln_1_11">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_10" target="Aln_1_12">
+      <data key="d13">H37Rv1</data>
+    </edge>
+    <edge id="0" source="Aln_1_10" target="Aln_1_13">
+      <data key="d13">H37Rv2</data>
+    </edge>
+    <edge id="0" source="Aln_1_11" target="Aln_1_14">
+      <data key="d13">H37Rv</data>
+    </edge>
+    <edge id="0" source="Aln_1_12" target="Aln_1_14">
+      <data key="d13">H37Rv1</data>
+    </edge>
+    <edge id="0" source="Aln_1_13" target="Aln_1_14">
+      <data key="d13">H37Rv2</data>
+    </edge>
+    <data key="d0">H37Rv,H37Rv1,H37Rv2</data>
+    <data key="d1">Aln_1_1</data>
+    <data key="d2">Aln_1_1</data>
+    <data key="d3">Aln_1_1</data>
+    <data key="d4">Aln_1_1</data>
+  </graph>
+</graphml>
