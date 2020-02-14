@@ -211,14 +211,14 @@ class GgDiGraph(nx.DiGraph):
 	#-----------------------------------------------------"SequenceHomology" functions added below
 
 	def nucleotide_sequence_alignment(pos1, pos2, path, isolate1, isolate2):
-		
+
 		"""extracts the same gene sequences from two isolates and performs a pairwise alignment
-			:param pos1: start position of gene in isolate1
-			:param pos2: end position of gene in isolate1
-			:param path: path to genome graph contained within XML file containing isolate1 and isolate2
-			:param isolate1: the first strain from the genome graph being compared (i.e. H37Rv in this case since it is being used as a reference)
-			:param isolate2: the second strain from the genome graph being compared (i.e. H37Ra strain)
-			:return:
+					:param pos1: start position of gene in isolate1
+					:param pos2: end position of gene in isolate1
+					:param path: path to genome graph contained within XML file containing isolate1 and isolate2
+					:param isolate1: the first strain from the genome graph being compared (i.e. H37Rv in this case since it is being used as a reference)
+					:param isolate2: the second strain from the genome graph being compared (i.e. H37Ra strain)
+					:return:
 
 			subseq1 - nucleotide sequence string of gene found in isolate1
 			subseq2_coords - the converted coordinates to allow extraction of the same gene sequence in isolate2
@@ -243,48 +243,48 @@ class GgDiGraph(nx.DiGraph):
 			nucleotide_sequence_alignment(1557101, 1560448, './H37R_pangenome.xml', 'H37Rv', 'H37Ra')
 
 
-			"""
+		"""
 
-			# IMPORT .XML FILE AND EXTRACT GENE SEQUENCE FROM THE DIFFERENT STRAINS
+		#IMPORT .XML FILE AND EXTRACT GENE SEQUENCE FROM THE DIFFERENT STRAINS
 
-			graph_obj = import_gg_graph(path)
-			# extract subgraphs from both isolates you want to compare for a specified nucleotide range
-			# isolate1 needs to be the ancestral strain and isolate2 the derived strain in order for this function to work
-			subseq1 = extract_original_seq_region_fast(graph_obj, pos1, pos2, isolate1)
-			# "pos1" and "pos2" are relative to "isolate1" and so need to convert coords to get gene sequence in "isolate2"
-			# so that similar regions are being compared between the strains
-			subseq2_coords = convert_coordinates(graph_obj, pos1, pos2, isolate1, isolate2)
-			subseq2_coords = list(subseq2_coords.values())
-			subseq2 = extract_original_seq_region_fast(graph_obj, subseq2_coords[0], subseq2_coords[1], isolate2)
+		graph_obj = import_gg_graph(path)
+		# extract subgraphs from both isolates you want to compare for a specified nucleotide range
+		# isolate1 needs to be the ancestral strain and isolate2 the derived strain in order for this function to work
+		subseq1 = extract_original_seq_region_fast(graph_obj, pos1, pos2, isolate1)
+		# "pos1" and "pos2" are relative to "isolate1" and so need to convert coords to get gene sequence in "isolate2"
+		# so that similar regions are being compared between the strains
+		subseq2_coords = convert_coordinates(graph_obj, pos1, pos2, isolate1, isolate2)
+		subseq2_coords = list(subseq2_coords.values())
+		subseq2 = extract_original_seq_region_fast(graph_obj, subseq2_coords[0], subseq2_coords[1], isolate2)
 
-			#mimic deletion in carB gene for "deletion_detection" function example
+		#mimic deletion in carB gene for "deletion_detection" function example
 
-			#subseq2 = subseq2.replace('CCC', '', 1)
+		#subseq2 = subseq2.replace('CCC', '', 1)
 
-			#mimic insertion in carB gene for "insertion_detection" function example
+		#mimic insertion in carB gene for "insertion_detection" function example
 
-			#subseq1 = subseq1.replace('CCC', '', 1)
+		#subseq1 = subseq1.replace('CCC', '', 1)
 
-			#mimic SNP in carB gene for "substitution_detection" function example
+		#mimic SNP in carB gene for "substitution_detection" function example
 
-			#subseq1 = subseq1.replace('T', 'C', 1)
+		#subseq1 = subseq1.replace('T', 'C', 1)
 
-			# PERFORM NUCLEOTIDE ALIGNMENT using Biopython module
+		# PERFORM NUCLEOTIDE ALIGNMENT using Biopython module
 
-			aligner = Align.PairwiseAligner()
-			aligner.mode = 'local'
-			aligner.open_gap_score = -0.5
+		aligner = Align.PairwiseAligner()
+		aligner.mode = 'local'
+		aligner.open_gap_score = -0.5
 		nucleotide_alignment = aligner.align(subseq1, subseq2)[0]# produces many different alignments for the same two sequences, of which the first one will be chosen
-			list_alignment = list(str(nucleotide_alignment).splitlines())# convert alignment to string to be able to be to loop through each nucleotide - 'PairwiseAlign is not iterable'
-			# create an array where each character in alignment gets its own index
-			isolate1_gene = np.array(list(list_alignment[0]))
-			isolate2_gene = np.array(list(list_alignment[2]))
-			aligned = np.array(list(list_alignment[1]))
-			nucleotide_matrix = np.row_stack((isolate1_gene, aligned, isolate2_gene))
-			matches = sum(np.char.count(aligned, '|'))
-			score = "Similarity = %.1f:" % (matches / (len(subseq1)) * 100)
+		list_alignment = list(str(nucleotide_alignment).splitlines())# convert alignment to string to be able to be to loop through each nucleotide - 'PairwiseAlign is not iterable'
+		# create an array where each character in alignment gets its own index
+		isolate1_gene = np.array(list(list_alignment[0]))
+		isolate2_gene = np.array(list(list_alignment[2]))
+		aligned = np.array(list(list_alignment[1]))
+		nucleotide_matrix = np.row_stack((isolate1_gene, aligned, isolate2_gene))
+		matches = sum(np.char.count(aligned, '|'))
+		score = "Similarity = %.1f:" % (matches / (len(subseq1)) * 100)
 
-			return subseq1, subseq2_coords, subseq2, score, nucleotide_alignment, nucleotide_matrix, isolate1_gene, isolate2_gene
+		return subseq1, subseq2_coords, subseq2, score, nucleotide_alignment, nucleotide_matrix, isolate1_gene, isolate2_gene
 
 	
 	def protein_sequence_alignment(pos1, pos2, path, isolate1, isolate2):
@@ -356,16 +356,16 @@ class GgDiGraph(nx.DiGraph):
 		subseq2_codons = [subseq2[i:i + 3] for i in range(0, len(subseq2), 3)]
 
 		for i in range(len(subseq1_codons)):
-		if len(subseq1_codons[i]) % 3 == 0:
-			protein1 += table[subseq1_codons[i]]
-		else:
-			protein1 += '-'
+			if len(subseq1_codons[i]) % 3 == 0:
+				protein1 += table[subseq1_codons[i]]
+			else:
+				protein1 += '-'
 
 		for i in range(len(subseq2_codons)):
-		if len(subseq2) % 3 == 0:
-			protein2 += table[subseq2_codons[i]]
-		else:
-			protein2 += '-'
+			if len(subseq2) % 3 == 0:
+				protein2 += table[subseq2_codons[i]]
+			else:
+				protein2 += '-'
 
 		protein1_amino_acids = list(protein1)
 		protein2_amino_acids = list(protein2)
@@ -398,84 +398,84 @@ class GgDiGraph(nx.DiGraph):
 		pointerOne = 0
 		pointerTwo = 0
 		for i in range(len(stringOne)):
-		if pointerOne != len(stringOne) - 1 and pointerTwo != len(stringOne) - 1:
-			if stringOne[pointerOne] == stringTwo[pointerTwo]:
-			finalStringOne = finalStringOne + str(stringOne[pointerOne])
-			finalStringTwo = finalStringTwo + str(stringTwo[pointerTwo])
-			middleString = middleString + '|'
-			pointerOne += 1
-			pointerTwo += 1
+			if pointerOne != len(stringOne) - 1 and pointerTwo != len(stringOne) - 1:
+				if stringOne[pointerOne] == stringTwo[pointerTwo]:
+					finalStringOne = finalStringOne + str(stringOne[pointerOne])
+					finalStringTwo = finalStringTwo + str(stringTwo[pointerTwo])
+					middleString = middleString + '|'
+					pointerOne += 1
+					pointerTwo += 1
 
 			elif stringOne[pointerOne] != stringTwo[pointerTwo]:
-			if pointerOne == 0 and pointerTwo == 0 and stringOne[pointerOne] != stringTwo[pointerTwo] and stringOne[pointerOne + 1] == stringTwo[pointerTwo + 1]:
-				finalStringOne = finalStringOne + str(stringOne[pointerOne])
-				finalStringTwo = finalStringTwo + str(stringTwo[pointerTwo])
-				middleString = middleString + 'X'
-				pointerOne += 1
-				pointerTwo += 1
+				if pointerOne == 0 and pointerTwo == 0 and stringOne[pointerOne] != stringTwo[pointerTwo] and stringOne[pointerOne + 1] == stringTwo[pointerTwo + 1]:
+					finalStringOne = finalStringOne + str(stringOne[pointerOne])
+					finalStringTwo = finalStringTwo + str(stringTwo[pointerTwo])
+					middleString = middleString + 'X'
+					pointerOne += 1
+					pointerTwo += 1
 
 			elif pointerOne > 0 and pointerTwo > 0 and stringOne[pointerOne - 1] == stringTwo[pointerTwo - 1]:
 				if stringOne[pointerOne + 1] == stringTwo[pointerTwo + 1] and stringOne[pointerOne + 1] != stringTwo[pointerTwo] and stringOne[pointerOne] != stringTwo[pointerTwo + 1]:
-				finalStringOne = finalStringOne + str(stringOne[pointerOne])
-				finalStringTwo = finalStringTwo + str(stringTwo[pointerTwo])
-				middleString = middleString + 'X'
-				pointerOne += 1
-				pointerTwo += 1
+					finalStringOne = finalStringOne + str(stringOne[pointerOne])
+					finalStringTwo = finalStringTwo + str(stringTwo[pointerTwo])
+					middleString = middleString + 'X'
+					pointerOne += 1
+					pointerTwo += 1
 				elif stringOne[pointerOne] == stringTwo[pointerTwo + 1] and stringOne[pointerOne + 1] == stringTwo[pointerTwo + 2]:
-				check = True
+					check = True
 				while check:
 					finalStringOne = finalStringOne + '-'
 					finalStringTwo = finalStringTwo + str(stringTwo[pointerTwo])
 					middleString = middleString + '-'
 					pointerTwo += 1
 					if stringOne[pointerOne] == stringTwo[pointerTwo]:
-					check = False
-					break
-				elif stringOne[pointerOne] == stringTwo[pointerTwo + 2] and stringOne[pointerOne + 1] == stringTwo[
-				pointerTwo + 3] and stringOne[pointerOne + 2] == stringTwo[pointerTwo + 4]:
-				finalStringOne = finalStringOne + '--'
-				finalStringTwo = finalStringTwo + str(stringTwo[pointerTwo]) + str(stringTwo[pointerTwo + 1])
-				middleString = middleString + '--'
-				pointerTwo += 2
+						check = False
+						break
+				elif stringOne[pointerOne] == stringTwo[pointerTwo + 2] and stringOne[pointerOne + 1] == stringTwo[pointerTwo + 3] and stringOne[pointerOne + 2] == stringTwo[pointerTwo + 4]:
+					finalStringOne = finalStringOne + '--'
+					finalStringTwo = finalStringTwo + str(stringTwo[pointerTwo]) + str(stringTwo[pointerTwo + 1])
+					middleString = middleString + '--'
+					pointerTwo += 2
 
 				elif stringOne[pointerOne + 1] == stringTwo[pointerTwo] and stringOne[pointerOne + 2] == stringTwo[pointerTwo + 1]:
-				check = True
+					check = True
 				while check:
 					finalStringOne = finalStringOne + str(stringOne[pointerOne])
 					finalStringTwo = finalStringTwo + '-'
 					middleString = middleString + '-'
 					pointerOne += 1
 					if stringOne[pointerOne + 1] == stringTwo[pointerTwo + 1]:
-					check = False
+						check = False
 					break
 
 				elif stringOne[pointerOne + 2] == stringTwo[pointerTwo] and stringOne[pointerOne + 3] == stringTwo[pointerTwo + 1] and stringOne[pointerOne + 4] == stringTwo[pointerTwo + 2]:
-				finalStringOne = finalStringOne + str(stringOne[pointerOne]) + str(stringOne[pointerOne + 1])
-				finalStringTwo = finalStringTwo + '--'
-				middleString = middleString + '--'
-				pointerOne += 2
+					finalStringOne = finalStringOne + str(stringOne[pointerOne]) + str(stringOne[pointerOne + 1])
+					finalStringTwo = finalStringTwo + '--'
+					middleString = middleString + '--'
+					pointerOne += 2
 
-		else:  # and pointerOne == range(len(stringOne)) and pointerTwo == range(len(stringOne)):
+		else:
+			# and pointerOne == range(len(stringOne)) and pointerTwo == range(len(stringOne)):
 
 			if stringOne[-1] != stringTwo[-1]:
-			if stringOne[pointerOne] != '_' or stringTwo[pointerTwo] != '_':
-				finalStringOne = finalStringOne + str(stringOne[-1])
-				finalStringTwo = finalStringTwo + str(stringTwo[-1])
-				middleString = middleString + 'X'
+				if stringOne[pointerOne] != '_' or stringTwo[pointerTwo] != '_':
+					finalStringOne = finalStringOne + str(stringOne[-1])
+					finalStringTwo = finalStringTwo + str(stringTwo[-1])
+					middleString = middleString + 'X'
 			else:
 				if stringOne[pointerOne] == '_':
-				finalStringOne = finalStringOne + '-'
-				finalStringTwo = finalStringTwo + str(stringTwo[-1])
-				middleString = middleString + '-'
+					finalStringOne = finalStringOne + '-'
+					finalStringTwo = finalStringTwo + str(stringTwo[-1])
+					middleString = middleString + '-'
 				elif stringTwo[pointerTwo] == '_':
-				finalStringOne = finalStringOne + str(stringOne[-1])
-				finalStringTwo = finalStringTwo + '-'
-				middleString = middleString + '-'
+					finalStringOne = finalStringOne + str(stringOne[-1])
+					finalStringTwo = finalStringTwo + '-'
+					middleString = middleString + '-'
 
 			elif stringOne[-1] == stringTwo[-1]:
-			finalStringOne = finalStringOne + str(stringOne[-1])
-			finalStringTwo = finalStringTwo + str(stringTwo[-1])
-			middleString = m
+				finalStringOne = finalStringOne + str(stringOne[-1])
+				finalStringTwo = finalStringTwo + str(stringTwo[-1])
+				middleString = m
 
 		protein_alignment = finalStringOne + '\n' + middleString + '\n' + finalStringTwo
 
