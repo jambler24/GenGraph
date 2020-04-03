@@ -1,6 +1,7 @@
 # Dependencies
 
 import networkx as nx
+from gengraphTool import *
 
 # Built in
 
@@ -17,10 +18,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from Bio import Align
 import pandas as pd
+import difflib
 
 try:
 	import cPickle as pickle
-except:
+except ModuleNotFoundError:
 	import pickle
 
 import logging
@@ -120,10 +122,10 @@ class GgDiGraph(nx.DiGraph):
 		return res_string
 
 	def ids(self):
-		'''
+		"""
 		Returns the IDs of the sequences found in the graph.
 		:return: list of ID strings
-		'''
+		"""
 
 		# Need to change to ids to be consistant with graph
 		ID_list = self.graph['isolates'].split(',')
@@ -154,8 +156,6 @@ class GgDiGraph(nx.DiGraph):
 		:param neighbours: Number of neighbours to be included. Currently testing, only 1 level available.
 		:return: Plots a netowrkx + matplotlib figure of the region subgraph.
 		"""
-
-		import matplotlib.pyplot as plt
 
 		sub_graph = extract_region_subgraph(self, region_start, region_stop, seq_name, neighbours=neighbours)
 		pos = nx.spring_layout(sub_graph)
@@ -201,984 +201,732 @@ class GgDiGraph(nx.DiGraph):
 
 			return 0
 
+	# ---------------------------------------------------- New functions under testing
+
+	# ---------------------------------------------------- Read Alignment functions
+	kmerDict = {}
+	global firstPath
+	firstPath = True
+
+	def fast_kmer_create(self, kmerLength):
+		"""
+		:param kmerLength: A number that indicated the length of the kmers that you want as an output
+		:return: A dictionary with all the kmers in the graph, each entry in the dictionary has a kmer name, the nodes that the kmer covers, the sequence of the kmer and
+				the starting position of the kmer on the graph
+		"""
+		# Start Positions stored in the dictionary are character list positions, so the first character in the node sequence is position 0 not position 1
+		graphNodes = list(self.nodes)
+		kmerNumber = 1
+
+		# Runs through the graph nodes creating kmers and checking if each of the nodes has an inversion in it
+		for i in graphNodes:
+			currentNodeName = str(i)
+			idsCounter = str(self.node[currentNodeName]['ids']).count(',')
+			idsCounter += 1
+			negCounter = str(self.node[currentNodeName]).count('-')
+			if idsCounter * 2 == negCounter:
+				ids = str(self.node[currentNodeName]['ids']).split(',')
+				for f in ids:
+					self.node[currentNodeName][str(f) + '_leftend'] = int(
+						self.node[currentNodeName][str(f) + '_leftend']) * -1
+					self.node[currentNodeName][str(f) + '_rightend'] = int(
+						self.node[currentNodeName][str(f) + '_rightend']) * -1
+				self.node[currentNodeName]['sequence'] = str(self.node[currentNodeName]['sequence'])[::-1]
+
+			nodeSequence = self.nodes[currentNodeName]['sequence']
+			revNodeSequence = nodeSequence[::-1]
+			nodeKeys = list(self.nodes[currentNodeName])
+			kmerStartPos = 0
+			values = list(dict(self.node[currentNodeName]).values())
+			inv = False
+			for num in values:
+				if isinstance(num, int):
+					if num < 0:
+						inv = True
+			if inv == True:
+				for j in range(len(nodeSequence)):
+					if kmerStartPos + kmerLength <= len(nodeSequence):
+						kmerSeq = nodeSequence[kmerStartPos:kmerStartPos + kmerLength]
+						kmerRevSeq = revNodeSequence[kmerStartPos:kmerStartPos + kmerLength]
+						dictStartPos = kmerStartPos
+						kmerStartPos += 1
+						tempDict = {'nodes': [currentNodeName], 'sequence': kmerSeq, 'inversesequence': kmerRevSeq,
+									'startposition': dictStartPos}
+						newkmer = {'kmer_' + str(kmerNumber): tempDict}
+						kmerNumber += 1
+						GgDiGraph.kmerDict.update(newkmer)
+					else:
+						kmerPartseq = nodeSequence[kmerStartPos:]
+						dictStartPos = kmerStartPos
+						kmerStartPos += 1
+						currentNode = [currentNodeName]
+						self.kmer_over_multiple_nodes(kmerPartseq, currentNode, kmerLength, kmerNumber, dictStartPos,
+													  True)
+						kmerNumber += 1
+			else:
+				for j in range(len(nodeSequence)):
+					if kmerStartPos + kmerLength <= len(nodeSequence):
+						kmerSeq = nodeSequence[kmerStartPos:kmerStartPos + kmerLength]
+						dictStartPos = kmerStartPos
+						kmerStartPos += 1
+						tempDict = {'nodes': [currentNodeName], 'sequence': kmerSeq, 'startposition': dictStartPos}
+						newkmer = {'kmer_' + str(kmerNumber): tempDict}
+						kmerNumber += 1
+						GgDiGraph.kmerDict.update(newkmer)
+					else:
+						kmerPartseq = nodeSequence[kmerStartPos:]
+						dictStartPos = kmerStartPos
+						kmerStartPos += 1
+						currentNode = [currentNodeName]
+						self.kmer_over_multiple_nodes(kmerPartseq, currentNode, kmerLength, kmerNumber, dictStartPos,
+													  False)
+						kmerNumber += 1
+		return GgDiGraph.kmerDict
+
+	def kmer_over_multiple_nodes(self, kmerPart, currentNode, kmerLength, kmerNumber, kmerStartPos, hasInv):
+		"""
+		You do not call this function directly. This function is used when creating kmers from the graph and is called by
+		the fast_kmer_create function. Recursively goes through nodes until the kmer has been successfully created.
+		:param kmerPart: the current part of the kmer sequence
+		:param currentNode: the current node that the kmer is traversing over
+		:param kmerLength: the length of the desired outcome for the kmer
+		:param kmerNumber: the current number of this kmer
+		:param kmerStartPos: The starting position of this current kmer
+		:param hasInv: Boolean as to whether the node has an inversion
+		:return: Adds to the kmerDict of all kmers in the graphs. This is called by the fast kmer create when a kmer spans over
+				more than one node.
+		"""
+		remainingNumber = kmerLength - len(kmerPart)
+		connectedNodes = list(self[currentNode[-1]])
+		connectedNodeNumber = len(connectedNodes)
+
+		for k in range(connectedNodeNumber):
+			nextNode = self.nodes[connectedNodes[k]]
+			nextNodeSeq = nextNode['sequence']
+			nodeKeys = list(nextNode)
+			nextNodeReverseSeq = nextNode['sequence'][::-1]
+			# If the kmer can be fully created by the current node
+			if len(nextNodeSeq) >= remainingNumber:
+				vals = list(dict(nextNode).values())
+				invs = False
+				for num in vals:
+					if isinstance(num, int):
+						if num < 0:
+							invs = True
+				if invs == True:
+					kmerSeq = kmerPart + nextNodeSeq[:remainingNumber]
+					kmerRevSeq = kmerPart + nextNodeReverseSeq[:remainingNumber]
+					allNodes = []
+					pos = 0
+					for x in range(len(currentNode)):
+						allNodes.append(currentNode[pos])
+						pos += 1
+					allNodes.append(connectedNodes[k])
+					tempDict = {'nodes': allNodes, 'sequence': kmerSeq, 'inversesequence': kmerRevSeq,
+								'startposition': kmerStartPos}
+					kmerKey = 'kmer_' + str(kmerNumber) + '_' + str(k + 1)
+					if kmerKey in GgDiGraph.kmerDict.keys():
+						lastDigit = kmerKey[-1]
+						lastDigit = int(lastDigit) + 1
+						newkmerKey = kmerKey[:len(kmerKey) - 1] + str(lastDigit)
+						kmerKey = newkmerKey
+					newkmer = {kmerKey: tempDict}
+					GgDiGraph.kmerDict.update(newkmer)
+				else:
+					# If the node is not longenough to make a full kmer you will need to recursively move onto its neighbours until
+					# all of the kmers have been successfully created
+					if hasInv == True:
+						kmerSeq = kmerPart + nextNodeSeq[:remainingNumber]
+						revKmerSeq = self.nodes[currentNode[-1]]['sequence']
+						revKmerSeq = revKmerSeq[0:len(kmerPart)]
+						revKmerSeq = revKmerSeq[::-1]
+						revKmerSeq = revKmerSeq + nextNodeSeq[:remainingNumber]
+						allNodes = []
+						pos = 0
+						for x in range(len(currentNode)):
+							allNodes.append(currentNode[pos])
+							pos += 1
+						allNodes.append(connectedNodes[k])
+						tempDict = {'nodes': allNodes, 'sequence': kmerSeq, 'inversesequence': revKmerSeq,
+									'startposition': kmerStartPos}
+						kmerKey = 'kmer_' + str(kmerNumber) + '_' + str(k + 1)
+						if kmerKey in GgDiGraph.kmerDict.keys():
+							lastDigit = kmerKey[-1]
+							lastDigit = int(lastDigit) + 1
+							newkmerKey = kmerKey[:len(kmerKey) - 1] + str(lastDigit)
+							kmerKey = newkmerKey
+						newkmer = {kmerKey: tempDict}
+						GgDiGraph.kmerDict.update(newkmer)
+					else:
+						kmerSeq = kmerPart + nextNodeSeq[:remainingNumber]
+						allNodes = []
+						pos = 0
+						for x in range(len(currentNode)):
+							allNodes.append(currentNode[pos])
+							pos += 1
+						allNodes.append(connectedNodes[k])
+						tempDict = {'nodes': allNodes, 'sequence': kmerSeq, 'startposition': kmerStartPos}
+						kmerKey = 'kmer_' + str(kmerNumber) + '_' + str(k + 1)
+						if kmerKey in GgDiGraph.kmerDict.keys():
+							lastDigit = kmerKey[-1]
+							lastDigit = int(lastDigit) + 1
+							newkmerKey = kmerKey[:len(kmerKey) - 1] + str(lastDigit)
+							kmerKey = newkmerKey
+						newkmer = {kmerKey: tempDict}
+						GgDiGraph.kmerDict.update(newkmer)
+			else:
+				kmerTemp = kmerPart + nextNodeSeq
+				nodesInvolved = []
+				posx = 0
+				for x in range(len(currentNode)):
+					nodesInvolved.append(currentNode[posx])
+					posx += 1
+				nodesInvolved.append(connectedNodes[k])
+				# print(kmerTemp + " " +str(nodesInvolved))
+				self.kmer_over_multiple_nodes(kmerTemp, nodesInvolved, kmerLength, kmerNumber, kmerStartPos, False)
+
+	# recursively goes over multiple nodes
+	# will need the currentNode that is parsed at this step so instead you have the two previous nodes the kmer goes over so you have all three nodes saved into the dictionary
+
+	def kmers_of_node(self, nodeName):
+		'''
+
+		:param nodeName: the Node that you want to use create kmers from
+		:return: returns a dictionary of all of the kmers involved with the given node.
+		'''
+		kmersOfNode = {}
+		if len(GgDiGraph.kmerDict) == 0:
+			# default kmer length is 4
+			GgDiGraph.fast_kmer_create(self, 4)
+
+		keyList = list(GgDiGraph.kmerDict.keys())
+		# creates the kmers of the current node if the dictionary of all of the kmers is not already made
+		for i in keyList:
+			currentKmer = GgDiGraph.kmerDict.get(i)
+			kmerNodeList = currentKmer['nodes']
+			for j in kmerNodeList:
+				if j == nodeName:
+					kmer = {i: currentKmer}
+					kmersOfNode.update(kmer)
+		return kmersOfNode
+
+	def create_query_kmers(self, querySequence, kmerLength):
+		'''
+
+		:param querySequence: the sequence of the query you want to align to the graph
+		:param kmerLength: The length of the kmers that you want to make from the query sequence.
+				These should be the same as the graph kmer length
+		:return:Returns a dictionary with all of the kmers from the query sequence. The dictionary contains the query
+				kmer name and query kmer sequence.
+		'''
+		startPos = 0
+		queryKmers = {}
+		kmerNumber = 1
+		for i in range(len(querySequence)):
+			if startPos + kmerLength <= len(querySequence):
+				kmerSeq = querySequence[startPos:startPos + kmerLength]
+				kmer = {'qkmer_' + str(kmerNumber): kmerSeq}
+				kmerNumber += 1
+				queryKmers.update(kmer)
+				startPos += 1
+		return queryKmers
+
+	# need to fix readgaps. It is sometimes still not giving the correct values for gaps in between
+	def readGaps(self, nodeNeighbours, query, firstReadInfo, secondReadInfo, distanceBetween):
+		'''
+		This function is not actually used as a more efficient way was found that bypasses this function. In any
+		case this function should not be called and was called by the read aligner.
+		:param nodeNeighbours: neighbours of the current node
+		:param query: query sequence
+		:param firstReadInfo: first aligned read dictionary information
+		:param secondReadInfo: second aligned read dictionary information
+		:param distanceBetween: the current distance between the two aligned reads
+		:return: Returns the total distance between the two aligned reads
+		'''
+		global dist
+		for x in nodeNeighbours:
+			if x == secondReadInfo['nodescoveredbyread'][0]:
+				if self.firstPath == True:
+					self.dist = distanceBetween + (
+							(len(self.nodes[firstReadInfo['nodescoveredbyread'][-1]]['sequence'])) - (
+							firstReadInfo['alignementendpositioninlastnode'] + 1)) + secondReadInfo[
+									'alignmentstartpositioninfirstnode']
+					self.firstPath = False
+					# print(self.dist)
+					return self.dist
+				else:
+					return self.dist
+		for i in nodeNeighbours:
+			if len(self.nodes[i]['sequence']) + int(distanceBetween) < len(query):
+				distanceBetween = int(distanceBetween) + len(self.nodes[i]['sequence'])
+				newNeighbours = list(self[i])
+				self.readGaps(newNeighbours, query, firstReadInfo, secondReadInfo, distanceBetween)
+			else:
+				return distanceBetween
+		return distanceBetween
+
+	def debruin_read_alignment(self, queryseq, kmerLength, outPutFilename):
+		'''
+		Running this Function will print out blocks of information on the aligned reads. Each block of 7 lines will correspond to a single aligned read.
+		Line 1: The Aligned read sequence
+		Line 2: The Nodes that the aligned read covers
+		Line 3: All nodes that the read aligns to inversely(Nodes with an aligned inversion)
+		Line 4: The starting alignment position on the first node involved in the alignment
+		Line 5: The ending alignment position on the last node involved in the alignment
+		Line 6: Percentage of the initial query that has aligned to the graph
+		Line 7:Percentage of the aligned read that has successfully aligned to the graph
+		:param query: This is the read, as a string saved in a .txt file, that you want to try and align to the graph.
+		:param kmerLength: The length of the kmers that will be created
+		:return: returns a dictionary with the sequences that align, x's represent sections of the sequence that doesnt correctly align
+				It also returns the nodes that the sequence aligns to and the position on the first node the sequence starts aligning to and the position on the last node that the sequence ends aligning to.
+				These positions are in string positions, so the first base pair is position 0.
+		'''
+		queryKmerDict = self.create_query_kmers(queryseq, kmerLength)
+		referenceKmerDict = self.fast_kmer_create(kmerLength)
+		# creates the query and graph kmers with the desired kmer length
+		finalkmerGroups = []
+		groupedListOftwos = []
+		matchedKmers = []
+		finalAlignedReads = {}
+		inversionNodes = []
+		# list of lists of matched kmers
+		# first pos is query kmer name, second pos is reference nodes that the kmer covers, third is the start position of reference kmer, fourth is reference kmer name, 5th is qkmerseq
+
+		queryKmerKeys = list(queryKmerDict.keys())
+		referenceKmerKeys = list(referenceKmerDict.keys())
+
+		# mathces the each query kmer to refernce graph kmers with the same sequence
+		for i in queryKmerKeys:
+			currentQueryKmer = queryKmerDict.get(i)
+			for j in referenceKmerKeys:
+				currentReferenceKmer = referenceKmerDict.get(j)
+				if currentReferenceKmer['sequence'] == currentQueryKmer:
+					tempList = [i, currentReferenceKmer['nodes'], currentReferenceKmer['startposition'], j,
+								currentQueryKmer, 'normal']
+					matchedKmers.append(tempList)
+				elif 'inversesequence' in currentReferenceKmer:
+					if currentReferenceKmer['inversesequence'] == currentQueryKmer:
+						tempList = [i, currentReferenceKmer['nodes'], currentReferenceKmer['startposition'], j,
+									currentQueryKmer, 'inverse']
+						matchedKmers.append(tempList)
+		# results in a list of list with the matched kmers
+		# has each match between query kmer and reference graph kmer
+
+		# runs through the matched kmers and groups the kmers into groups of twos by the kmers that line up next to each other
+		for k in matchedKmers:
+			for x in matchedKmers:
+				tempGroupedList = []
+				currentQKmer = str(k[0])
+				underscorePos = currentQKmer.find('_')
+				qkmerNumber = currentQKmer[int(underscorePos) + 1:]
+				nextQkmerNumber = int(qkmerNumber) + 1
+				nextQkmer = 'qkmer_' + str(nextQkmerNumber)
+
+				if nextQkmer == x[0]:
+					if k[1][0] == x[1][0] and k[2] + 1 == x[2]:
+						addOne = str(k[0]) + '-' + str(k[3])
+						addTwo = str(x[0]) + '-' + str(x[3])
+						if len(k[1]) == 1 and k[5] == 'inverse':
+							node = referenceKmerDict[addOne[addOne.find('-') + 1:]]['nodes'][0]
+							if node not in inversionNodes:
+								inversionNodes.append(node)
+							addOne = 'i' + addOne
+						if len(x[1]) == 1 and x[5] == 'inverse':
+							addTwo = 'i' + addTwo
+							node = referenceKmerDict[addTwo[addTwo.find('-') + 1:]]['nodes'][0]
+							if node not in inversionNodes:
+								inversionNodes.append(node)
+						tempGroupedList.append(addOne)
+						tempGroupedList.append(addTwo)
+						groupedListOftwos.append(tempGroupedList)
+					elif len(self.nodes[k[1][0]]['sequence']) - 1 == k[2]:
+						if len(k[1]) > 1:
+							if k[1][1] == x[1][0] and x[2] == 0:
+								addOne = str(k[0]) + '-' + str(k[3])
+								addTwo = str(x[0]) + '-' + str(x[3])
+								if (len(k[1]) == 1 and k[5] == 'inverse'):
+									node = referenceKmerDict[addOne[addOne.find('-') + 1:]]['nodes'][0]
+									if node not in inversionNodes:
+										inversionNodes.append(node)
+									addOne = 'i' + addOne
+								if (len(x[1]) == 1 and x[5] == 'inverse'):
+									node = referenceKmerDict[addTwo[addTwo.find('-') + 1:]]['nodes'][0]
+									if node not in inversionNodes:
+										inversionNodes.append(node)
+									addTwo = 'i' + addTwo
+								tempGroupedList.append(addOne)
+								tempGroupedList.append(addTwo)
+								groupedListOftwos.append(tempGroupedList)
+
+		# end up with list of lists with groups of two kmers that are next to each other
+
+		# takes the groups of two lists and groups all o the kmers that are in a line and next to each other on the graph
+		for t in groupedListOftwos:
+			continueCheck = True
+			tempFinal = []
+
+			for c in finalkmerGroups:
+				if t[0] in c and t[1] in c:
+					continueCheck = False
+
+			if continueCheck == True:
+				for l in t:
+					tempFinal.append(l)
+
+				for p in groupedListOftwos:
+					if tempFinal[-1] == p[0]:
+						tempFinal = tempFinal + list(set(p) - set(tempFinal))
+				finalkmerGroups.append(tempFinal)
+		# result in final groups with all kmers that are next to each other on the graphs grouped up
+		AlignNumber = 1
+
+		# creates a dictionary with all the final aligned kmers that align 100% perfectly to the reference graph
+		for n in finalkmerGroups:
+			matchedSquence = ''
+			nodesCovered = []
+			startpos = 0
+			endpos = 0
+			finalKmerName = n[-1][n[-1].find('-') + 1:]
+			finalNode = referenceKmerDict[finalKmerName]['nodes'][-1]
+			for m in n:
+				inverse = False
+				if m[0] == 'i':
+					inverse = True
+				kmerName = m[m.find('-') + 1:]
+				# get kmerseq from matchedkmers not from the reference kmer list
+				kmerseq = ''
+				if inverse == True:
+					qkmerName = m[1:m.find('-')]
+				else:
+					qkmerName = m[:m.find('-')]
+				for r in matchedKmers:
+					# shouldnt be finalkmerName, got to get each kmerName
+					if r[0] == qkmerName and kmerName == r[3]:
+						kmerseq = r[4]
+				kmernode = referenceKmerDict[kmerName]['nodes']
+				nodesCovered.extend(kmernode)
+				positionsLeft = 0
+				nodesCovered = list(dict.fromkeys(nodesCovered))
+				if m == n[0]:
+					startpos = referenceKmerDict[kmerName]['startposition']
+				if m == n[-1]:
+					if len(referenceKmerDict[kmerName]['nodes']) == 1 and referenceKmerDict[kmerName]['nodes'][
+						-1] == finalNode:
+						endpos = referenceKmerDict[kmerName]['startposition'] + kmerLength - 1
+					else:
+						for b in (referenceKmerDict[kmerName]['nodes']):
+							if b == referenceKmerDict[kmerName]['nodes'][0]:
+								tempnumber = len(self.nodes[b]['sequence']) - referenceKmerDict[kmerName][
+									'startposition']
+								positionsLeft += tempnumber
+							elif b != referenceKmerDict[kmerName]['nodes'][0] and b != \
+									referenceKmerDict[kmerName]['nodes'][-1]:
+								positionsLeft += len(self.nodes[b]['sequence'])
+						endpos = len(referenceKmerDict[kmerName]['sequence']) - positionsLeft - 1
+				if len(matchedSquence) == 0:
+					matchedSquence = matchedSquence + kmerseq
+				else:
+					matchedSquence = matchedSquence + kmerseq[-1]
+			match = False
+			for s in finalAlignedReads:
+				if matchedSquence in str(finalAlignedReads[s]['sequence']) and set(nodesCovered).issubset(
+						finalAlignedReads[s]['nodescoveredbyread']):
+					match = True
+			if match == False:
+				tempValues = {'sequence': matchedSquence, 'nodescoveredbyread': nodesCovered,
+							  'alignmentstartpositioninfirstnode': startpos, 'alignementendpositioninlastnode': endpos}
+				tempAlign = {'Aligned_Read_' + str(AlignNumber): tempValues}
+				AlignNumber += 1
+				finalAlignedReads.update(tempAlign)
+		# At the moment this returns reads that matched that are any size larger than one kmer length.
+		# finalAlignedReads Are all reads that map 100 percent accurately
+		# Start grouping the final aligned read dictionary to show bigger reads and not only 100% alignment
+		finalGroupedReads = {}
+		readGroups = []
+		unlinkedReads = []
+
+		# then finds the distances between the 100 percent mapped reads and if those distances are small enough it groups those 100 percent mapped reads together
+		# this represents the final aligned reads which may not be 100 percent accurately mapped to each other.
+		for z in finalAlignedReads:
+			endNode = finalAlignedReads[z]['nodescoveredbyread'][-1]
+			links = 0
+			for c in finalAlignedReads:
+				distanceBetween = 0
+				startNode = finalAlignedReads[c]['nodescoveredbyread'][0]
+				if z != c and list(finalAlignedReads.keys()).index(z) < list(finalAlignedReads.keys()).index(c):
+					if int(z[13:]) + 1 == int(c[13:]):
+						if endNode == startNode:
+							distanceBetween = finalAlignedReads[c]['alignmentstartpositioninfirstnode'] - 1 - \
+											  finalAlignedReads[z]['alignementendpositioninlastnode']
+						else:
+							if nx.has_path(self, endNode, startNode):
+								path = nx.all_shortest_paths(self, endNode, startNode)
+								pathList = list(path)
+								for v in range(len(pathList)):
+									tdistanceBetween = 0
+									pointer = v
+									startDist = 0
+									for x in pathList[v]:
+										if x == pathList[v][0]:
+											startDist = len(self.nodes[x]['sequence']) - finalAlignedReads[z][
+												'alignementendpositioninlastnode'] - 1
+											tdistanceBetween = tdistanceBetween + startDist
+										elif x == pathList[v][-1]:
+											tdistanceBetween = tdistanceBetween + finalAlignedReads[c][
+												'alignmentstartpositioninfirstnode']
+										else:
+											tdistanceBetween = tdistanceBetween + len(self.nodes[x]['sequence'])
+									if distanceBetween == 0:
+										distanceBetween = tdistanceBetween
+									elif tdistanceBetween < distanceBetween and distanceBetween != 0:
+										distanceBetween = tdistanceBetween
+						if distanceBetween < len(queryseq) and distanceBetween != 0:
+							readGroups.append([z, distanceBetween, c])
+							links += 1
+			if links == 0:
+				contains = False
+				for o in readGroups:
+					if o[0] == z or o[2] == z:
+						contains = True
+				if contains == False:
+					unlinkedReads.append(z)
+
+		# Alignement read groups will shop the start and end point of the reads but will hva egaps in between that can be larger then gaps between the sections in the reads
+		finalReadGroups = []
+		intfinalReadGroups = []
+		tempReadGroups = []
+		for u in readGroups:
+			temp = [u[0], u[-1]]
+			tempReadGroups.append(temp)
+		# print(tempReadGroups)
+		out = []
+		while len(tempReadGroups) > 0:
+			# first, *rest = tempReadGroups
+			first = tempReadGroups[0]
+			rest = tempReadGroups[1:]
+			first = set(first)
+
+			lf = -1
+			while len(first) > lf:
+				lf = len(first)
+
+				rest2 = []
+				for r in rest:
+					if len(first.intersection(set(r))) > 0:
+						first |= set(r)
+					else:
+						rest2.append(r)
+				rest = rest2
+
+			out.append(first)
+			tempReadGroups = rest
+		for h in out:
+			readNo = []
+			intermediate = []
+			for y in h:
+				readNo.append(int(y[str(y).rfind('_') + 1:]))
+			readNo.sort()
+			for o in readNo:
+				for p in h:
+					if o == int(p[str(p).rfind('_') + 1:]):
+						intermediate.append(p)
+			intfinalReadGroups.append(intermediate)
+		# print(intfinalReadGroups)
+
+		for x in intfinalReadGroups:
+			readsWithDist = []
+			for c in range(len(x) - 1):
+				for z in readGroups:
+					if z[0] == x[c] and z[-1] == x[c + 1]:
+						if c == 0:
+							readsWithDist.append(x[c])
+							readsWithDist.append(z[1])
+							readsWithDist.append(x[c + 1])
+						else:
+							readsWithDist.append(z[1])
+							readsWithDist.append(x[c + 1])
+			finalReadGroups.append(readsWithDist)
+
+		# all the final reads are now grouped together with the distances between the reads represented in the list of reads
+		# Now the dictionary of final reads are created with the sequence of the read,the start and end positions of the reads
+		# and the nodes that the reads covers
+		# it also shows the percentage of the read that aligns to the graph and the percentage of the read that has aligned to the graph
+		allAlignedReads = {}
+		AlignNo = 1
+		for z in finalReadGroups:
+			sequence = ''
+			checkPercentSeq = ''
+			xCounter = 0
+			nodesCoveredByRead = []
+			startAlignPos = 0
+			endAlignPos = 0
+			percentOfQuery = 0
+			percentAligned = 0
+			for i in range(len(z)):
+				if i == 0:
+					readInfo = finalAlignedReads[z[i]]
+					startAlignPos = readInfo['alignmentstartpositioninfirstnode']
+					sequence = sequence + str(readInfo['sequence'])
+					checkPercentSeq = checkPercentSeq + str(readInfo['sequence'])
+					nodesCoveredByRead.extend(x for x in readInfo['nodescoveredbyread'] if x not in nodesCoveredByRead)
+				elif i == len(z) - 1:
+					readInfo = finalAlignedReads[z[i]]
+					endAlignPos = readInfo['alignementendpositioninlastnode']
+					sequence = sequence + str(readInfo['sequence'])
+					checkPercentSeq = checkPercentSeq + str(readInfo['sequence'])
+					nodesCoveredByRead.extend(x for x in readInfo['nodescoveredbyread'] if x not in nodesCoveredByRead)
+				elif i % 2 == 0:
+					readInfo = finalAlignedReads[z[i]]
+					sequence = sequence + str(readInfo['sequence'])
+					checkPercentSeq = checkPercentSeq + str(readInfo['sequence'])
+					nodesCoveredByRead.extend(x for x in readInfo['nodescoveredbyread'] if x not in nodesCoveredByRead)
+				else:
+					if int(z[i]) < 0:
+						endremove = int(z[i]) - 1
+						sequence = sequence[:len(sequence) + endremove]
+					else:
+						for v in range(int(z[i])):
+							xCounter += 1
+							sequence = sequence + 'x'
+			nodeNos = []
+			newNodesCoveredByRead = []
+			for r in nodesCoveredByRead:
+				nodeNos.append(str(r[str(r).find('_') + 1:str(r).rfind('_')]) + str(r[str(r).rfind('_') + 1:]))
+			for a in nodeNos:
+				for b in nodesCoveredByRead:
+					if a == str(b[str(b).find('_') + 1:str(b).rfind('_')]) + str(b[str(b).rfind('_') + 1:]):
+						newNodesCoveredByRead.append(b)
+			startAlignPos += 1
+			endAlignPos += 1
+			if newNodesCoveredByRead[-1] in inversionNodes:
+				endAlignPos = endAlignPos * -1
+			if newNodesCoveredByRead[0] in inversionNodes:
+				startAlignPos = startAlignPos * -1
+			percentOfQuery = difflib.SequenceMatcher(None, queryseq, checkPercentSeq).ratio() * 100
+			percentAligned = (len(sequence) - xCounter) / len(sequence) * 100
+			tempVal = {'sequence': sequence, 'nodescoveredbyread': newNodesCoveredByRead,
+					   'alignmentstartpositioninfirstnode': startAlignPos,
+					   'alignementendpositioninlastnode': endAlignPos,
+					   'percentageofqueryaligned': percentOfQuery, 'percentageofalignedreadtograph': percentAligned}
+			key = {'Alignment_' + str(AlignNo): tempVal}
+			AlignNo += 1
+			allAlignedReads.update(key)
+
+		for w in unlinkedReads:
+			read = finalAlignedReads.get(w)
+			percentOfQuery = difflib.SequenceMatcher(None, queryseq, read['sequence']).ratio() * 100
+			percentAligned = (len(read['sequence'])) / len(read['sequence']) * 100
+			s = read['alignmentstartpositioninfirstnode']
+			e = read['alignementendpositioninlastnode']
+			s += 1
+			e += 1
+			if read['nodescoveredbyread'][-1] in inversionNodes:
+				e = e * -1
+			if read['nodescoveredbyread'][0] in inversionNodes:
+				s = s * -1
+			tempVals = {'sequence': read['sequence'], 'nodescoveredbyread': read['nodescoveredbyread'],
+						'alignmentstartpositioninfirstnode': s, 'alignementendpositioninlastnode': e,
+						'percentageofqueryaligned': percentOfQuery, 'percentageofalignedreadtograph': percentAligned}
+			key = {'Alignment_' + str(AlignNo): tempVals}
+			AlignNo += 1
+			allAlignedReads.update(key)
+
+		# print out the blocks of information for each aligned read
+		print('7 line block format for each aligned read')
+		print('Line 1: The Aligned read sequence ')
+		print('Line 2: The Nodes that the aligned read covers')
+		print('Line 3: All nodes that the read aligns to inversely(Nodes with an aligned inversion)')
+		print('Line 4: The starting alignment position on the first node involved in the alignment')
+		print('Line 5: The ending alignment position on the last node involved in the alignment')
+		print('Line 6: Percentage of the initial query that has aligned to the graph')
+		print('Line 7:Percentage of the aligned read that has successfully aligned to the graph')
+		print()
+
+		for t in list(allAlignedReads.keys()):
+			print(allAlignedReads[t]['sequence'])
+			print(allAlignedReads[t]['nodescoveredbyread'])
+			if len(inversionNodes) == 0:
+				print('None')
+			else:
+				currentInversionNodes = []
+				for x in allAlignedReads[t]['nodescoveredbyread']:
+					if x in inversionNodes:
+						currentInversionNodes.append(x)
+				print(currentInversionNodes)
+			print(allAlignedReads[t]['alignmentstartpositioninfirstnode'])
+			print(allAlignedReads[t]['alignementendpositioninlastnode'])
+			print(allAlignedReads[t]['percentageofqueryaligned'])
+			print(allAlignedReads[t]['percentageofalignedreadtograph'])
+			print()
+		self.create_alignment_JSON(allAlignedReads,inversionNodes,outPutFilename)
+		return allAlignedReads
+
+	def create_alignment_JSON(self, AlignedReads, inversionNodes, fileName):
+		file = open(fileName + '.JSON','w+')
+		file.write('[\n')
+		for i in list(dict(AlignedReads)):
+			file.write('\t{ \n')
+			file.write('\t\t"alignmentId": "'+i+'",\n')
+			file.write('\t\t"sequence": "' + str(AlignedReads[i]['sequence']) + '",\n')
+			file.write('\t\t"alignedNodes": "' + str(AlignedReads[i]['nodescoveredbyread']) + '",\n')
+			currentInversionNodes = []
+			for x in AlignedReads[i]['nodescoveredbyread']:
+				if x in inversionNodes:
+					currentInversionNodes.append(x)
+			file.write('\t\t"invertedAlignedNodes": "' + str(currentInversionNodes) + '",\n')
+			file.write('\t\t"alignmentStartPosition": ' + str(AlignedReads[i]['alignmentstartpositioninfirstnode']) + ',\n')
+			file.write('\t\t"alignmentEndPosition": ' + str(AlignedReads[i]['alignementendpositioninlastnode']) + ',\n')
+			file.write('\t\t"queryAlignedPercent": "' + str(AlignedReads[i]['percentageofqueryaligned']) + '",\n')
+			file.write('\t\t"readToGraphPercent": "' + str(AlignedReads[i]['percentageofalignedreadtograph']) + '",\n')
+			file.write('\t}\n')
+		file.write(']')
+
+	def extract_JSON(self,JSONfile):
+		print('7 line block format for each aligned read')
+		print('Line 1: The Aligned read sequence ')
+		print('Line 2: The Nodes that the aligned read covers')
+		print('Line 3: All nodes that the read aligns to inversely(Nodes with an aligned inversion)')
+		print('Line 4: The starting alignment position on the first node involved in the alignment')
+		print('Line 5: The ending alignment position on the last node involved in the alignment')
+		print('Line 6: Percentage of the initial query that has aligned to the graph')
+		print('Line 7:Percentage of the aligned read that has successfully aligned to the graph')
+		print()
+
+		AlignedRead = {}
+		file = open(JSONfile,'r')
+		file.readline()
+		checkLine = file.readline()
+		while checkLine != ']':
+			id = file.readline()
+			seq = file.readline()
+			nodes = file.readline()
+			invert = file.readline()
+			start = file.readline()
+			end = file.readline()
+			qPercent = file.readline()
+			rPercent = file.readline()
+			file.readline()
+			checkLine = file.readline()
+
+			tempVals = {'sequence': seq[int(seq.find(':'))+3:-3], 'nodescoveredbyread': nodes[nodes.find(':')+3: -3],
+						'alignmentstartpositioninfirstnode': start[start.find(':')+2: -2], 'alignementendpositioninlastnode': end[end.find(':')+2: -2],
+						'percentageofqueryaligned': qPercent[qPercent.find(':')+3:-3], 'percentageofalignedreadtograph': rPercent[rPercent.find(':')+3: -3]}
+			key = {id[id.find(':')+3:-3]: tempVals}
+			AlignedRead.update(key)
+
+			print(seq[seq.find(':')+3:-3])
+			print(nodes[nodes.find(':')+3:-3])
+			print(invert[invert.find(':')+3:-3])
+			print(start[start.find(':')+2:-2])
+			print(end[end.find(':')+2:-2])
+			print(qPercent[qPercent.find(':')+3:-3])
+			print(rPercent[rPercent.find(':')+3:-3])
+			print()
+
+		return AlignedRead
+
 
 # ---------------------------------------------------- New functions under testing
-
-	
-	
-#-----------------------------------------------------"SequenceHomology" functions added below
-
-	def nucleotide_sequence_alignment(pos1, pos2, path, isolate1, isolate2):
-		
-		"""extracts the same gene sequences from two isolates and performs a pairwise alignment
-	    	:param pos1: start position of gene in isolate1
-	    	:param pos2: end position of gene in isolate1
-	    	:param path: path to genome graph contained within XML file containing isolate1 and isolate2
-	    	:param isolate1: the first strain from the genome graph being compared (i.e. H37Rv in this case since it is being used as a reference)
-	    	:param isolate2: the second strain from the genome graph being compared (i.e. H37Ra strain)
-	    	:return:
-
-	    	subseq1 - nucleotide sequence string of gene found in isolate1
-	    	subseq2_coords - the converted coordinates to allow extraction of the same gene sequence in isolate2
-	    	subseq2 - nucleotide sequence string of gene found in isolate2
-	    	score - the similarity score of the two gene sequences
-	    	nucleotide_alignment - the pairwise alignment of the two nucleotide alignments
-	    	nucleotide_matrix - a NumPy array version of the pairwise alignment to allow iteration for mutation detection in later functions
-	    	isolate1_gene - the alignment array version of "subseq1"
-	    	isolate2_gene - the alignment array version of "subseq2"
-
-	    	NOTES
-	    	-------------
-
-	    	this function is only able to align two similar sequences and doesn't allow for multiple sequence alignment needed for
-	    	sequence similarity assessment. Future work should be directed toward adding this capability to the function.
-
-	    	EXAMPLE
-	    	-------------
-
-	    	comparing the carB gene sequence from the H37Rv and H37Ra strains extracted from an XML file named "H37R_pangenome.xml"
-
-			nucleotide_sequence_alignment(1557101, 1560448, './H37R_pangenome.xml', 'H37Rv', 'H37Ra')
-
-
-	    	"""
-
-	    	# IMPORT .XML FILE AND EXTRACT GENE SEQUENCE FROM THE DIFFERENT STRAINS
-
-	    	graph_obj = import_gg_graph(path)
-	    	# extract subgraphs from both isolates you want to compare for a specified nucleotide range
-	    	# isolate1 needs to be the ancestral strain and isolate2 the derived strain in order for this function to work
-	    	subseq1 = extract_original_seq_region_fast(graph_obj, pos1, pos2, isolate1)
-	    	# "pos1" and "pos2" are relative to "isolate1" and so need to convert coords to get gene sequence in "isolate2"
-	    	# so that similar regions are being compared between the strains
-	    	subseq2_coords = convert_coordinates(graph_obj, pos1, pos2, isolate1, isolate2)
-	    	subseq2_coords = list(subseq2_coords.values())
-	    	subseq2 = extract_original_seq_region_fast(graph_obj, subseq2_coords[0], subseq2_coords[1], isolate2)
-
-	    	#mimic deletion in carB gene for "deletion_detection" function example
-
-	    	#subseq2 = subseq2.replace('CCC', '', 1)
-
-	    	#mimic insertion in carB gene for "insertion_detection" function example
-
-	    	#subseq1 = subseq1.replace('CCC', '', 1)
-
-	    	#mimic SNP in carB gene for "substitution_detection" function example
-
-	    	#subseq1 = subseq1.replace('T', 'C', 1)
-
-	    	# PERFORM NUCLEOTIDE ALIGNMENT using Biopython module
-
-	    	aligner = Align.PairwiseAligner()
-	    	aligner.mode = 'local'
-	    	aligner.open_gap_score = -0.5
-		nucleotide_alignment = aligner.align(subseq1, subseq2)[0]# produces many different alignments for the same two sequences, of which the first one will be chosen
-	    	list_alignment = list(str(nucleotide_alignment).splitlines())# convert alignment to string to be able to be to loop through each nucleotide - 'PairwiseAlign is not iterable'
-	    	# create an array where each character in alignment gets its own index
-	    	isolate1_gene = np.array(list(list_alignment[0]))
-	    	isolate2_gene = np.array(list(list_alignment[2]))
-	    	aligned = np.array(list(list_alignment[1]))
-	    	nucleotide_matrix = np.row_stack((isolate1_gene, aligned, isolate2_gene))
-	    	matches = sum(np.char.count(aligned, '|'))
-	    	score = "Similarity = %.1f:" % (matches / (len(subseq1)) * 100)
-
-	    	return subseq1, subseq2_coords, subseq2, score, nucleotide_alignment, nucleotide_matrix, isolate1_gene, isolate2_gene
-
-	
-	def protein_sequence_alignment(pos1, pos2, path, isolate1, isolate2):
-
-		"""converts extracted gene sequences in "nucleotide_alignment" to protein sequences and performs protein pairwise alignment
-	    :param pos1: start position of gene in isolate1
-	    :param pos2: end position of gene in isolate1
-	    :param path: path to genome graph contained within XML file containing isolate1 and isolate2
-	    :param isolate1: the first strain from the genome graph being compared(i.e. H37Rv in this case since it is being used as a reference)
-	    :param isolate2: the second strain from the genome graph being compared (i.e. H37Ra strain)
-	    :return:
-	    protein_alignment: the pairwise alignment of the amino acid sequences converted from the nucleotide sequences
-	    of "subseq1" ("isolate1" protein) and "subseq2" ("isolate2" protein)
-	    protein_matrix: a NumPy array version of the pairwise alignment to allow iteration for amino acid change detection
-	    isolate1_protein: a Numpy array version of the "isolate1" protein - the first row of "protein_matrix"
-	    aligned_protein: a NumPy array version of the alignment of the two proteins - the second row of "protein_matrix"
-	    isolate2_protein: a NumPy array version of the "isolate2" protein - the third row of "protein_matrix"
-	    protein1_amino_acids: a list version of "isolate1_protein"
-	    protein2_amino_acids: a list version of "isolate2_protein"
-
-	    NOTES
-	    -----------------
-
-	    this function is only able to align two similar protein sequences and doesn't allow for multiple sequence alignment needed for
-	    sequence similarity assessment. Future work should be directed toward adding this capability to the function.
-
-	    An original aligner was developed to allow for protein pairwise alignment but may presents bug as unit testing has
-	    not been done
-
-	    EXAMPLE
-	    -----------------
-
-	    comparing the translated versions of the carB gene sequences from the H37Rv and H37Ra strains extracted from an XML file named "H37R_pangenome.xml"
-
-		protein_sequence_alignment(1557101, 1560448, './H37R_pangenome.xml', 'H37Rv', 'H37Ra')
-
-	    """
-
-	    subseq1, subseq2_coords, subseq2, score, nucleotide_alignment, nucleotide_matrix, isolate1_gene, isolate2_gene = nucleotide_sequence_alignment(pos1, pos2, path, isolate1, isolate2)
-	    print(isolate1_gene)
-	    print(isolate2_gene)
-	    # ALIGNMENT - Protein sequence
-
-	    # create protein sequences from nucleotide sequences "subseq1" and "subseq2"
-	    # "_" in table is a stop codon
-
-	    table = {
-		'ATA': 'I', 'ATC': 'I', 'ATT': 'I', 'ATG': 'M',
-		'ACA': 'T', 'ACC': 'T', 'ACG': 'T', 'ACT': 'T',
-		'AAC': 'N', 'AAT': 'N', 'AAA': 'K', 'AAG': 'K',
-		'AGC': 'S', 'AGT': 'S', 'AGA': 'R', 'AGG': 'R',
-		'CTA': 'L', 'CTC': 'L', 'CTG': 'L', 'CTT': 'L',
-		'CCA': 'P', 'CCC': 'P', 'CCG': 'P', 'CCT': 'P',
-		'CAC': 'H', 'CAT': 'H', 'CAA': 'Q', 'CAG': 'Q',
-		'CGA': 'R', 'CGC': 'R', 'CGG': 'R', 'CGT': 'R',
-		'GTA': 'V', 'GTC': 'V', 'GTG': 'V', 'GTT': 'V',
-		'GCA': 'A', 'GCC': 'A', 'GCG': 'A', 'GCT': 'A',
-		'GAC': 'D', 'GAT': 'D', 'GAA': 'E', 'GAG': 'E',
-		'GGA': 'G', 'GGC': 'G', 'GGG': 'G', 'GGT': 'G',
-		'TCA': 'S', 'TCC': 'S', 'TCG': 'S', 'TCT': 'S',
-		'TTC': 'F', 'TTT': 'F', 'TTA': 'L', 'TTG': 'L',
-		'TAC': 'Y', 'TAT': 'Y', 'TAA': '_', 'TAG': '_',
-		'TGC': 'C', 'TGT': 'C', 'TGA': '_', 'TGG': 'W',
-	    }
-
-	    protein1 = ""
-	    protein2 = ""
-	    subseq1_codons = [subseq1[i:i + 3] for i in range(0, len(subseq1), 3)]
-	    subseq2_codons = [subseq2[i:i + 3] for i in range(0, len(subseq2), 3)]
-
-	    for i in range(len(subseq1_codons)):
-		if len(subseq1_codons[i]) % 3 == 0:
-		    protein1 += table[subseq1_codons[i]]
-		else:
-		    protein1 += '-'
-
-	    for i in range(len(subseq2_codons)):
-		if len(subseq2) % 3 == 0:
-		    protein2 += table[subseq2_codons[i]]
-		else:
-		    protein2 += '-'
-
-	    protein1_amino_acids = list(protein1)
-	    protein2_amino_acids = list(protein2)
-
-	    # tried to perform protein pairwise alignment using Biopython but presented a lot of bugs - created an alignment tool below
-	    # the commented-out code
-
-	    # perform protein pairwise alignment - #since we are looking at coding regions, let's take the two protein sequences and align them to see which amino acids are different between them
-	    #aligner = Align.PairwiseAligner()
-	    #aligner.mode = 'local'
-	    #aligner.open_gap_score = -0.5
-	    #aligner.extend_gap_score = -1
-	    #protein_alignment = aligner.align(protein1, protein2)[0]
-	    #list_protein_alignment = list(str(protein_alignment).splitlines())  # convert alignment to string to be able to be to loop through each nucleotide - 'PairwiseAlign is not iterable'
-	    # create an array where each character in alignment gets its own index
-	    #ancestral_protein = np.array(list(list_protein_alignment[0]))
-	    #derived_protein = np.array(list(list_protein_alignment[2]))
-	    #aligned_protein = np.array(list(list_protein_alignment[1]))
-	    #protein_matrix = np.row_stack((ancestral_protein, aligned_protein, derived_protein))
-
-	    # here is the protein aligner that was developed to allow more accurate comparison of the protein sequences
-
-	    stringOne = protein1
-	    stringTwo = protein2
-
-	    finalStringOne = ''
-	    middleString = ''
-	    finalStringTwo = ''
-
-	    pointerOne = 0
-	    pointerTwo = 0
-	    for i in range(len(stringOne)):
-		if pointerOne != len(stringOne) - 1 and pointerTwo != len(stringOne) - 1:
-		    if stringOne[pointerOne] == stringTwo[pointerTwo]:
-			finalStringOne = finalStringOne + str(stringOne[pointerOne])
-			finalStringTwo = finalStringTwo + str(stringTwo[pointerTwo])
-			middleString = middleString + '|'
-			pointerOne += 1
-			pointerTwo += 1
-
-		    elif stringOne[pointerOne] != stringTwo[pointerTwo]:
-			if pointerOne == 0 and pointerTwo == 0 and stringOne[pointerOne] != stringTwo[pointerTwo] and stringOne[pointerOne + 1] == stringTwo[pointerTwo + 1]:
-			    finalStringOne = finalStringOne + str(stringOne[pointerOne])
-			    finalStringTwo = finalStringTwo + str(stringTwo[pointerTwo])
-			    middleString = middleString + 'X'
-			    pointerOne += 1
-			    pointerTwo += 1
-
-			elif pointerOne > 0 and pointerTwo > 0 and stringOne[pointerOne - 1] == stringTwo[pointerTwo - 1]:
-			    if stringOne[pointerOne + 1] == stringTwo[pointerTwo + 1] and stringOne[pointerOne + 1] != stringTwo[pointerTwo] and stringOne[pointerOne] != stringTwo[pointerTwo + 1]:
-				finalStringOne = finalStringOne + str(stringOne[pointerOne])
-				finalStringTwo = finalStringTwo + str(stringTwo[pointerTwo])
-				middleString = middleString + 'X'
-				pointerOne += 1
-				pointerTwo += 1
-			    elif stringOne[pointerOne] == stringTwo[pointerTwo + 1] and stringOne[pointerOne + 1] == stringTwo[pointerTwo + 2]:
-				check = True
-				while check:
-				    finalStringOne = finalStringOne + '-'
-				    finalStringTwo = finalStringTwo + str(stringTwo[pointerTwo])
-				    middleString = middleString + '-'
-				    pointerTwo += 1
-				    if stringOne[pointerOne] == stringTwo[pointerTwo]:
-					check = False
-					break
-			    elif stringOne[pointerOne] == stringTwo[pointerTwo + 2] and stringOne[pointerOne + 1] == stringTwo[
-				pointerTwo + 3] and stringOne[pointerOne + 2] == stringTwo[pointerTwo + 4]:
-				finalStringOne = finalStringOne + '--'
-				finalStringTwo = finalStringTwo + str(stringTwo[pointerTwo]) + str(stringTwo[pointerTwo + 1])
-				middleString = middleString + '--'
-				pointerTwo += 2
-
-			    elif stringOne[pointerOne + 1] == stringTwo[pointerTwo] and stringOne[pointerOne + 2] == stringTwo[pointerTwo + 1]:
-				check = True
-				while check:
-				    finalStringOne = finalStringOne + str(stringOne[pointerOne])
-				    finalStringTwo = finalStringTwo + '-'
-				    middleString = middleString + '-'
-				    pointerOne += 1
-				    if stringOne[pointerOne + 1] == stringTwo[pointerTwo + 1]:
-					check = False
-					break
-
-			    elif stringOne[pointerOne + 2] == stringTwo[pointerTwo] and stringOne[pointerOne + 3] == stringTwo[pointerTwo + 1] and stringOne[pointerOne + 4] == stringTwo[pointerTwo + 2]:
-				finalStringOne = finalStringOne + str(stringOne[pointerOne]) + str(stringOne[pointerOne + 1])
-				finalStringTwo = finalStringTwo + '--'
-				middleString = middleString + '--'
-				pointerOne += 2
-
-		else:  # and pointerOne == range(len(stringOne)) and pointerTwo == range(len(stringOne)):
-
-		    if stringOne[-1] != stringTwo[-1]:
-			if stringOne[pointerOne] != '_' or stringTwo[pointerTwo] != '_':
-			    finalStringOne = finalStringOne + str(stringOne[-1])
-			    finalStringTwo = finalStringTwo + str(stringTwo[-1])
-			    middleString = middleString + 'X'
-			else:
-			    if stringOne[pointerOne] == '_':
-				finalStringOne = finalStringOne + '-'
-				finalStringTwo = finalStringTwo + str(stringTwo[-1])
-				middleString = middleString + '-'
-			    elif stringTwo[pointerTwo] == '_':
-				finalStringOne = finalStringOne + str(stringOne[-1])
-				finalStringTwo = finalStringTwo + '-'
-				middleString = middleString + '-'
-
-		    elif stringOne[-1] == stringTwo[-1]:
-			finalStringOne = finalStringOne + str(stringOne[-1])
-			finalStringTwo = finalStringTwo + str(stringTwo[-1])
-			middleString = m
-
-	    protein_alignment = finalStringOne + '\n' + middleString + '\n' + finalStringTwo
-
-	    isolate1_protein = np.array(list(finalStringOne))
-	    aligned_protein = np.array(list(middleString))
-	    isolate2_protein = np.array(list(finalStringTwo))
-	    protein_matrix = np.row_stack((isolate1_protein, aligned_protein, isolate2_protein))
-
-	    return protein_alignment, protein_matrix, isolate1_protein, aligned_protein, isolate2_protein, protein1_amino_acids, protein2_amino_acids
-
-
-	def substitution_detection(pos1, pos2, path, isolate1, isolate2):
-
-    	"""uses the nucleotide and protein pairwise alignments to detect substitutions and any codon/amino acid changes that occur
-	    :param pos1: start position of gene in isolate1
-	    :param pos2: end position of gene in isolate1
-	    :param path: path to genome graph contained within XML file containing isolate1 and isolate2
-	    :param isolate1: the first strain from the genome graph being compared(i.e. H37Rv in this case since it is being used as a reference)
-	    :param isolate2: the second strain from the genome graph being compared (i.e. H37Ra strain)
-	    :return:
-	    df_substitutions: Pandas DataFrame reporting any substitutions that occurred between the "isolate1" and "isolate2"
-	    versions of the gene
-
-	    NOTES
-	    -------------
-
-	    This function allows for detection of substitutions and the effects these substitutions have on coding sequences.
-	    However, in order to assess the biological significance of these substitutions, the ability for
-	    multiple sequence alignment to be performed in the function is needed.
-
-	    This function identifies any amino acid changes that occur due to substitutions.
-	    This function can't discern whether an amino acid change is conserved or not
-	    (i.e. a SNP that leads to an amino acid change from leucine to isoleucine represents a conservative mutation and is seen as a mismatch)
-
-	    positions where substitutions occur are reported relative to "isolate1" which will most likely be the H37Rv since it
-	    is used as a reference
-
-	    EXAMPLE
-	    -------------
-
-	    using the carB gene sequences from "isolate1" and "isolate2" as an example:
-
-		substitution_detection(1557101, 1560448, './H37R_pangenome.xml', 'H37Rv', 'H37Ra')
-
-		this will return "no substitutions in the coding sequence (CDS)" since these sequences are the same in both strains
-
-	    now let's mimic a SNP that occurs between the H37Rv and H37Ra carB genes:
-
-		search for "mimic SNP in carB gene" in the "nucleotide_sequence_alignment" function and run code below comment
-		to mimic SNP and to show how a SNP that occurs between two gene sequences is identified and displayed in Pandas
-		DataFrame
-
-	    """
-
-	    subseq1, subseq2_coords, subseq2, score, nucleotide_alignment, nucleotide_matrix, isolate1_gene, isolate2_gene = nucleotide_sequence_alignment(pos1, pos2, path, isolate1, isolate2)
-	    protein_alignment, protein_matrix, isolate1_protein, aligned_protein, isolate2_protein, protein1_amino_acids, protein2_amino_acids = protein_sequence_alignment(pos1, pos2, path, isolate1, isolate2)
-
-	    # positions
-	    # the position of a nucleotide in the alignment and in the genome are different
-	    # need to get the position from the alignment and minus the number of gaps that have occurred during the alignment to get actual position
-
-	    substitution_positions = []
-	    for i in range(len(isolate1_gene)):
-		if nucleotide_matrix[1][i] == 'X' or nucleotide_matrix[1][i] == '.' and nucleotide_matrix[0][i] != '.':
-		    alignment_symbols = list(nucleotide_matrix[1][:i])
-		    gaps = alignment_symbols.count('-')
-		    substitution_positions.append(pos1 + i - gaps)
-
-	    #nucleotides at those positions
-
-	    substitution_nucleotides_ref = [nucleotide_matrix[0][j] for j in range(len(isolate1_gene)) if nucleotide_matrix[1][j] == 'X' or nucleotide_matrix[1][j] == '.' and nucleotide_matrix[0][j] != '.']
-	    substitution_nucleotides_alt = [nucleotide_matrix[2][j] for j in range(len(isolate1_gene)) if nucleotide_matrix[1][j] == 'X' or nucleotide_matrix[1][j] == '.' and nucleotide_matrix[0][j] != '.']
-
-	    #codon change and amino acid change detection
-	    #create codons to detect codon changes from mutations
-
-	    isolate1_gene = np.ndarray.tolist(isolate1_gene)
-	    isolate1_gene = ''.join([x for x in isolate1_gene])
-	    codon_isolate1_gene = [isolate1_gene[i:i + 3] for i in range(0, len(subseq1), 3)]
-
-	    isolate2_gene = np.ndarray.tolist(isolate2_gene)
-	    isolate2_gene = ''.join([x for x in isolate2_gene])
-	    codon_isolate2_gene = [isolate2_gene[i:i + 3] for i in range(0, len(subseq2), 3)]
-
-	    codons = []
-	    codon_mutations_ref = []
-	    codon_mutations_alt = []
-	    amino_acids = []
-	    for i in range(len(codon_isolate1_gene)):
-		for j in range(len(codon_isolate1_gene[i])):
-		    if codon_isolate1_gene[i][j] != codon_isolate2_gene[i][j]:
-			codon_mutations_ref.append(codon_isolate1_gene[i][j])
-			codon_mutations_alt.append(codon_isolate2_gene[i][j])
-			codons.append(codon_isolate1_gene[i] + '/' + codon_isolate2_gene[i])
-			if isolate1_protein[i] != isolate2_protein[i]:
-			    amino_acids.append(isolate1_protein[i] + '/' + isolate2_protein[i])
-			else:
-			    amino_acids.append('synonymous_coding')
-
-	    codons = [x for x in codons if x != []]
-	    codon_mutations_ref = [x for x in codon_mutations_ref if x != []]
-	    codon_mutations_alt = [x for x in codon_mutations_alt if x != []]
-
-	    substitution_codons = [codons[i] if substitution_nucleotides_ref[i] == codon_mutations_ref[i] and substitution_nucleotides_alt[i] == codon_mutations_alt[i] else 'No change' for i in range(len(substitution_nucleotides_ref))]
-
-	    #group positions and nucleotides of MNPs and append to new lists below - creates list of lists in each empty list below 
-
-	    sub_pos_range = []
-	    sub_nucleotide_ref = []
-	    sub_nucleotide_alt = []
-	    sub_codons = []
-	    sub_amino_acids = []
-	    listPosition = 0
-	    if len(substitution_positions) == 0:
-		print(sub_pos_range)
-	    elif len(substitution_positions) == 1:
-		sub_pos_range.append(substitution_positions[0])
-		sub_nucleotide_ref.append(substitution_nucleotides_ref[0])
-		sub_nucleotide_alt.append(substitution_nucleotides_alt[0])
-		sub_codons.append(substitution_codons[0])
-		sub_amino_acids.append(amino_acids[0])
-	    elif len(substitution_positions) == 2:
-		subst_pos_list = []
-		subst_ref_nucl_list = []
-		subst_alt_nucl_list = []
-		subst_codon_list = []
-		subst_amino_acid = []
-		if (substitution_positions[0] + 1) == (substitution_positions[-1]):
-		    subst_pos_list.append([substitution_positions[0]])
-		    subst_pos_list.append([substitution_positions[-1]])
-		    sub_pos_range.append(subst_pos_list)
-		    subst_ref_nucl_list.append(substitution_nucleotides_ref[0])
-		    subst_ref_nucl_list.append(substitution_nucleotides_ref[-1])
-		    sub_nucleotide_ref.append(subst_ref_nucl_list)
-		    subst_alt_nucl_list.append(substitution_nucleotides_alt[0])
-		    subst_alt_nucl_list.append(substitution_nucleotides_alt[-1])
-		    sub_nucleotide_alt.append(subst_alt_nucl_list)
-		    subst_codon_list.append(substitution_codons[0])
-		    subst_codon_list.append(substitution_codons[-1])
-		    sub_codons.append(subst_codon_list)
-		    subst_amino_acid.append(amino_acids[0])
-		    subst_amino_acid.append(amino_acids[-1])
-		    sub_amino_acids.append(subst_amino_acid)
-		else:
-		    sub_pos_range.append([substitution_positions[0]])
-		    sub_pos_range.append([substitution_positions[-1]])
-		    sub_nucleotide_ref.append(substitution_nucleotides_ref[0])
-		    sub_nucleotide_ref.append(substitution_nucleotides_ref[-1])
-		    sub_nucleotide_alt.append(substitution_nucleotides_alt[0])
-		    sub_nucleotide_alt.append(substitution_nucleotides_alt[-1])
-		    sub_codons.append(substitution_codons[0])
-		    sub_codons.append(substitution_codons[-1])
-		    sub_amino_acids.append(amino_acids[0])
-		    sub_amino_acids.append(amino_acids[-1])
-
-	    else:
-		while listPosition < len(substitution_positions) - 2:
-		    originalPosition = listPosition
-		    tempList_pos = []
-		    tempList_nucl_ref = []
-		    tempList_nucl_alt = []
-		    tempList_codon = []
-		    tempList_amino_acid = []
-		    checkIfContinue = True
-		    while checkIfContinue:
-			if (substitution_positions[listPosition] + 1) == substitution_positions[listPosition + 1]:
-			    if originalPosition == listPosition:
-				tempList_pos.append(substitution_positions[listPosition])
-				tempList_pos.append(substitution_positions[listPosition + 1])
-				tempList_nucl_ref.append(substitution_nucleotides_ref[listPosition])
-				tempList_nucl_ref.append(substitution_nucleotides_ref[listPosition + 1])
-				tempList_nucl_alt.append(substitution_nucleotides_alt[listPosition])
-				tempList_nucl_alt.append(substitution_nucleotides_alt[listPosition + 1])
-				tempList_codon.append(substitution_codons[listPosition])
-				tempList_codon.append(substitution_codons[listPosition + 1])
-				tempList_amino_acid.append(amino_acids[listPosition])
-				tempList_amino_acid.append(amino_acids[listPosition + 1])
-			    else:
-				tempList_pos.append(substitution_positions[listPosition + 1])
-				tempList_nucl_ref.append(substitution_nucleotides_ref[listPosition + 1])
-				tempList_nucl_alt.append(substitution_nucleotides_alt[listPosition + 1])
-				tempList_codon.append(substitution_codons[listPosition + 1])
-				tempList_amino_acid.append(amino_acids[listPosition + 1])
-				if substitution_positions[listPosition + 1] == substitution_positions[-1]:
-				    break
-			else:
-			    if len(tempList_pos) == 0:
-				tempList_pos.append(substitution_positions[listPosition])
-				tempList_nucl_ref.append(substitution_nucleotides_ref[listPosition])
-				tempList_nucl_alt.append(substitution_nucleotides_alt[listPosition])
-				tempList_codon.append(substitution_codons[listPosition])
-				tempList_amino_acid.append(amino_acids[listPosition])
-			    checkIfContinue = False
-			listPosition += 1
-
-		    sub_pos_range.append(tempList_pos)
-		    sub_nucleotide_ref.append(tempList_nucl_ref)
-		    sub_nucleotide_alt.append(tempList_nucl_alt)
-		    sub_codons.append(tempList_codon)
-		    sub_amino_acids.append(tempList_amino_acid)
-
-		check = True
-		lastPos = -1
-		tempLast_pos = []
-		tempLast_nucl_ref = []
-		tempLast_nucl_alt = []
-		tempLast_codons = []
-		tempLast_amino_acids = []
-		while check:
-		    if (substitution_positions[lastPos]) == (substitution_positions[lastPos - 1] + 1):
-			if -1 == lastPos:
-			    tempLast_pos.append(substitution_positions[lastPos])
-			    tempLast_pos.append(substitution_positions[lastPos - 1])
-			    tempLast_nucl_ref.append(substitution_nucleotides_ref[lastPos])
-			    tempLast_nucl_ref.append(substitution_nucleotides_ref[lastPos - 1])
-			    tempLast_nucl_alt.append(substitution_nucleotides_alt[lastPos])
-			    tempLast_nucl_alt.append(substitution_nucleotides_alt[lastPos - 1])
-			    tempLast_codons.append(substitution_codons[lastPos])
-			    tempLast_codons.append(substitution_codons[lastPos - 1])
-			    tempLast_amino_acids.append(amino_acids[lastPos])
-			    tempLast_amino_acids.append(amino_acids[lastPos - 1])
-			else:
-			    tempLast_pos.append(substitution_positions[lastPos - 1])
-			    tempLast_nucl_ref.append(substitution_nucleotides_ref[lastPos - 1])
-			    tempLast_nucl_alt.append(substitution_nucleotides_alt[lastPos - 1])
-			    tempLast_codons.append(substitution_codons[lastPos - 1])
-			    tempLast_amino_acids.append(amino_acids[lastPos - 1])
-		    else:
-			if len(tempLast_pos) == 0:
-			    sub_pos_range.append([substitution_positions[lastPos - 1]])
-			    tempLast_pos.append(substitution_positions[lastPos])
-			    sub_nucleotide_ref.append(substitution_nucleotides_ref[lastPos - 1])
-			    tempLast_nucl_ref.append(substitution_nucleotides_ref[lastPos])
-			    sub_nucleotide_alt.append(substitution_nucleotides_alt[lastPos - 1])
-			    tempLast_nucl_alt.append(substitution_nucleotides_alt[lastPos])
-			    sub_codons.append([substitution_codons[lastPos - 1]])
-			    tempLast_codons.append(substitution_codons[lastPos])
-			    sub_amino_acids.append([amino_acids[lastPos - 1]])
-			    tempLast_amino_acids.append(amino_acids[lastPos])
-
-			check = False
-		    lastPos -= 1
-		tempLast_pos.reverse()
-		tempLast_nucl_ref.reverse()
-		tempLast_nucl_alt.reverse()
-		tempLast_codons.reverse()
-		tempLast_amino_acids.reverse()
-
-		sub_pos_range.append(tempLast_pos)
-		sub_nucleotide_ref.append(tempLast_nucl_ref)
-		# sub_nucleotide_ref.append(substitution_nucleotides_ref[-1])
-		sub_nucleotide_alt.append(tempLast_nucl_alt)
-		# sub_nucleotide_alt.append(substitution_nucleotides_alt[-1])
-		sub_codons.append(tempLast_codons)
-		sub_amino_acids.append(tempLast_amino_acids)
-
-		if len(sub_pos_range) == 0 or len(sub_pos_range) == 1:
-		    print(sub_pos_range)
-		else:
-		    if sub_pos_range[-2] == sub_pos_range[-1]:
-			sub_pos_range.pop(-1)
-
-		for i in range(len(sub_codons)):
-		    sub_codons[i] = list(set(sub_codons[i]))
-
-		for i in range(len(sub_amino_acids)):
-		    sub_amino_acids[i] = list(set(sub_amino_acids[i]))
-
-	    #joining together positions and the nucleotides associated with those positions
-	    #the list comprehensions below joins the reference and alternate nucleotides for the positions ranges together to report them as a single nucleotide string
-
-	    sub_nucleotide_ref = [''.join(sub_nucleotide_ref[i][0:]) if len(sub_nucleotide_ref[i]) != 1 else ", ".join(map(str, sub_nucleotide_ref[i])) for i in range(len(sub_nucleotide_ref))]
-	    sub_nucleotide_alt = [''.join(sub_nucleotide_alt[i][0:]) if len(sub_nucleotide_alt[i]) != 1 else ", ".join(map(str, sub_nucleotide_alt[i])) for i in range(len(sub_nucleotide_alt))]
-
-	    if len(sub_pos_range) > 0:
-		substitutions_data = {'chromosome': 1,
-				      'positions (isolate1)': sub_pos_range,
-				      'reference allele': sub_nucleotide_ref,
-				      'alternate allele': sub_nucleotide_alt,
-				      'mutation type': 'substitution',
-				      'frameshift': '-',
-				      'old codon/new codon': sub_codons,
-				      'old AA/new AA': sub_amino_acids}
-		df_substitutions = pd.DataFrame(substitutions_data)
-		return df_substitutions
-	    else:
-		return 'no substitutions in this CDS'
-
-	def insertion_detection(pos1, pos2, path, isolate1, isolate2):
-
-    	"""uses the nucleotide alignment to detect insertions and reports them in a Pandas dataframe in VCF format
-	    :param pos1: start position of gene in isolate1
-	    :param pos2: end position of gene in isolate1
-	    :param path: path to genome graph contained within XML file containing isolate1 and isolate2
-	    :param isolate1: the first strain from the genome graph being compared(i.e. H37Rv in this case since it is being used as a reference)
-	    :param isolate2: the second strain from the genome graph being compared (i.e. H37Ra strain)
-	    :return:
-	    df_insertions: Pandas DataFrame reporting any insertions that occurred between the "isolate1" and "isolate2"
-	    versions of the gene
-
-	    NOTES
-	    ------------------
-
-	    This function allows for the detection of insertions that occur between similar gene sequences extracted from a genome graph
-	    However, this function can only compare two similar sequences and thus in order to understand the biological significance
-	    of the insertions that may occur, the ability to perform a multiple sequence alignment within the function will be required
-
-	    positions of insertions are reported relative to "isolate2" in the Pandas DataFrame since insertions will occur across
-	    a position range in "isolate2" and not "isolate1"
-	    It is important to note that InDels are identified relative to "isolate1"
-	    (i.e. a deletion is where a nucleotide from "isolate1" is removed in "isolate2" and an insertion is where a nucleotide is
-	    added to "isolate2" that is not present in "isolate1" - this is determined by looking at the nucleotide pairwise alignment)
-
-	    EXAMPLE
-	    ------------------
-
-	    Using the carB gene sequences from "isolate1" and "isolate2" as an example:
-
-		insertion_detection(1557101, 1560448, './H37R_pangenome.xml', 'H37Rv', 'H37Ra')
-
-		this will return "no insertions in the coding sequence (CDS)" since these sequences are the same in both strains
-
-	    now let's mimic a three-nucleotide insertion that occurs between the H37Rv and H37Ra carB genes:
-
-		search for "mimic insertion in carB gene" in the "nucleotide_sequence_alignment" function and run code below comment
-		to mimic the insertion to show how an insertion that occurs between two gene sequences is identified and
-		displayed in Pandas DataFrame
-	    """
-
-	    subseq1, subseq2_coords, subseq2, score, nucleotide_alignment, nucleotide_matrix, isolate1_gene, isolate2_gene = nucleotide_sequence_alignment(pos1, pos2, path, isolate1, isolate2)
-
-	    #determine positions where insertions occurred
-
-	    insertion_positions = []
-	    for i in range(len(isolate1_gene)):
-		if nucleotide_matrix[0][i] == '-' or nucleotide_matrix[0][i] == '.':
-		    alignment_symbols = list(nucleotide_matrix[0][:i])
-		    gaps = alignment_symbols.count('-')
-		    insertion_positions.append(subseq2_coords[0] + i) #get position of insertion in "isolate2"
-
-	    #nucleotides that have been inserted
-
-	    insertion_nucleotides = [nucleotide_matrix[2][j] for j in range(len(isolate1_gene)) if nucleotide_matrix[0][j] == '-' or nucleotide_matrix[0][j] == '.']
-
-	    #group consecutive positions and their respective nucleotides for insertions > 1 nucleotide
-
-	    insert_pos_range = []
-	    insert_nucleotide = []
-	    listPosition = 0
-	    if len(insertion_positions) == 0:
-		print(insert_pos_range)
-	    elif len(insertion_positions) == 1:
-		insert_pos_range.append(insertion_positions[0])
-		insert_nucleotide.append(insertion_nucleotides[0])
-	    elif len(insertion_positions) == 2:
-		ins_list = []
-		if (insertion_positions[0] + 1) == (insertion_positions[-1]):
-		    ins_list.append([insertion_positions[0]])
-		    ins_list.append([insertion_positions[-1]])
-		    insert_pos_range.append(ins_list)
-		else:
-		    insert_pos_range.append([insertion_positions[0]])
-		    insert_pos_range.append([insertion_positions[-1]])
-	    else:
-		while listPosition < len(insertion_positions) - 2:
-		    originalPosition = listPosition
-		    tempList_pos = []
-		    tempList_nucl = []
-		    checkIfContinue = True
-		    while checkIfContinue:
-			if (insertion_positions[listPosition] + 1) == insertion_positions[listPosition + 1]:
-			    if originalPosition == listPosition:
-				tempList_pos.append(insertion_positions[listPosition])
-				tempList_pos.append(insertion_positions[listPosition + 1])
-				tempList_nucl.append(insertion_nucleotides[listPosition])
-				tempList_nucl.append(insertion_nucleotides[listPosition + 1])
-			    else:
-				tempList_pos.append(insertion_positions[listPosition + 1])
-				tempList_nucl.append(insertion_nucleotides[listPosition + 1])
-				if insertion_positions[listPosition + 1] == insertion_positions[-1]:
-				    break
-			else:
-			    if len(tempList_pos) == 0:
-				tempList_pos.append(insertion_positions[listPosition])
-				tempList_nucl.append(insertion_nucleotides[listPosition])
-			    checkIfContinue = False
-			listPosition += 1
-
-		    insert_pos_range.append(tempList_pos)
-		    insert_nucleotide.append(tempList_nucl)
-
-		check = True
-		lastPos = -1
-		tempLast_pos = []
-		tempLast_nucl = []
-		if len(insert_pos_range[0]) == len(insertion_positions):
-		    check = False
-		while check:
-		    if (insertion_positions[lastPos]) == (insertion_positions[lastPos - 1] + 1):
-			if -1 == lastPos:
-			    tempLast_pos.append(insertion_positions[lastPos])
-			    tempLast_pos.append(insertion_positions[lastPos - 1])
-			    tempLast_nucl.append(insertion_nucleotides[lastPos])
-			    tempLast_nucl.append(insertion_nucleotides[lastPos - 1])
-			else:
-			    tempLast_pos.append(insertion_positions[lastPos - 1])
-			    tempLast_nucl.append(insertion_nucleotides[lastPos - 1])
-		    else:
-			if len(tempLast_pos) == 0:
-			    insert_pos_range.append(insertion_positions[lastPos - 1])
-			    tempLast_pos.append(insertion_positions[lastPos])
-			    insert_nucleotide.append(insertion_nucleotides[lastPos - 1])
-			    tempLast_nucl.append(insertion_nucleotides[lastPos])
-			check = False
-		    lastPos -= 1
-		tempLast_pos.reverse()
-		tempLast_nucl.reverse()
-
-		if len(tempLast_pos) > 0:
-		    insert_pos_range.append(tempLast_pos)
-		    insert_nucleotide.append(tempLast_nucl)
-
-	    insert_nucleotide = [''.join(insert_nucleotide[i][0:]) if len(insert_nucleotide[i]) != 1 else ", ".join(map(str, insert_nucleotide[i])) for i in range(len(insert_nucleotide))]
-
-	    print(insert_pos_range)
-	    print(insert_nucleotide)
-
-	    #detect whether insertion is a frameshift mutation or not
-
-	    frameshift_insertions = []
-	    for i in range(len(insert_nucleotide)):
-		if len(insert_nucleotide[i]) % 3 != 0:
-		    frameshift_insertions.append('frameshift!')
-		else:
-		    frameshift_insertions.append('-')
-
-	    #represent results in a pandas dataframe
-
-	    if len(insert_pos_range) > 0:
-		insertion_data = {'chromosome': 1,
-				  'positions (isolate2)': insert_pos_range,
-				  'reference allele': '-',
-				  'alternate allele': insert_nucleotide,
-				  'mutation type': 'insertion',
-				  'frameshift': frameshift_insertions,
-				  }
-		df_insertions = pd.DataFrame(insertion_data)
-		return df_insertions
-	    else:
-		return 'there are no insertions in the CDS'
-	
-	def deletion_detection(pos1, pos2, path, isolate1, isolate2):
-
-    	"""uses the nucleotide alignment to detect deletions and reports them in a Pandas dataframe in VCF format
-	    :param pos1: start position of gene in isolate1
-	    :param pos2: end position of gene in isolate1
-	    :param path: path to genome graph contained within XML file containing isolate1 and isolate2
-	    :param isolate1: the first strain from the genome graph being compared(i.e. H37Rv in this case since it is being used as a reference)
-	    :param isolate2: the second strain from the genome graph being compared (i.e. H37Ra strain)
-	    :return:
-	    df_deletions: Pandas dataframe reporting any deletions that occurred between the "isolate1" and "isolate2"
-	    versions of the gene
-
-	    NOTES
-	    -------------------
-
-	    This function allows for the detection of deletions that occur between similar gene sequences extracted from a genome graph
-	    However, this function can only compare two similar sequences and thus in order to understand the biological significance
-	    of the deletions that may occur, the ability to perform a multiple sequence alignment within the function will be required
-
-	    positions of deletions are reported relative to "isolate1" in the Pandas DataFrame 
-	    (i.e. a deletion is where a nucleotide from "isolate1" is removed in "isolate2" and an insertion is where a nucleotide is
-	    added to "isolate2" that is not present in "isolate1" - this is determined by looking at the nucleotide pairwise alignment)
-	    
-	    It is important to note that InDels are identified relative to "isolate1" but that deletions are reported relative to "isolate1" 
-	    and insertions are reported relative "isolate2"
-	    
-
-	    EXAMPLE
-	    -------------------
-
-	    Using the carB gene sequences from "isolate1" and "isolate2" as an example:
-
-		insertion_detection(1557101, 1560448, './H37R_pangenome.xml', 'H37Rv', 'H37Ra')
-
-		this will return "no insertions in the coding sequence (CDS)" since these sequences are the same in both strains
-
-	    now let's mimic a three-nucleotide deletion that occurs in the H37Ra carB gene:
-
-		search for "mimic deletion in carB gene" in the "nucleotide_sequence_alignment" function and use code below comment
-		to mimic the deletion. Run code to show how an deletion that occurs between two gene sequences is identified and
-		displayed in Pandas DataFrame
-
-	    """
-
-	    subseq1, subseq2_coords, subseq2, score, nucleotide_alignment, nucleotide_matrix, isolate1_gene, isolate2_gene = nucleotide_sequence_alignment(pos1, pos2, path, isolate1, isolate2)
-
-	    #positions in CDS where deletions occur
-
-	    deletion_positions = []
-	    for i in range(len(isolate1_gene)):
-		if nucleotide_matrix[2][i] == '-' or nucleotide_matrix[2][i] == '.':
-		    alignment_symbols = list(nucleotide_matrix[0][:i])
-		    gaps = alignment_symbols.count('-')
-		    deletion_positions.append(pos1 + i - gaps)
-
-	    #deleted nucleotides
-
-	    deletion_nucleotides = [nucleotide_matrix[0][j] for j in range(len(isolate1_gene)) if nucleotide_matrix[2][j] == '-' or nucleotide_matrix[2][j] == '.']
-
-	    #group MN deletion positions and the nucleotides associated with them (MN = multiple nucleotide)
-
-	    del_pos_range = []
-	    del_nucleotide = []
-	    listPosition = 0
-	    if len(deletion_positions) == 0:
-		print(del_pos_range)
-	    elif len(deletion_positions) == 1:
-		del_pos_range.append(deletion_positions[0])
-		del_nucleotide.append(deletion_nucleotides[0])
-	    elif len(deletion_positions) == 2:
-		del_list = []
-		if (deletion_positions[0] + 1) == (deletion_positions[-1]):
-		    del_list.append([deletion_positions[0]])
-		    del_list.append([deletion_positions[-1]])
-		    del_pos_range.append(del_list)
-		else:
-		    del_pos_range.append([deletion_positions[0]])
-		    del_pos_range.append([deletion_positions[-1]])
-	    else:
-		while listPosition < len(deletion_positions) - 2:
-		    originalPosition = listPosition
-		    tempList_pos = []
-		    tempList_nucl = []
-		    checkIfContinue = True
-		    while checkIfContinue:
-			if (deletion_positions[listPosition] + 1) == deletion_positions[listPosition + 1]:
-			    if originalPosition == listPosition:
-				tempList_pos.append(deletion_positions[listPosition])
-				tempList_pos.append(deletion_positions[listPosition + 1])
-				tempList_nucl.append(deletion_nucleotides[listPosition])
-				tempList_nucl.append(deletion_nucleotides[listPosition + 1])
-			    else:
-				tempList_pos.append(deletion_positions[listPosition + 1])
-				tempList_nucl.append(deletion_nucleotides[listPosition + 1])
-				if deletion_positions[listPosition + 1] == deletion_positions[-1]:
-				    break
-			else:
-			    if len(tempList_pos) == 0:
-				tempList_pos.append(deletion_positions[listPosition])
-				tempList_nucl.append(deletion_nucleotides[listPosition])
-			    checkIfContinue = False
-			listPosition += 1
-
-		    del_pos_range.append(tempList_pos)
-		    del_nucleotide.append(tempList_nucl)
-
-		check = True
-		lastPos = -1
-		tempLast_pos = []
-		tempLast_nucl = []
-		if len(del_pos_range[0]) == len(deletion_positions):
-		    check = False
-		else:
-		    while check:
-			if (deletion_positions[lastPos]) == (deletion_positions[lastPos - 1] + 1):
-			    if -1 == lastPos:
-				tempLast_pos.append(deletion_positions[lastPos])
-				tempLast_pos.append(deletion_positions[lastPos - 1])
-				tempLast_nucl.append(deletion_nucleotides[lastPos])
-				tempLast_nucl.append(deletion_nucleotides[lastPos - 1])
-			    else:
-				tempLast_pos.append(deletion_positions[lastPos - 1])
-				tempLast_nucl.append(deletion_nucleotides[lastPos - 1])
-			else:
-			    if len(tempLast_pos) == 0:
-				del_pos_range.append(deletion_positions[lastPos - 1])
-				tempLast_pos.append(deletion_positions[lastPos])
-				del_nucleotide.append(deletion_nucleotides[lastPos - 1])
-				tempLast_nucl.append(deletion_nucleotides[lastPos])
-			    check = False
-			lastPos -= 1
-		    tempLast_pos.reverse()
-		    tempLast_nucl.reverse()
-
-		    if len(tempLast_pos) > 0:
-			del_pos_range.append(tempLast_pos)
-			del_nucleotide.append(tempLast_nucl)
-
-		    del_pos_range.append(tempLast_pos)
-		    del_nucleotide.append(tempLast_nucl)
-
-		if len(del_pos_range) == 0 or len(del_pos_range) == 1:
-		    print(del_pos_range)
-		else:
-		    if del_pos_range[-2] == del_pos_range[-1]:
-			del_pos_range.pop(-1)
-
-	    #concatenate nucleotides together for MN deletions
-
-	    deletion_nucleotides = [''.join(del_nucleotide[i][0:]) if len(del_pos_range[i]) != 1 else ", ".join(map(str, del_nucleotide[i])) for i in range(len(del_pos_range))]
-
-	    # determine whether the small/large deletion causes a frameshift or not
-
-	    frameshift_deletions = []
-	    for i in range(len(del_pos_range)):
-		if len(del_pos_range[i]) % 3 != 0:
-		    frameshift_deletions.append('frameshift!')
-		else:
-		    frameshift_deletions.append('-')
-
-	    # code to join together nucleotides of MN deletions
-	    for i in range(len(del_pos_range)):
-		if len(del_pos_range[i]) != 1:
-		    ",".join(map(str, del_pos_range[i]))
-		    ''.join(del_nucleotide[i][0:])
-		else:
-		    ", ".join(map(str, del_pos_range[i]))
-		    ", ".join(map(str, del_nucleotide[i]))
-
-	    #represent results in a pandas dataframe
-
-	    if len(del_pos_range) > 0:
-		deletion_data = {'chromosome': 1,
-				 'positions (isolate1)': del_pos_range,
-				 'reference allele': deletion_nucleotides,
-				 'alternate allele': '-',
-				 'mutation type': 'deletion',
-				 'frameshift': frameshift_deletions,
-				 }
-		df_deletions = pd.DataFrame(deletion_data)
-		return df_deletions
-	    else:
-		return 'there are no deletions in the CDS'
-	# SCORING MATRIX FOR CORE, ACCESSORY AND UNIQUE GENES
-
-	# take the two proteins and compares amino acid sequences of the two
-
-	# 'ancestral_protein' and 'derived_protein' previously assigned so use these two variables for matrix
-
-	def scoring_matrix(pos1, pos2, path, isolate1, isolate2):
-
-	    """gene classification function that uses protein sequence similarity of the same gene from two different isolates
-	    to determine whether a gene is core, accessory or unique
-	    :param pos1: start position of gene in isolate1
-	    :param pos2: end position of gene in isolate1
-	    :param path: path to genome graph contained within XML file containing isolate1 and isolate2
-	    :param isolate1: the first strain from the genome graph being compared(i.e. H37Rv in this case since it is being used as a reference)
-	    :param isolate2: the second strain from the genome graph being compared (i.e. H37Ra strain)
-	    :return:
-	    score: the amino acid sequence similarity score of the two protein sequences
-
-	    NOTES
-	    --------------------
-
-	    Gene classification is based on protein sequence similarity score - this function will return whether the gene being assessed
-	    is likely to be characterised as either a "core gene", "accessory gene" or "unique gene" using sequence similarity cut-off values
-
-	    Since only two sequences can be compared at once within the function, gene classification will not be accurate since
-	    the definitions of core genes (present in all strains), accessory genes (present in more than two strains) and unique
-	    genes (specific to a certain strain) require that multiple similar genes from different isolates be compared within a
-	    multiple sequence alignment. Adding this capability to the function will allow for more accurate classification of genes
-
-	    The scoring system of this function is simple (match = 1, mismatch/gap = -1) and can be changed to suit needs of user. 
-	    The scoring system has a limitation in that but is not able to discern conservative amino acid changes that occur 
-	    which would lead to a mismatch occurring instead of a match. Gaps and mismatches are also given the same score which may 
-	    be lead to more inaccuracy of the scoring matrix and therefore these could be improved upon.
-	    
-
-	    EXAMPLE
-	    --------------------
-
-	    Using the carB gene sequences from "isolate1" and "isolate2" as an example:
-
-		scoring_matrix(1557101, 1560448, './H37R_pangenome.xml', 'H37Rv', 'H37Ra')
-
-		since these genes are very similar, this gene may be essential to the survival of these M. tuberculosis strains
-		and may therefore be considered a core gene - this prediction would become more accurate once multiple gene sequences
-		can be compared (may be classified an accessory gene after multiple sequence alignment)
-
-	    """
-
-	    protein_alignment, protein_matrix, isolate1_protein, aligned_protein, isolate2_protein, protein1_amino_acids, protein2_amino_acids = protein_sequence_alignment(pos1, pos2, path, isolate1, isolate2)
-
-	    score = []
-	    for i in range(len(isolate1_protein)):
-		if isolate1_protein[i] == isolate2_protein[i]:
-		    score.append(1)
-		else:
-		    score.append(-1)
-	    score = 100 * (sum(score) / len(isolate1_protein))
-	    if 95 <= score <= 100:
-		print(score)
-		print('this gene is possibly a core gene')
-	    elif 90 <= score < 95:
-		print(score)
-		print('this gene is possibly an accessory gene')
-	    else:
-		print(score)
-		print('this gene is possibly a unique gene')
-
-   
-#-----------------------------------------------------Sequece_Homology Functions end here
-
-	
 
 
 def import_gg_graph(path):
@@ -1578,11 +1326,11 @@ def compliment_Base(base_in):
 
 
 def is_even(a_num):
-    x = int(a_num)
-    if x % 2 == 0:
-        return True
-    else:
-        return False
+	x = int(a_num)
+	if x % 2 == 0:
+		return True
+	else:
+		return False
 
 
 def bp_distance(pos_A, pos_B):
@@ -2346,7 +2094,7 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 
 
 def convert_coordinates(graph_obj, q_start, q_stop, ref_iso, query_iso):
-	'''
+	"""
 	Convert coordinates from one sequence to another
 	:param graph_obj:
 	:param q_start:
@@ -2354,7 +2102,7 @@ def convert_coordinates(graph_obj, q_start, q_stop, ref_iso, query_iso):
 	:param ref_iso:
 	:param query_iso:
 	:return:
-	'''
+	"""
 
 	# Find the right node
 
