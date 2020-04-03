@@ -465,7 +465,7 @@ class GgDiGraph(nx.DiGraph):
 				return distanceBetween
 		return distanceBetween
 
-	def debruin_read_alignment(self, queryfile, kmerLength, outPutFilename):
+	def debruin_read_alignment(self, queryseq, kmerLength, outPutFilename):
 		'''
 		Running this Function will print out blocks of information on the aligned reads. Each block of 7 lines will correspond to a single aligned read.
 		Line 1: The Aligned read sequence
@@ -475,15 +475,13 @@ class GgDiGraph(nx.DiGraph):
 		Line 5: The ending alignment position on the last node involved in the alignment
 		Line 6: Percentage of the initial query that has aligned to the graph
 		Line 7:Percentage of the aligned read that has successfully aligned to the graph
-		:param query: This is the read, as a string saved ina .txt file, that you want to try and align to the graph.
+		:param query: This is the read, as a string saved in a .txt file, that you want to try and align to the graph.
 		:param kmerLength: The length of the kmers that will be created
 		:return: returns a dictionary with the sequences that align, x's represent sections of the sequence that doesnt correctly align
 				It also returns the nodes that the sequence aligns to and the position on the first node the sequence starts aligning to and the position on the last node that the sequence ends aligning to.
 				These positions are in string positions, so the first base pair is position 0.
 		'''
-		f = open(queryfile, 'r')
-		query = f.read()
-		queryKmerDict = self.create_query_kmers(query, kmerLength)
+		queryKmerDict = self.create_query_kmers(queryseq, kmerLength)
 		referenceKmerDict = self.fast_kmer_create(kmerLength)
 		# creates the query and graph kmers with the desired kmer length
 		finalkmerGroups = []
@@ -682,7 +680,7 @@ class GgDiGraph(nx.DiGraph):
 										distanceBetween = tdistanceBetween
 									elif tdistanceBetween < distanceBetween and distanceBetween != 0:
 										distanceBetween = tdistanceBetween
-						if distanceBetween < len(query) and distanceBetween != 0:
+						if distanceBetween < len(queryseq) and distanceBetween != 0:
 							readGroups.append([z, distanceBetween, c])
 							links += 1
 			if links == 0:
@@ -804,7 +802,7 @@ class GgDiGraph(nx.DiGraph):
 				endAlignPos = endAlignPos * -1
 			if newNodesCoveredByRead[0] in inversionNodes:
 				startAlignPos = startAlignPos * -1
-			percentOfQuery = difflib.SequenceMatcher(None, query, checkPercentSeq).ratio() * 100
+			percentOfQuery = difflib.SequenceMatcher(None, queryseq, checkPercentSeq).ratio() * 100
 			percentAligned = (len(sequence) - xCounter) / len(sequence) * 100
 			tempVal = {'sequence': sequence, 'nodescoveredbyread': newNodesCoveredByRead,
 					   'alignmentstartpositioninfirstnode': startAlignPos,
@@ -816,7 +814,7 @@ class GgDiGraph(nx.DiGraph):
 
 		for w in unlinkedReads:
 			read = finalAlignedReads.get(w)
-			percentOfQuery = difflib.SequenceMatcher(None, query, read['sequence']).ratio() * 100
+			percentOfQuery = difflib.SequenceMatcher(None, queryseq, read['sequence']).ratio() * 100
 			percentAligned = (len(read['sequence'])) / len(read['sequence']) * 100
 			s = read['alignmentstartpositioninfirstnode']
 			e = read['alignementendpositioninlastnode']
@@ -922,9 +920,8 @@ class GgDiGraph(nx.DiGraph):
 			print(start[start.find(':')+2:-2])
 			print(end[end.find(':')+2:-2])
 			print(qPercent[qPercent.find(':')+3:-3])
-			print( rPercent[rPercent.find(':')+3:-3])
+			print(rPercent[rPercent.find(':')+3:-3])
 			print()
-
 
 		return AlignedRead
 
