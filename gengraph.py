@@ -468,6 +468,7 @@ class GgDiGraph(nx.DiGraph):
 	def debruin_read_alignment(self, queryseq, kmerLength, outPutFilename):
 		'''
 		Running this Function will print out blocks of information on the aligned reads. Each block of 7 lines will correspond to a single aligned read.
+		Author: Campbell Green
 		Line 1: The Aligned read sequence
 		Line 2: The Nodes that the aligned read covers
 		Line 3: All nodes that the read aligns to inversely(Nodes with an aligned inversion)
@@ -2973,7 +2974,7 @@ def extract_original_seq_region_fast(graph_obj, region_start, region_stop, seq_n
 					multi_node_dict[node_start] = data['sequence']
 
 	result_string = ''
-	print(multi_node_dict)
+	#print(multi_node_dict)
 	for key in sorted(multi_node_dict.keys()):
 		result_string += multi_node_dict[key]
 
