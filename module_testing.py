@@ -1,7 +1,10 @@
 from gengraph import *
 
 from itertools import combinations
-from multiprocessing import Process, Queue
+import multiprocessing as mp
+
+from itertools import product
+import datetime
 
 '''
 
@@ -77,7 +80,9 @@ def import_gfa(file_path):
 
 #quit()
 
-path_to_GG_file = 'TestGraphs/mix_of_snps.xml'
+#path_to_GG_file = 'TestGraphs/mix_of_snps.xml'
+path_to_GG_file = 'TestGraphs/latest2genome.xml'
+
 path_to_reads = './test_files/minSRR1144793.fastq'
 graph_obj = import_gg_graph(path_to_GG_file)
 
@@ -372,13 +377,15 @@ def get_next_base(kmer_length, kmer_matrix, graph_obj):
         return new_matrix
 
 
-def get_node_kmers(a_node, graph_obj, kmer_length, return_structure='list'):
+def get_node_kmers(a_node, graph_obj, kmer_length, return_structure):
 
     # Reversed nodes?
     node_length = len(graph_obj.nodes[a_node]['sequence'])
     current_base_pos = 1
 
     kmer_matrix = []
+
+    print(a_node)
 
     while current_base_pos <= node_length:
 
@@ -393,11 +400,11 @@ def get_node_kmers(a_node, graph_obj, kmer_length, return_structure='list'):
 
     kmer_matrix = get_next_base(kmer_length, kmer_matrix, graph_obj)
 
-    if return_structure is 'list':
+    if return_structure == 'list':
 
         return kmer_matrix
 
-    elif return_structure is 'kmer_dict':
+    elif return_structure == 'kmer_dict':
 
         kmer_dict = {}
 
@@ -439,7 +446,6 @@ def get_node_kmers(a_node, graph_obj, kmer_length, return_structure='list'):
 
 
 def create_query_kmers(q_sequence, kmer_size):
-    q_sequence
 
     q_kmers = [q_sequence[x:y] for x, y in combinations(range(len(q_sequence) + 1), r = 2) if len(q_sequence[x:y]) == kmer_size ]
 
@@ -456,19 +462,14 @@ def create_kmer_dict(in_graph_obj, kmer_size):
 
     all_kmer_positions = {}
 
-    for a_node in in_graph_obj.nodes():
+    pool = mp.Pool(mp.cpu_count())
 
-        count += 1
+    per_node_kmer_list = pool.starmap(get_node_kmers, [(a_node, in_graph_obj, kmer_size, 'kmer_dict') for a_node in in_graph_obj.nodes()])
 
-        print(str(count), '/', str(total_nodes))
-
-        a_node_kmer_dict = get_node_kmers(a_node, graph_obj, kmer_size, return_structure='kmer_dict')
-
-        for key, value in a_node_kmer_dict.items():
-
+    for a_node_kmers in per_node_kmer_list:
+        for key, value in a_node_kmers.items():
             if key in all_kmer_positions.keys():
                 all_kmer_positions[key] += value
-                print('akak')
             else:
                 all_kmer_positions[key] = value
 
@@ -529,9 +530,15 @@ print(len(a_matrix))
 quit()
 '''
 
+begin_time = datetime.datetime.now()
+
 kmer_dict_out = create_kmer_dict(graph_obj, 20)
 
-with open('kmer_dict.pickle', 'wb') as handle:
+print(datetime.datetime.now() - begin_time)
+
+#print(kmer_dict_out)
+
+with open('kmer_dict_multi.pickle', 'wb') as handle:
     pickle.dump(kmer_dict_out, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
