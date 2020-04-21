@@ -243,7 +243,7 @@ class GgDiGraph(nx.DiGraph):
 				if isinstance(num, int):
 					if num < 0:
 						inv = True
-			if inv == True:
+			if inv:
 				for j in range(len(nodeSequence)):
 					if kmerStartPos + kmerLength <= len(nodeSequence):
 						kmerSeq = nodeSequence[kmerStartPos:kmerStartPos + kmerLength]
@@ -1042,6 +1042,26 @@ def extract_region_subgraph(graph, region_start, region_stop, seq_name, neighbou
 
 
 # ---------------------------------------------------- General functions 
+
+def input_file_check(input_dict):
+	"""
+	Checkto see if the input test file is formatted correctly, and the fasta files will work.
+	:param input_dict: The input_dict returned from input_parser
+	:return: A list of any errors
+	"""
+
+	# Check if fasta files have multi chromosomes
+
+	errors_list = []
+
+	for isolate, a_fast_file in input_dict[1].items():
+		file = open(a_fast_file, 'r').read()
+		chrom_count = file.count('>')
+
+		if chrom_count != 1:
+			errors_list.append('Input file fail - ' + str(chrom_count) + ' chromosomes seen in fasta file: ' +  a_fast_file)
+
+	return errors_list
 
 
 def input_parser(file_path, parse_as='default'):
@@ -2447,8 +2467,9 @@ def local_node_realign_new(in_graph, node_ID, seq_fasta_paths_dict):
 	for node_isolate in node_data_dict['ids'].split(','):
 		iso_full_seq = input_parser(seq_fasta_paths_dict[node_isolate])[0]['DNA_seq'].upper()
 
-
-		''' Currenty only rev comp sequences are seen in the BBone file, represented by a - but not reversed start / stop '''
+		''' 
+		Currently only rev comp sequences are seen in the BBone file, represented by a - but not reversed start / stop 
+		'''
 
 		if int(node_data_dict[node_isolate + '_leftend']) > 0:
 			orientation_dict[node_isolate] = '+'
@@ -2460,7 +2481,7 @@ def local_node_realign_new(in_graph, node_ID, seq_fasta_paths_dict):
 			node_seq_start_pos[node_isolate] = int(node_data_dict[node_isolate + '_leftend'])
 
 		else:
-			slice_start = abs(int(node_data_dict[node_isolate + '_leftend'])) -1
+			slice_start = abs(int(node_data_dict[node_isolate + '_leftend'])) - 1
 			slice_end = abs(int(node_data_dict[node_isolate + '_rightend']))
 			iso_node_seq = iso_full_seq[slice_start: slice_end]
 			node_seq_start_pos[node_isolate] = int(node_data_dict[node_isolate + '_leftend'])

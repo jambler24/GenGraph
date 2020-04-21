@@ -82,6 +82,13 @@ if __name__ == '__main__':
 
 		parsed_input_dict = parse_seq_file(args.seq_file)
 
+		check_result = input_file_check(parsed_input_dict)
+
+		if len(check_result) > 0:
+			for input_error in check_result:
+				print(input_error)
+			quit()
+
 		# --------------------------------------------------------------------------------- Initial global alignment
 
 		if args.block_aligner[0] == 'progressiveMauve' and args.backbone_file == 'default':
