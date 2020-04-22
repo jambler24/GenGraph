@@ -243,7 +243,7 @@ class GgDiGraph(nx.DiGraph):
 				if isinstance(num, int):
 					if num < 0:
 						inv = True
-			if inv == True:
+			if inv:
 				for j in range(len(nodeSequence)):
 					if kmerStartPos + kmerLength <= len(nodeSequence):
 						kmerSeq = nodeSequence[kmerStartPos:kmerStartPos + kmerLength]
@@ -468,6 +468,7 @@ class GgDiGraph(nx.DiGraph):
 	def debruin_read_alignment(self, queryseq, kmerLength, outPutFilename):
 		'''
 		Running this Function will print out blocks of information on the aligned reads. Each block of 7 lines will correspond to a single aligned read.
+		Author: Campbell Green
 		Line 1: The Aligned read sequence
 		Line 2: The Nodes that the aligned read covers
 		Line 3: All nodes that the read aligns to inversely(Nodes with an aligned inversion)
@@ -1042,6 +1043,33 @@ def extract_region_subgraph(graph, region_start, region_stop, seq_name, neighbou
 
 # ---------------------------------------------------- General functions 
 
+def input_file_check(input_dict):
+	"""
+	Checkto see if the input test file is formatted correctly, and the fasta files will work.
+	:param input_dict: The input_dict returned from input_parser
+	:return: A list of any errors
+	"""
+	# TODO: Catch invisible chars
+
+	errors_list = []
+
+	# Check if the header is correct
+
+	# Check if fasta files have multi chromosomes
+	for isolate, a_fasta_path in input_dict[1].items():
+
+		# Check if files are where they should be
+		if os.path.isfile(a_fasta_path) is False:
+			errors_list.append('Fasta file not found - ' + a_fasta_path)
+		else:
+			file = open(a_fasta_path, 'r').read()
+			chrom_count = file.count('>')
+
+			if chrom_count != 1:
+				errors_list.append('Input file fail - ' + str(chrom_count) + ' chromosomes seen in fasta file: ' + a_fasta_path)
+
+	return errors_list
+
 
 def input_parser(file_path, parse_as='default'):
 	if file_path[-3:] == ".fa" or file_path[-6:] == ".fasta":
@@ -1161,8 +1189,6 @@ def input_parser(file_path, parse_as='default'):
 					entries[8] = extra_info_dict
 
 			list_of_lists.append(entries)
-
-
 		return list_of_lists
 
 	if file_path[-5:] == ".gff3" or file_path[-4:] == ".gff":
@@ -1206,7 +1232,6 @@ def input_parser(file_path, parse_as='default'):
 							info_byte = info_byte.split('=')
 							extra_info_dict[info_byte[0]] = info_byte[1]
 
-
 						if 'locus_tag' in extra_info_dict.keys():
 
 							gtf_info_dict['gene_id'] = extra_info_dict['locus_tag']
@@ -1215,11 +1240,6 @@ def input_parser(file_path, parse_as='default'):
 							entries[8] = gtf_info_dict
 					
 							list_of_lists.append(entries)
-
-							#quit()
-
-
-
 		return list_of_lists
 
 	if file_path[-4:] == ".gff OLD":
@@ -1569,11 +1589,11 @@ def bbone_to_initGraph(bbone_file, input_dict):
 
 	new_header_line = []
 
-	# Because MAUVE does not use teh sequence names in the bbone file, you need to replace the generic names like 'seq0'
+	# Because MAUVE does not use the sequence names in the bbone file, you need to replace the generic names like 'seq0'
 	# with the identifiers like 'H37Rv'
 	for header_item in header_line:
 		for seqID in input_dict[0].keys():
-			if seqID in header_item:
+			if seqID == header_item.split('_')[0]:
 				new_header_line.append(header_item.replace(seqID, input_dict[0][seqID]))
 
 	# This is now the list of lists without the header line.
@@ -1724,17 +1744,12 @@ def link_nodes(graph_obj, sequence_name, node_prefix='gn'):
 
 	count = 0
 
-
-	#print 'Sorting'
-
 	all_node_list = sorted(pos_lol, key=lambda start_val: start_val[0])
 
 
 	# -------------------------------------------------------- Here we add edges to the graph, weaving in the new nodes
 
 	count = 0
-
-	#print 'Add new edges'
 
 	edges_obj = graph_obj.edges()
 
@@ -1762,12 +1777,8 @@ def link_nodes(graph_obj, sequence_name, node_prefix='gn'):
 				new_seq_list = graph_obj.edges[node_1][node_2]['ids']
 
 			nx.set_edge_attributes(graph_obj, {'ids': new_seq_list})
-			#graph_obj[node_1][node_2]['ids'] = new_seq_list
 
 		else:
-			#print 'new edge'
-			#print [(node_1, node_2, dict(ids=sequence_name))]
-
 			graph_obj.add_edge(node_1, node_2, ids=sequence_name)
 
 		count += 1
@@ -1794,7 +1805,6 @@ def add_sequences_to_graph(graph_obj, paths_dict):
 
 		seq_source = data['ids'].split(',')[0]
 		is_reversed = False
-		is_comp = False
 
 		if len(seq_source) < 1:
 			logging.error('No ids current node')
@@ -1811,10 +1821,6 @@ def add_sequences_to_graph(graph_obj, paths_dict):
 			seq_end = abs(int(data[seq_source + '_rightend']))
 
 			if seq_start > seq_end:
-				#new_seq_start = seq_end
-				#new_seq_end = seq_start
-				#seq_end = new_seq_end
-				#seq_start = new_seq_start
 				logging.error('Something wrong with orientation')
 
 			'''
@@ -1829,7 +1835,6 @@ def add_sequences_to_graph(graph_obj, paths_dict):
 			node_seq = ref_seq[seq_start:seq_end].upper()
 
 			if is_reversed:
-				#print 'seq was rev comp' + node
 				node_seq = reverse_compliment(node_seq)
 
 			graph_obj.node[node]['sequence'] = node_seq
@@ -1899,10 +1904,7 @@ def make_circular(graph_obj, seq_name):
 def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, threshold=1.0, return_dict=False, simmilarity_measure='percentage'):
 	'''Retrieve the nodes from a graph spanning a region'''
 
-
 	print(start_pos, stop_pos)
-
-	#print '\nchecking iso in region'
 
 	graph_isolate_list = graph_obj.graph['isolates'].split(',')
 
@@ -1914,17 +1916,12 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 		print(int(stop_pos), int(start_pos))
 		print(expected_ref_length)
 
-	#print expected_ref_length
-	#print reference_name
-
 	# Extract subgraph
 	node_leftend_label = reference_name + '_leftend'
 	node_rightend_label = reference_name + '_rightend'
 
 	# Identify the nodes that contain the start and stop positions
 
-	#print int(start_pos)
-	#print int(stop_pos)
 	print(reference_name)
 
 	for node, data in graph_obj.nodes(data=True):
@@ -1935,29 +1932,21 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 				if abs(int(data[node_leftend_label])) <= int(start_pos) <= abs(int(data[node_rightend_label])):
 					start_node = node
 					print('Ping')
-					#print data[node_leftend_label]
 					print(start_pos)
-					#print data[node_rightend_label]
-					start_overlap =  bp_distance(data[node_rightend_label], start_pos)
+					start_overlap = bp_distance(data[node_rightend_label], start_pos)
 
 				if abs(int(data[node_leftend_label])) <= int(stop_pos) <= abs(int(data[node_rightend_label])) or abs(int(data[node_leftend_label])) >= int(stop_pos) >= abs(int(data[node_rightend_label])):
 					print('ping')
 					stop_node = node
 					print(stop_pos)
 					stop_overlap = bp_distance(stop_pos, data[node_leftend_label])
-					#stop_overlap = int(stop_pos) - int(data[node_leftend_label]) + 1
 
 			if int(data[node_leftend_label]) < 0:
-				#print 'negative'
-				#print data[node_leftend_label]
-				#print data[node_rightend_label]
 				if abs(int(data[node_leftend_label])) <= int(start_pos) <= abs(int(data[node_rightend_label])):
 					start_node = node
 					print('Ping')
 					print('neg node')
-					#print data[node_leftend_label]
 					print(start_pos)
-					#print data[node_rightend_label]
 					start_overlap =  bp_distance(data[node_rightend_label], start_pos)
 
 				if abs(int(data[node_leftend_label])) <= int(stop_pos) <= abs(int(data[node_rightend_label])):
@@ -1965,19 +1954,15 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 					stop_node = node
 					logging.info(stop_pos)
 					stop_overlap = bp_distance(stop_pos, data[node_leftend_label])
-					#stop_overlap = int(stop_pos) - int(data[node_leftend_label]) + 1
-
-
-
 
 	# Dealing with genes that occur at the start and stop nodes of the graph... needs a propper solution
 	# Caused by the lack of a 'length' attribute in the start and stop node
 	# Temp fix = just return a nope.
 
 	if start_node.split('_')[-1] == 'start' or stop_node.split('_')[-1] == 'stop':
-		if return_dict == True:
+		if return_dict:
 			# THIS WILL FAIL maybe...
-			return {reference_name:1}
+			return {reference_name: 1}
 		else:
 			return [reference_name]
 
@@ -1985,9 +1970,6 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 
 	start_node_pb_length = bp_length_node(graph_obj.node[start_node])
 	stop_node_pb_length = bp_length_node(graph_obj.node[stop_node])
-
-	#print start_node_pb_length
-
 
 	start_node_nonoverlap = start_node_pb_length - start_overlap
 	stop_node_nonoverlap = stop_node_pb_length - stop_overlap
@@ -2008,18 +1990,11 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 		nodes_in_path.append(start_node)
 		nodes_in_path.append(stop_node)
 
-	#print 'nodes in path'
-	#print nodes_in_path
-
-
 	for path_node in nodes_in_path:
 		if reference_name in graph_obj.node[path_node]['ids']:
 			ref_nodes_in_path.append(path_node)
 		else:
 			alt_nodes_in_path.append(path_node)
-
-	#print ref_nodes_in_path
-	#print alt_nodes_in_path
 
 	total_alt_length = 0
 	total_ref_length = 0
@@ -2035,17 +2010,12 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 
 	total_ref_length = total_ref_length + start_overlap + stop_overlap
 
-	#print total_alt_length
-	#print total_ref_length
-
 	iso_diff_dict = {}
 	iso_sim_dict = {}
 
 	for node_iso in graph_isolate_list:
-		#print node_iso
 		iso_diff_dict[node_iso] = 0
 		iso_sim_dict[node_iso] = 0
-
 
 	for a_node in nodes_in_path:
 		for a_isolate in graph_isolate_list:
@@ -2060,10 +2030,6 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 			iso_sim_dict[a_iso] = iso_sim_dict[a_iso] - start_node_nonoverlap
 		if a_iso in graph_obj.node[stop_node]['ids']:
 			iso_sim_dict[a_iso] = iso_sim_dict[a_iso] - stop_node_nonoverlap
-
-
-	#print iso_sim_dict
-	#print iso_diff_dict
 
 	iso_sim_score_dict = {}
 
@@ -2085,9 +2051,7 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 		if iso_sim_score_dict[a_isolate] >= threshold:
 			ret_list.append(a_isolate)
 
-	#print iso_sim_score_dict
-
-	if return_dict == True:
+	if return_dict:
 		return iso_sim_score_dict
 	else:
 		return ret_list
@@ -2121,36 +2085,23 @@ def convert_coordinates(graph_obj, q_start, q_stop, ref_iso, query_iso):
 	for node, data in graph_obj.nodes(data=True):
 		if ref_iso in data['ids'].split(',') and query_iso in data['ids'].split(','):
 			if int(data[node_leftend_label]) < int(q_start) and int(q_stop) < int(data[node_rightend_label]):
-				#print 'local found!!!!'
 				ref_node_left = data[node_leftend_label]
 				ref_node_right = data[node_rightend_label]
 				query_node_left = data[query_leftend_label]
 				query_node_right = data[query_rightend_label]
 
-				#print int(ref_node_left) - int(ref_node_right)
-				#print int(query_node_left) - int(query_node_right)
-
 				ref_low_num = abs(int(ref_node_left))
 				if abs(int(ref_node_left)) > abs(int(ref_node_right)):
 					ref_low_num = abs(int(ref_node_right))
-
-				#print ref_low_num
 
 				query_low_num = abs(int(query_node_left))
 				if abs(int(query_node_left)) > abs(int(query_node_right)):
 					query_low_num = abs(int(query_node_right))
 
-				#print query_low_num
-
 				conversion_factor = ref_low_num - query_low_num
-
-				#print conversion_factor
 
 				new_r_start = int(q_start) - conversion_factor
 				new_r_stop = int(q_stop) - conversion_factor
-
-				#print new_r_start
-				#print new_r_stop
 
 				return {query_iso + '_leftend':new_r_start, query_iso + '_rightend':new_r_stop}
 
@@ -2367,7 +2318,7 @@ def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', or
 
 	# Adding additional info and indexing
 
-	last_bline = {'blocklist':[]}
+	last_bline = {'blocklist': []}
 
 	bpos_count = 1
 
@@ -2384,9 +2335,7 @@ def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', or
 
 					true_start[an_isolate] = true_start[an_isolate] - 1
 
-
 		bline['global_pos'] = bpos_count
-		#bline['relative_pos'] = copy.deepcopy(true_start)
 		bline['relative_pos'] = pickle.loads(pickle.dumps(true_start, -1))
 
 		# See if this bline is a new block / node set
@@ -2399,9 +2348,6 @@ def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', or
 		block_list = sorted(block_list)
 
 		bline['blocklist'] = block_list
-
-
-
 
 		# Here we call blocks
 		if bline['blocklist'] != last_bline['blocklist']:
@@ -2417,11 +2363,8 @@ def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', or
 	# Last block
 	block_ends_list.append(last_bline)
 
-	#print '\n'
-
 	# Trimming off that forst start block
 	block_ends_list = block_ends_list[1:]
-
 
 	# Here we start getting the nodes paired and into the correct format
 	# Start and stop are in pairs
@@ -2502,6 +2445,15 @@ def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', or
 
 
 def local_node_realign_new(in_graph, node_ID, seq_fasta_paths_dict):
+	"""
+	This used a multiple sequence aligner to realign the nodes that represent blocks of sequences.
+	:param in_graph: input graph object that represents the blocks of co-linear sequences
+	:param node_ID: The node to realign. String.
+	:param seq_fasta_paths_dict: Dict containing the paths to the fasta sequences.
+	:return:
+	"""
+	# TODO: This fails if there are multiple chromosomes in the input fasta file.
+	# TODO: load fasta into memory instead of reading each time.
 
 	logging.info('Fast local node realign: ' + node_ID)
 	logging.info(in_graph.node[node_ID])
@@ -2522,42 +2474,29 @@ def local_node_realign_new(in_graph, node_ID, seq_fasta_paths_dict):
 	for node_isolate in node_data_dict['ids'].split(','):
 		iso_full_seq = input_parser(seq_fasta_paths_dict[node_isolate])[0]['DNA_seq'].upper()
 
-		#print node_isolate
-		#print '----------------+------------------'
-
-		''' Currenty only rev comp sequences are seen in the BBone file, represented by a - but not reversed start / stop '''
-		#print node_data_dict
+		''' 
+		Currently only rev comp sequences are seen in the BBone file, represented by a - but not reversed start / stop 
+		'''
 
 		if int(node_data_dict[node_isolate + '_leftend']) > 0:
 			orientation_dict[node_isolate] = '+'
 		else:
 			orientation_dict[node_isolate] = '-'
 
-
 		if orientation_dict[node_isolate] == '+':
-			#print 'not reversed'
-			#print 'Not compliment'
 			iso_node_seq = iso_full_seq[int(node_data_dict[node_isolate + '_leftend']) - 1:int(node_data_dict[node_isolate + '_rightend']) ]
 			node_seq_start_pos[node_isolate] = int(node_data_dict[node_isolate + '_leftend'])
 
-
 		else:
-			#print 'reversed'
-			#print abs(int(node_data_dict[node_isolate + '_rightend']))
-			#print abs(int(node_data_dict[node_isolate + '_leftend']))
-
-			iso_node_seq = iso_full_seq[abs(int(node_data_dict[node_isolate + '_leftend'])) - 1:abs(int(node_data_dict[node_isolate + '_rightend'])) ]
+			slice_start = abs(int(node_data_dict[node_isolate + '_leftend'])) - 1
+			slice_end = abs(int(node_data_dict[node_isolate + '_rightend']))
+			iso_node_seq = iso_full_seq[slice_start: slice_end]
 			node_seq_start_pos[node_isolate] = int(node_data_dict[node_isolate + '_leftend'])
 			iso_node_seq = reverse_compliment(iso_node_seq)
-
-		#print 'seq'
-		#print iso_node_seq
 
 		temp_fasta_file.write('>' + node_isolate + '\n')
 		temp_fasta_file.write(iso_node_seq + '\n')
 		node_seq_len_est = len(iso_node_seq)
-		#print 'passed start positions'
-		#print node_seq_start_pos
 
 	temp_fasta_file.close()
 
@@ -2689,7 +2628,6 @@ def kalign_alignment(fasta_unaln_file, out_aln_name):
 
 def muscle_alignment(fasta_unaln_file, out_aln_name):
 
-
 	muscle_command_call = [path_to_muscle, '-in', fasta_unaln_file, '-out', out_aln_name]
 
 	return call(muscle_command_call)
@@ -2819,20 +2757,11 @@ def extract_original_seq(graph_obj, seq_name):
 
 	pos_lol = sorted(pos_lol)
 
-	#for aposthing in pos_lol:
-	#	print aposthing
-	#print len(pos_lol)
-	#print 'oooo'
-	#print test_count
-
 	# REMOVE AND PUT AS TEST
 
 	last_node_line = [0,0,0]
 
 	for segment in pos_lol:
-		#print '\n'
-		#print segment
-		#print graph_obj.node[str(segment[2])]['sequence']
 
 		if segment[0] == last_node_line[1]:
 			logging.info('-')
@@ -2973,7 +2902,7 @@ def extract_original_seq_region_fast(graph_obj, region_start, region_stop, seq_n
 					multi_node_dict[node_start] = data['sequence']
 
 	result_string = ''
-	print(multi_node_dict)
+	#print(multi_node_dict)
 	for key in sorted(multi_node_dict.keys()):
 		result_string += multi_node_dict[key]
 

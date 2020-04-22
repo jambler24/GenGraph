@@ -1,5 +1,10 @@
 from gengraph import *
 
+from itertools import combinations
+import multiprocessing as mp
+
+from itertools import product
+import datetime
 
 '''
 
@@ -75,7 +80,9 @@ def import_gfa(file_path):
 
 #quit()
 
-path_to_GG_file = './latest2genome.xml'
+#path_to_GG_file = 'TestGraphs/mix_of_snps.xml'
+path_to_GG_file = 'TestGraphs/latest2genome.xml'
+
 path_to_reads = './test_files/minSRR1144793.fastq'
 graph_obj = import_gg_graph(path_to_GG_file)
 
@@ -370,17 +377,15 @@ def get_next_base(kmer_length, kmer_matrix, graph_obj):
         return new_matrix
 
 
-def get_node_kmers(a_node, graph_obj, kmer_length):
+def get_node_kmers(a_node, graph_obj, kmer_length, return_structure):
 
     # Reversed nodes?
     node_length = len(graph_obj.nodes[a_node]['sequence'])
     current_base_pos = 1
 
-    #print(graph_obj.nodes[a_node]['sequence'])
-
     kmer_matrix = []
 
-    test_count = 0
+    print(a_node)
 
     while current_base_pos <= node_length:
 
@@ -395,7 +400,99 @@ def get_node_kmers(a_node, graph_obj, kmer_length):
 
     kmer_matrix = get_next_base(kmer_length, kmer_matrix, graph_obj)
 
-    return kmer_matrix
+    if return_structure == 'list':
+
+        return kmer_matrix
+
+    elif return_structure == 'kmer_dict':
+
+        kmer_dict = {}
+
+        for a_kmer in kmer_matrix:
+            if a_kmer[0][0] in kmer_dict.keys():
+                kmer_dict[a_kmer[0][0]] += [a_kmer[1]]
+            else:
+                kmer_dict[a_kmer[0][0]] = [a_kmer[1]]
+
+        return kmer_dict
+
+
+
+
+
+
+
+'''
+[
+    [
+        ['ACTTCGACGACTTCGACGAT'], 
+        [
+            ['Aln_79_26', 1], ['Aln_79_27', 1]
+        ]
+    ], 
+    [['CTTCGACGACTTCGACGATA'], [['Aln_79_26', 2], ['Aln_79_27', 1]]], 
+    [['TTCGACGACTTCGACGATAA'], [['Aln_79_26', 3], ['Aln_79_27', 1]]], 
+    [['TCGACGACTTCGACGATAAG'], [['Aln_79_26', 4], ['Aln_79_27', 1]]], 
+    [['CGACGACTTCGACGATAAGG'], [['Aln_79_26', 5], ['Aln_79_27', 1]]], 
+    [['GACGACTTCGACGATAAGGG'], [['Aln_79_26', 6], ['Aln_79_27', 1]]], 
+    [['ACGACTTCGACGATAAGGGC'], [['Aln_79_26', 7], ['Aln_79_27', 1]]], 
+    [['CGACTTCGACGATAAGGGCC'], [['Aln_79_26', 8], ['Aln_79_27', 1]]], 
+    [['GACTTCGACGATAAGGGCCG'], [['Aln_79_26', 9], ['Aln_79_27', 1]]]
+
+]
+
+
+'''
+
+
+def create_query_kmers(q_sequence, kmer_size):
+
+    q_kmers = [q_sequence[x:y] for x, y in combinations(range(len(q_sequence) + 1), r = 2) if len(q_sequence[x:y]) == kmer_size ]
+
+    return q_kmers
+
+
+def create_kmer_dict(in_graph_obj, kmer_size):
+
+    # TODO: Multi processing here
+
+    total_nodes = len(in_graph_obj.nodes())
+
+    count = 0
+
+    all_kmer_positions = {}
+
+    pool = mp.Pool(mp.cpu_count())
+
+    per_node_kmer_list = pool.starmap(get_node_kmers, [(a_node, in_graph_obj, kmer_size, 'kmer_dict') for a_node in in_graph_obj.nodes()])
+
+    for a_node_kmers in per_node_kmer_list:
+        for key, value in a_node_kmers.items():
+            if key in all_kmer_positions.keys():
+                all_kmer_positions[key] += value
+            else:
+                all_kmer_positions[key] = value
+
+    return all_kmer_positions
+
+
+def align_seq_hash(q_sequence, ref_hash_dict, kmer_size):
+
+    q_kmers = create_query_kmers(q_sequence, kmer_size)
+
+    q_kmer_dict = {k: [v] for v, k in enumerate(q_kmers)}
+
+    for kmer, position in q_kmer_dict.items():
+
+        try:
+            kmer_graph_pos = ref_hash_dict[kmer]
+
+        except KeyError:
+            kmer_graph_pos = []
+
+        q_kmer_dict[kmer] += kmer_graph_pos
+
+    return q_kmer_dict
 
 
 def calcGCcontent():
@@ -433,6 +530,28 @@ print(len(a_matrix))
 quit()
 '''
 
+begin_time = datetime.datetime.now()
+
+kmer_dict_out = create_kmer_dict(graph_obj, 20)
+
+print(datetime.datetime.now() - begin_time)
+
+#print(kmer_dict_out)
+
+with open('kmer_dict_multi.pickle', 'wb') as handle:
+    pickle.dump(kmer_dict_out, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+sub_seq = graph_obj.get_sequence(10, 50, 'H37Rv_2')
+
+print(sub_seq)
+
+align_res = align_seq_hash(sub_seq, kmer_dict_out, 20)
+
+print(align_res)
+
+quit()
+
 node_dbg = nx.Graph()
 
 total = len(graph_obj.nodes())
@@ -444,6 +563,9 @@ for a_node in graph_obj.nodes():
     print(a_node)
     print(str(count), '/', str(total))
     count += 1
+
+    if count == 100:
+        quit()
 
     a_matrix = get_node_kmers(a_node, graph_obj, 20)
 
