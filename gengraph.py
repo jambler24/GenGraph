@@ -1049,17 +1049,24 @@ def input_file_check(input_dict):
 	:param input_dict: The input_dict returned from input_parser
 	:return: A list of any errors
 	"""
-
-	# Check if fasta files have multi chromosomes
+	# TODO: Catch invisible chars
 
 	errors_list = []
 
-	for isolate, a_fast_file in input_dict[1].items():
-		file = open(a_fast_file, 'r').read()
-		chrom_count = file.count('>')
+	# Check if the header is correct
 
-		if chrom_count != 1:
-			errors_list.append('Input file fail - ' + str(chrom_count) + ' chromosomes seen in fasta file: ' +  a_fast_file)
+	# Check if fasta files have multi chromosomes
+	for isolate, a_fasta_path in input_dict[1].items():
+
+		# Check if files are where they should be
+		if os.path.isfile(a_fasta_path) is False:
+			errors_list.append('Fasta file not found - ' + a_fasta_path)
+		else:
+			file = open(a_fasta_path, 'r').read()
+			chrom_count = file.count('>')
+
+			if chrom_count != 1:
+				errors_list.append('Input file fail - ' + str(chrom_count) + ' chromosomes seen in fasta file: ' + a_fasta_path)
 
 	return errors_list
 
