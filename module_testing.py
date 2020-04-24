@@ -81,7 +81,7 @@ def import_gfa(file_path):
 #quit()
 
 #path_to_GG_file = 'TestGraphs/mix_of_snps.xml'
-path_to_GG_file = 'TestGraphs/latest2genome.xml'
+path_to_GG_file = 'test_files/latest2genome.xml'
 
 path_to_reads = './test_files/minSRR1144793.fastq'
 graph_obj = import_gg_graph(path_to_GG_file)
@@ -378,14 +378,21 @@ def get_next_base(kmer_length, kmer_matrix, graph_obj):
 
 
 def get_node_kmers(a_node, graph_obj, kmer_length, return_structure):
+    """
+    Returns a list structure of all possible kmers from a node, including the positions, and nodes that the sequences
+    extend into.
+    :param a_node: A string node ID from the graph object
+    :param graph_obj: A GenGraph graph object
+    :param kmer_length:
+    :param return_structure:
+    :return:
+    """
 
     # Reversed nodes?
     node_length = len(graph_obj.nodes[a_node]['sequence'])
     current_base_pos = 1
 
     kmer_matrix = []
-
-    print(a_node)
 
     while current_base_pos <= node_length:
 
@@ -549,6 +556,8 @@ print(sub_seq)
 align_res = align_seq_hash(sub_seq, kmer_dict_out, 20)
 
 print(align_res)
+
+print(datetime.datetime.now() - begin_time)
 
 quit()
 

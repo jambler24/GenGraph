@@ -389,11 +389,11 @@ class GgDiGraph(nx.DiGraph):
 	# will need the currentNode that is parsed at this step so instead you have the two previous nodes the kmer goes over so you have all three nodes saved into the dictionary
 
 	def kmers_of_node(self, nodeName):
-		'''
+		"""
 
 		:param nodeName: the Node that you want to use create kmers from
 		:return: returns a dictionary of all of the kmers involved with the given node.
-		'''
+		"""
 		kmersOfNode = {}
 		if len(GgDiGraph.kmerDict) == 0:
 			# default kmer length is 4
@@ -411,14 +411,14 @@ class GgDiGraph(nx.DiGraph):
 		return kmersOfNode
 
 	def create_query_kmers(self, querySequence, kmerLength):
-		'''
+		"""
 
 		:param querySequence: the sequence of the query you want to align to the graph
 		:param kmerLength: The length of the kmers that you want to make from the query sequence.
 				These should be the same as the graph kmer length
 		:return:Returns a dictionary with all of the kmers from the query sequence. The dictionary contains the query
 				kmer name and query kmer sequence.
-		'''
+		"""
 		startPos = 0
 		queryKmers = {}
 		kmerNumber = 1
@@ -466,7 +466,7 @@ class GgDiGraph(nx.DiGraph):
 		return distanceBetween
 
 	def debruin_read_alignment(self, queryseq, kmerLength, outPutFilename):
-		'''
+		"""
 		Running this Function will print out blocks of information on the aligned reads. Each block of 7 lines will correspond to a single aligned read.
 		Author: Campbell Green
 		Line 1: The Aligned read sequence
@@ -481,7 +481,7 @@ class GgDiGraph(nx.DiGraph):
 		:return: returns a dictionary with the sequences that align, x's represent sections of the sequence that doesnt correctly align
 				It also returns the nodes that the sequence aligns to and the position on the first node the sequence starts aligning to and the position on the last node that the sequence ends aligning to.
 				These positions are in string positions, so the first base pair is position 0.
-		'''
+		"""
 		queryKmerDict = self.create_query_kmers(queryseq, kmerLength)
 		referenceKmerDict = self.fast_kmer_create(kmerLength)
 		# creates the query and graph kmers with the desired kmer length
@@ -931,11 +931,11 @@ class GgDiGraph(nx.DiGraph):
 
 
 def import_gg_graph(path):
-	'''
+	"""
 	Import a GG graph
 	:param path: file path
 	:return: a GG graph genome object
-	'''
+	"""
 	graph_obj = nx.read_graphml(path)
 
 	out_graph = GgDiGraph(graph_obj)
@@ -965,7 +965,7 @@ def get_neighbours_context(graph, source_node, label, dir='out'):
 
 def extract_region_subgraph(graph, region_start, region_stop, seq_name, neighbours=0):
 
-	'''
+	"""
 	Extracts the sub-graph of a region between two coordinates for a sequence ID. An example may be
 	returning the sub-graph that represents a gene for a particular isolate. Specifying a value for
 	neighbours will result in the graph plus any adjacent nodes to be returned.
@@ -976,7 +976,7 @@ def extract_region_subgraph(graph, region_start, region_stop, seq_name, neighbou
 	:param neighbours: Whether to include neighbouring nodes. This currently only considers adjacent nodes, and
 	will be expanded to include neighbours of neighbours etc.
 	:return: A subgraph as a gengraph object.
-	'''
+	"""
 
 
 	node_list = []
