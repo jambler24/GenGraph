@@ -420,10 +420,27 @@ def get_node_kmers(a_node, graph_obj, kmer_length, return_structure):
 '''
 
 
-def create_query_kmers(q_sequence, kmer_size):
+def create_query_kmers_OLD_FAST(q_sequence, kmer_size):
 
     q_kmers = [q_sequence[x:y] for x, y in combinations(range(len(q_sequence) + 1), r=2)
                if len(q_sequence[x:y]) == kmer_size]
+
+    return q_kmers
+
+
+def create_query_kmers(q_sequence, kmer_size):
+
+    # TODO: Deal with lost tailing sequence. Lasy kmer size chunk not used.
+
+    q_kmers = {}
+    window_start = 0
+    window_stop = kmer_size
+    q_seq_length = len(q_sequence['sequence'])
+
+    while window_stop <= q_seq_length:
+        q_kmers[q_sequence['sequence'][window_start:window_stop]] = window_start
+        window_start += 1
+        window_stop += 1
 
     return q_kmers
 
@@ -474,11 +491,15 @@ def create_kmer_graph(in_graph_obj, kmer_size):
     return all_kmer_positions
 
 
-def align_seq_hash(q_sequence, ref_hash_dict, kmer_size):
+def align_seq_hash(q_sequence, ref_hash_dict, kmer_size, use_qual=True):
 
     q_kmers = create_query_kmers(q_sequence, kmer_size)
 
     q_kmer_dict = {k: [v] for v, k in enumerate(q_kmers)}
+
+    if use_qual:
+        for a_seq_kmer, val_list in q_kmer_dict.items():
+            q_kmer_dict[a_seq_kmer].append(q_sequence['quality'][val_list[0]])
 
     for kmer, position in q_kmer_dict.items():
 
@@ -572,7 +593,7 @@ def align_fastq_to_kmer_graph(fastq_file, reference_kmer_dict):
             lines = []
 
             # Align the sequence to hash
-            align_res = align_seq_hash(record['sequence'], reference_kmer_dict, set_kmer)
+            align_res = align_seq_hash(record, reference_kmer_dict, set_kmer)
 
             # process alignment result
 
@@ -580,14 +601,15 @@ def align_fastq_to_kmer_graph(fastq_file, reference_kmer_dict):
             for key, val in align_res.items():
 
                 try:
-                    kmer_node_name = val[1][0][0] + '-' + str(val[1][0][1])
+                    kmer_node_name = val[2][0][0] + '-' + str(val[2][0][1])
 
                     if kmer_node_name not in out_graph.nodes():
-                        ref_node_pos = val[1][0][0] + '-' + str(val[1][0][1])
-                        node_dict = {'nuc': key[0], 'ref': ref_node_pos, 'kmer': key}
+                        ref_node_pos = val[2][0][0] + '-' + str(val[2][0][1])
+                        node_dict = {'nuc': key[0], 'ref': ref_node_pos, 'kmer': key, 'qual': val[1]}
                         out_graph.add_node(kmer_node_name, **node_dict)
                     else:
-                        print('update')
+                        old_qual = out_graph.nodes[kmer_node_name]['qual']
+                        out_graph.nodes[kmer_node_name]['qual'] = old_qual + ',' + val[1]
 
                 except IndexError:
                     # Create a new node for the query seq
@@ -595,16 +617,16 @@ def align_fastq_to_kmer_graph(fastq_file, reference_kmer_dict):
 
                     if kmer_node_name not in out_graph.nodes():
                         ref_node_pos = 'alt' + str(val[0])
-                        node_dict = {'nuc': key[0], 'ref': ref_node_pos, 'kmer': key}
+                        node_dict = {'nuc': key[0], 'ref': ref_node_pos, 'kmer': key, 'qual': val[1]}
                         out_graph.add_node(kmer_node_name, **node_dict)
 
                     else:
-                        print('update')
+                        old_qual = out_graph.nodes[kmer_node_name]['qual']
+                        out_graph.nodes[kmer_node_name]['qual'] = old_qual + ',' + val[1]
 
                 if previous_node is not False:
                     if out_graph.has_edge(previous_node, kmer_node_name):
                         current_weight = out_graph[previous_node][kmer_node_name]['a']['weight']
-                        print(current_weight)
                         out_graph[previous_node][kmer_node_name]['a']['weight'] = current_weight + 1
                     else:
                         out_graph.add_edge(previous_node, kmer_node_name, key='a', weight=1)
