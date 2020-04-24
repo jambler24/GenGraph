@@ -71,38 +71,6 @@ def import_gfa(file_path):
     return gg_network
 
 
-#path_to_gfa = '/Users/panix/iCloud/programs/vg/W_148_NCBI.gfa'
-
-#gg_graph = import_gfa(path_to_gfa)
-
-#nx.write_graphml(gg_graph, 'imported_gml_test.xml')
-
-
-#quit()
-
-#path_to_GG_file = 'TestGraphs/mix_of_snps.xml'
-path_to_GG_file = 'test_files/latest2genome.xml'
-
-path_to_reads = './test_files/minSRR1144793.fastq'
-graph_obj = import_gg_graph(path_to_GG_file)
-
-'''
-print(graph_obj.get_edge_data('Aln_79_24', 'Aln_79_25'))
-
-new_seq_list = graph_obj.edges['Aln_79_24', 'Aln_79_25']['ids'] + ',' + 'lldld'
-
-graph_obj.edges['Aln_79_24', 'Aln_79_25']['ids'] = new_seq_list
-
-print(graph_obj.edges['Aln_79_24', 'Aln_79_25']['ids'].split(','))
-
-quit()
-
-sim_value = graph_obj.region_similarity(3020000, 3024100, 'H37Rv', 'W_148')
-print(sim_value)
-quit()
-'''
-
-
 def get_next_base_older(kmer_length, kmer_matrix, graph_obj):
     """
     Starting at a nucleotide in a node, get all kmers of the required length
@@ -454,12 +422,35 @@ def get_node_kmers(a_node, graph_obj, kmer_length, return_structure):
 
 def create_query_kmers(q_sequence, kmer_size):
 
-    q_kmers = [q_sequence[x:y] for x, y in combinations(range(len(q_sequence) + 1), r = 2) if len(q_sequence[x:y]) == kmer_size ]
+    q_kmers = [q_sequence[x:y] for x, y in combinations(range(len(q_sequence) + 1), r=2)
+               if len(q_sequence[x:y]) == kmer_size]
 
     return q_kmers
 
 
 def create_kmer_dict(in_graph_obj, kmer_size):
+
+    total_nodes = len(in_graph_obj.nodes())
+
+    count = 0
+
+    all_kmer_positions = {}
+
+    pool = mp.Pool(mp.cpu_count())
+
+    per_node_kmer_list = pool.starmap(get_node_kmers, [(a_node, in_graph_obj, kmer_size, 'kmer_dict') for a_node in in_graph_obj.nodes()])
+
+    for a_node_kmers in per_node_kmer_list:
+        for key, value in a_node_kmers.items():
+            if key in all_kmer_positions.keys():
+                all_kmer_positions[key] += value
+            else:
+                all_kmer_positions[key] = value
+
+    return all_kmer_positions
+
+
+def create_kmer_graph(in_graph_obj, kmer_size):
 
     # TODO: Multi processing here
 
@@ -536,28 +527,98 @@ print(a_matrix)
 print(len(a_matrix))
 quit()
 '''
+# ----------------------------------------------------------------- ><
 
-begin_time = datetime.datetime.now()
+path_to_GG_file = 'test_files/latest2genome.xml'
 
-kmer_dict_out = create_kmer_dict(graph_obj, 20)
+path_to_reads = './test_files/minSRR1144793.fastq'
+graph_obj = import_gg_graph(path_to_GG_file)
 
-print(datetime.datetime.now() - begin_time)
+#begin_time = datetime.datetime.now()
+
+#kmer_dict_out = create_kmer_dict(graph_obj, 20)
+
+#print(datetime.datetime.now() - begin_time)
 
 #print(kmer_dict_out)
 
-with open('kmer_dict_multi.pickle', 'wb') as handle:
-    pickle.dump(kmer_dict_out, handle, protocol=pickle.HIGHEST_PROTOCOL)
+#with open('kmer_dict_multi.pickle', 'wb') as handle:
+#    pickle.dump(kmer_dict_out, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+kmer_dict_out = pickle.load(open("kmer_dict_multi.pickle", "rb"))
+
+begin_time = datetime.datetime.now()
 
 
-sub_seq = graph_obj.get_sequence(10, 50, 'H37Rv_2')
+def process_fastq_lines(lines=None):
+    ks = ['name', 'sequence', 'optional', 'quality']
+    return {k: v for k, v in zip(ks, lines)}
 
-print(sub_seq)
 
-align_res = align_seq_hash(sub_seq, kmer_dict_out, 20)
+def align_fastq_to_kmer_graph(fastq_file, reference_kmer_dict):
 
-print(align_res)
+    set_kmer = 20
+
+    in_fasta = open(fastq_file, 'r')
+
+    out_graph = nx.MultiGraph()
+
+    n = 4
+    lines = []
+    for a_line in in_fasta:
+        lines.append(a_line.rstrip())
+        if len(lines) == n:
+            record = process_fastq_lines(lines)
+            lines = []
+
+            # Align the sequence to hash
+            align_res = align_seq_hash(record['sequence'], reference_kmer_dict, set_kmer)
+
+            # process alignment result
+
+            previous_node = False
+            for key, val in align_res.items():
+
+                try:
+                    kmer_node_name = val[1][0][0] + '-' + str(val[1][0][1])
+
+                    if kmer_node_name not in out_graph.nodes():
+                        ref_node_pos = val[1][0][0] + '-' + str(val[1][0][1])
+                        node_dict = {'nuc': key[0], 'ref': ref_node_pos, 'kmer': key}
+                        out_graph.add_node(kmer_node_name, **node_dict)
+                    else:
+                        print('update')
+
+                except IndexError:
+                    # Create a new node for the query seq
+                    kmer_node_name = key
+
+                    if kmer_node_name not in out_graph.nodes():
+                        ref_node_pos = 'alt' + str(val[0])
+                        node_dict = {'nuc': key[0], 'ref': ref_node_pos, 'kmer': key}
+                        out_graph.add_node(kmer_node_name, **node_dict)
+
+                    else:
+                        print('update')
+
+                if previous_node is not False:
+                    if out_graph.has_edge(previous_node, kmer_node_name):
+                        current_weight = out_graph[previous_node][kmer_node_name]['a']['weight']
+                        print(current_weight)
+                        out_graph[previous_node][kmer_node_name]['a']['weight'] = current_weight + 1
+                    else:
+                        out_graph.add_edge(previous_node, kmer_node_name, key='a', weight=1)
+
+                previous_node = kmer_node_name
+
+    return out_graph
+
+
+res_of_the_thing = align_fastq_to_kmer_graph(path_to_reads, kmer_dict_out)
 
 print(datetime.datetime.now() - begin_time)
+
+nx.write_graphml(res_of_the_thing, 'aligned_kmer.xml')
 
 quit()
 
