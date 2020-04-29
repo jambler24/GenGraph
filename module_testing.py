@@ -1,10 +1,11 @@
 from gengraph import *
 
-from itertools import combinations
+from itertools import combinations, combinations_with_replacement
 import multiprocessing as mp
 
-from itertools import product
+from itertools import product, islice
 import datetime
+import string
 
 '''
 
@@ -492,6 +493,30 @@ def create_kmer_graph(in_graph_obj, kmer_size):
 
 
 def align_seq_hash(q_sequence, ref_hash_dict, kmer_size, use_qual=True):
+    """
+
+    :param q_sequence:
+    :param ref_hash_dict:
+    :param kmer_size:
+    :param use_qual:
+    :return: Dictionary of mapped positions
+
+    {kmer: [
+        'k-mer_first_nucleotode_seq',
+        'quality_string',
+            [
+                [aligned_node, aligned_node_position],
+                [aligned_node2, aligned_node_position2]
+            ]
+        ]
+    }
+
+    """
+
+    exact_align = 0
+    multi_align = 0
+    no_align = 0
+    reversed_align = 0
 
     q_kmers = create_query_kmers(q_sequence, kmer_size)
 
@@ -542,6 +567,57 @@ def create_hash_info(in_matrix, method='testHash'):
 
     return out_hash_dict
 
+
+def create_encoding_dict(kmer_length, mode='default'):
+    encoding_dicts = {'encode': {}, 'decode': {}}
+    characters = 'ACGT'
+    end_char = '-'
+    list_of_combinations = []
+
+    for a_kmer in combinations_with_replacement(characters, kmer_length):
+        kmer_string = ''.join(a_kmer)
+        count = 1
+        while count < kmer_length:
+            #kmer_string_end = ''.join(a_kmer[count:])
+            #kmer_string_end = count * '-' + kmer_string_end
+            #list_of_combinations.append(kmer_string_end)
+
+            kmer_string_end = ''.join(a_kmer[:-1 * count])
+            kmer_string_end = kmer_string_end + count * end_char
+            if kmer_string_end not in list_of_combinations:
+                list_of_combinations.append(kmer_string_end)
+
+            count += 1
+        list_of_combinations.append(kmer_string)
+
+    kmer_count = 0
+
+    while kmer_count < len(list_of_combinations):
+
+        encoding_dicts['encode'][list_of_combinations[kmer_count]] = string.printable[kmer_count]
+        encoding_dicts['decode'][string.printable[kmer_count]] = list_of_combinations[kmer_count]
+
+        kmer_count += 1
+
+    return encoding_dicts
+
+
+def encode_nucleotides(nuc_string, encoding_dict, kmer_size):
+
+    encoded_result = ""
+
+    for a_kmer in islice(nuc_string, kmer_size, None, kmer_size):
+        try:
+            print(encoding_dict[a_kmer])
+            encoded_result += encoding_dict[a_kmer]
+        except KeyError:
+            while len(a_kmer) < kmer_size:
+                a_kmer += '-'
+            encoded_result += encoding_dict[a_kmer]
+
+    return encoded_result
+
+
 '''
 a_matrix = get_node_kmers('Aln_79_27', graph_obj, 20)
 print(a_matrix)
@@ -550,9 +626,26 @@ quit()
 '''
 # ----------------------------------------------------------------- ><
 
+encode_dict = create_encoding_dict(4)
+
+test_string = 'GCAGATCGAGCCTACGGCTACGGACGCGGCGGCGGCATATACGCATACGACTACTCTATACTCGG'
+
+encoded_test_string = encode_nucleotides(test_string, encode_dict['encode'], 4)
+
+print(sys.getsizeof(test_string))
+print(sys.getsizeof(encoded_test_string))
+
+print(test_string)
+print(encoded_test_string)
+print(encode_dict['decode']['p'])
+print(encode_dict)
+quit()
+
 path_to_GG_file = 'test_files/latest2genome.xml'
 
-path_to_reads = './test_files/minSRR1144793.fastq'
+#path_to_reads = './test_files/minSRR1144793.fastq'
+path_to_reads = '/Volumes/External/SAWC_507/MTB__S507_LFO46Pool91_3128__L8_GTCCGC_L008_R1_001.fastq'
+
 graph_obj = import_gg_graph(path_to_GG_file)
 
 #begin_time = datetime.datetime.now()
@@ -577,6 +670,12 @@ def process_fastq_lines(lines=None):
 
 
 def align_fastq_to_kmer_graph(fastq_file, reference_kmer_dict):
+    """
+
+    :param fastq_file:
+    :param reference_kmer_dict:
+    :return:
+    """
 
     set_kmer = 20
 
@@ -596,7 +695,6 @@ def align_fastq_to_kmer_graph(fastq_file, reference_kmer_dict):
             align_res = align_seq_hash(record, reference_kmer_dict, set_kmer)
 
             # process alignment result
-
             previous_node = False
             for key, val in align_res.items():
 
