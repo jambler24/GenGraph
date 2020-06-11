@@ -86,6 +86,7 @@ if __name__ == '__main__':
 
 		if len(check_result) > 0:
 			for input_error in check_result:
+				logging.error(input_error)
 				print(input_error)
 			quit()
 
@@ -97,6 +98,9 @@ if __name__ == '__main__':
 			logging.info(parsed_input_dict)
 
 			progressiveMauve_alignment(path_to_progressiveMauve, parsed_input_dict[2], args.out_file_name)
+
+			logging.info('progressiveMauve Complete')
+			print('progressiveMauve Complete')
 
 		# --------------------------------------------------------------------------------- Conversion to block graph
 

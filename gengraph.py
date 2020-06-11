@@ -2658,7 +2658,7 @@ def progressiveMauve_alignment(path_to_progressiveMauve, fasta_path_list, out_al
 	"""
 	# Maybe add --skip-gapped-alignment flag?
 
-	print(path_to_progressiveMauve)
+	logging.info(path_to_progressiveMauve)
 	progressiveMauve_call = [path_to_progressiveMauve, '--output=globalAlignment_' + out_aln_name, '--scratch-path-1=./mauveTemp', '--scratch-path-2=./mauveTemp'] + fasta_path_list
 
 	return call(progressiveMauve_call, stdout=open(os.devnull, 'wb'))
