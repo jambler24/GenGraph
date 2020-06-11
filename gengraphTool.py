@@ -110,6 +110,8 @@ if __name__ == '__main__':
 			print('Using existing BBone file')
 			bbone_file = args.backbone_file[0]
 
+		logging.info('Running bbone_to_initGraph')
+
 		genome_aln_graph = bbone_to_initGraph(bbone_file, parsed_input_dict)
 
 		refine_initGraph(genome_aln_graph)
