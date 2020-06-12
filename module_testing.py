@@ -1,10 +1,11 @@
 from gengraph import *
 
-from itertools import combinations
+from itertools import combinations, combinations_with_replacement
 import multiprocessing as mp
 
-from itertools import product
+from itertools import product, islice
 import datetime
+import string
 
 '''
 
@@ -69,38 +70,6 @@ def import_gfa(file_path):
             path_nodes = path_info[1]
 
     return gg_network
-
-
-#path_to_gfa = '/Users/panix/iCloud/programs/vg/W_148_NCBI.gfa'
-
-#gg_graph = import_gfa(path_to_gfa)
-
-#nx.write_graphml(gg_graph, 'imported_gml_test.xml')
-
-
-#quit()
-
-#path_to_GG_file = 'TestGraphs/mix_of_snps.xml'
-path_to_GG_file = 'test_files/latest2genome.xml'
-
-path_to_reads = './test_files/minSRR1144793.fastq'
-graph_obj = import_gg_graph(path_to_GG_file)
-
-'''
-print(graph_obj.get_edge_data('Aln_79_24', 'Aln_79_25'))
-
-new_seq_list = graph_obj.edges['Aln_79_24', 'Aln_79_25']['ids'] + ',' + 'lldld'
-
-graph_obj.edges['Aln_79_24', 'Aln_79_25']['ids'] = new_seq_list
-
-print(graph_obj.edges['Aln_79_24', 'Aln_79_25']['ids'].split(','))
-
-quit()
-
-sim_value = graph_obj.region_similarity(3020000, 3024100, 'H37Rv', 'W_148')
-print(sim_value)
-quit()
-'''
 
 
 def get_next_base_older(kmer_length, kmer_matrix, graph_obj):
@@ -452,14 +421,54 @@ def get_node_kmers(a_node, graph_obj, kmer_length, return_structure):
 '''
 
 
+def create_query_kmers_OLD_FAST(q_sequence, kmer_size):
+
+    q_kmers = [q_sequence[x:y] for x, y in combinations(range(len(q_sequence) + 1), r=2)
+               if len(q_sequence[x:y]) == kmer_size]
+
+    return q_kmers
+
+
 def create_query_kmers(q_sequence, kmer_size):
 
-    q_kmers = [q_sequence[x:y] for x, y in combinations(range(len(q_sequence) + 1), r = 2) if len(q_sequence[x:y]) == kmer_size ]
+    # TODO: Deal with lost tailing sequence. Lasy kmer size chunk not used.
+
+    q_kmers = {}
+    window_start = 0
+    window_stop = kmer_size
+    q_seq_length = len(q_sequence['sequence'])
+
+    while window_stop <= q_seq_length:
+        q_kmers[q_sequence['sequence'][window_start:window_stop]] = window_start
+        window_start += 1
+        window_stop += 1
 
     return q_kmers
 
 
 def create_kmer_dict(in_graph_obj, kmer_size):
+
+    total_nodes = len(in_graph_obj.nodes())
+
+    count = 0
+
+    all_kmer_positions = {}
+
+    pool = mp.Pool(mp.cpu_count())
+
+    per_node_kmer_list = pool.starmap(get_node_kmers, [(a_node, in_graph_obj, kmer_size, 'kmer_dict') for a_node in in_graph_obj.nodes()])
+
+    for a_node_kmers in per_node_kmer_list:
+        for key, value in a_node_kmers.items():
+            if key in all_kmer_positions.keys():
+                all_kmer_positions[key] += value
+            else:
+                all_kmer_positions[key] = value
+
+    return all_kmer_positions
+
+
+def create_kmer_graph(in_graph_obj, kmer_size):
 
     # TODO: Multi processing here
 
@@ -483,11 +492,39 @@ def create_kmer_dict(in_graph_obj, kmer_size):
     return all_kmer_positions
 
 
-def align_seq_hash(q_sequence, ref_hash_dict, kmer_size):
+def align_seq_hash(q_sequence, ref_hash_dict, kmer_size, use_qual=True):
+    """
+
+    :param q_sequence:
+    :param ref_hash_dict:
+    :param kmer_size:
+    :param use_qual:
+    :return: Dictionary of mapped positions
+
+    {kmer: [
+        'k-mer_first_nucleotode_seq',
+        'quality_string',
+            [
+                [aligned_node, aligned_node_position],
+                [aligned_node2, aligned_node_position2]
+            ]
+        ]
+    }
+
+    """
+
+    exact_align = 0
+    multi_align = 0
+    no_align = 0
+    reversed_align = 0
 
     q_kmers = create_query_kmers(q_sequence, kmer_size)
 
     q_kmer_dict = {k: [v] for v, k in enumerate(q_kmers)}
+
+    if use_qual:
+        for a_seq_kmer, val_list in q_kmer_dict.items():
+            q_kmer_dict[a_seq_kmer].append(q_sequence['quality'][val_list[0]])
 
     for kmer, position in q_kmer_dict.items():
 
@@ -530,34 +567,178 @@ def create_hash_info(in_matrix, method='testHash'):
 
     return out_hash_dict
 
+
+def create_encoding_dict(kmer_length, mode='default'):
+    encoding_dicts = {'encode': {}, 'decode': {}}
+    characters = 'ACGT'
+    end_char = '-'
+    list_of_combinations = []
+
+    for a_kmer in combinations_with_replacement(characters, kmer_length):
+        kmer_string = ''.join(a_kmer)
+        count = 1
+        while count < kmer_length:
+            #kmer_string_end = ''.join(a_kmer[count:])
+            #kmer_string_end = count * '-' + kmer_string_end
+            #list_of_combinations.append(kmer_string_end)
+
+            kmer_string_end = ''.join(a_kmer[:-1 * count])
+            kmer_string_end = kmer_string_end + count * end_char
+            if kmer_string_end not in list_of_combinations:
+                list_of_combinations.append(kmer_string_end)
+
+            count += 1
+        list_of_combinations.append(kmer_string)
+
+    kmer_count = 0
+
+    while kmer_count < len(list_of_combinations):
+
+        encoding_dicts['encode'][list_of_combinations[kmer_count]] = string.printable[kmer_count]
+        encoding_dicts['decode'][string.printable[kmer_count]] = list_of_combinations[kmer_count]
+
+        kmer_count += 1
+
+    return encoding_dicts
+
+
+def encode_nucleotides(nuc_string, encoding_dict, kmer_size):
+
+    encoded_result = ""
+
+    for a_kmer in islice(nuc_string, kmer_size, None, kmer_size):
+        try:
+            print(encoding_dict[a_kmer])
+            encoded_result += encoding_dict[a_kmer]
+        except KeyError:
+            while len(a_kmer) < kmer_size:
+                a_kmer += '-'
+            encoded_result += encoding_dict[a_kmer]
+
+    return encoded_result
+
+
 '''
 a_matrix = get_node_kmers('Aln_79_27', graph_obj, 20)
 print(a_matrix)
 print(len(a_matrix))
 quit()
 '''
+# ----------------------------------------------------------------- ><
 
-begin_time = datetime.datetime.now()
+encode_dict = create_encoding_dict(4)
 
-kmer_dict_out = create_kmer_dict(graph_obj, 20)
+test_string = 'GCAGATCGAGCCTACGGCTACGGACGCGGCGGCGGCATATACGCATACGACTACTCTATACTCGG'
 
-print(datetime.datetime.now() - begin_time)
+encoded_test_string = encode_nucleotides(test_string, encode_dict['encode'], 4)
+
+print(sys.getsizeof(test_string))
+print(sys.getsizeof(encoded_test_string))
+
+print(test_string)
+print(encoded_test_string)
+print(encode_dict['decode']['p'])
+print(encode_dict)
+quit()
+
+path_to_GG_file = 'test_files/latest2genome.xml'
+
+#path_to_reads = './test_files/minSRR1144793.fastq'
+path_to_reads = '/Volumes/External/SAWC_507/MTB__S507_LFO46Pool91_3128__L8_GTCCGC_L008_R1_001.fastq'
+
+graph_obj = import_gg_graph(path_to_GG_file)
+
+#begin_time = datetime.datetime.now()
+
+#kmer_dict_out = create_kmer_dict(graph_obj, 20)
+
+#print(datetime.datetime.now() - begin_time)
 
 #print(kmer_dict_out)
 
-with open('kmer_dict_multi.pickle', 'wb') as handle:
-    pickle.dump(kmer_dict_out, handle, protocol=pickle.HIGHEST_PROTOCOL)
+#with open('kmer_dict_multi.pickle', 'wb') as handle:
+#    pickle.dump(kmer_dict_out, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+kmer_dict_out = pickle.load(open("kmer_dict_multi.pickle", "rb"))
+
+begin_time = datetime.datetime.now()
 
 
-sub_seq = graph_obj.get_sequence(10, 50, 'H37Rv_2')
+def process_fastq_lines(lines=None):
+    ks = ['name', 'sequence', 'optional', 'quality']
+    return {k: v for k, v in zip(ks, lines)}
 
-print(sub_seq)
 
-align_res = align_seq_hash(sub_seq, kmer_dict_out, 20)
+def align_fastq_to_kmer_graph(fastq_file, reference_kmer_dict):
+    """
 
-print(align_res)
+    :param fastq_file:
+    :param reference_kmer_dict:
+    :return:
+    """
+
+    set_kmer = 20
+
+    in_fasta = open(fastq_file, 'r')
+
+    out_graph = nx.MultiGraph()
+
+    n = 4
+    lines = []
+    for a_line in in_fasta:
+        lines.append(a_line.rstrip())
+        if len(lines) == n:
+            record = process_fastq_lines(lines)
+            lines = []
+
+            # Align the sequence to hash
+            align_res = align_seq_hash(record, reference_kmer_dict, set_kmer)
+
+            # process alignment result
+            previous_node = False
+            for key, val in align_res.items():
+
+                try:
+                    kmer_node_name = val[2][0][0] + '-' + str(val[2][0][1])
+
+                    if kmer_node_name not in out_graph.nodes():
+                        ref_node_pos = val[2][0][0] + '-' + str(val[2][0][1])
+                        node_dict = {'nuc': key[0], 'ref': ref_node_pos, 'kmer': key, 'qual': val[1]}
+                        out_graph.add_node(kmer_node_name, **node_dict)
+                    else:
+                        old_qual = out_graph.nodes[kmer_node_name]['qual']
+                        out_graph.nodes[kmer_node_name]['qual'] = old_qual + ',' + val[1]
+
+                except IndexError:
+                    # Create a new node for the query seq
+                    kmer_node_name = key
+
+                    if kmer_node_name not in out_graph.nodes():
+                        ref_node_pos = 'alt' + str(val[0])
+                        node_dict = {'nuc': key[0], 'ref': ref_node_pos, 'kmer': key, 'qual': val[1]}
+                        out_graph.add_node(kmer_node_name, **node_dict)
+
+                    else:
+                        old_qual = out_graph.nodes[kmer_node_name]['qual']
+                        out_graph.nodes[kmer_node_name]['qual'] = old_qual + ',' + val[1]
+
+                if previous_node is not False:
+                    if out_graph.has_edge(previous_node, kmer_node_name):
+                        current_weight = out_graph[previous_node][kmer_node_name]['a']['weight']
+                        out_graph[previous_node][kmer_node_name]['a']['weight'] = current_weight + 1
+                    else:
+                        out_graph.add_edge(previous_node, kmer_node_name, key='a', weight=1)
+
+                previous_node = kmer_node_name
+
+    return out_graph
+
+
+res_of_the_thing = align_fastq_to_kmer_graph(path_to_reads, kmer_dict_out)
 
 print(datetime.datetime.now() - begin_time)
+
+nx.write_graphml(res_of_the_thing, 'aligned_kmer.xml')
 
 quit()
 

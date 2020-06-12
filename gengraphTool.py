@@ -86,6 +86,7 @@ if __name__ == '__main__':
 
 		if len(check_result) > 0:
 			for input_error in check_result:
+				logging.error(input_error)
 				print(input_error)
 			quit()
 
@@ -98,6 +99,9 @@ if __name__ == '__main__':
 
 			progressiveMauve_alignment(path_to_progressiveMauve, parsed_input_dict[2], args.out_file_name)
 
+			logging.info('progressiveMauve Complete')
+			print('progressiveMauve Complete')
+
 		# --------------------------------------------------------------------------------- Conversion to block graph
 
 		if args.backbone_file == 'default':
@@ -105,6 +109,8 @@ if __name__ == '__main__':
 		else:
 			print('Using existing BBone file')
 			bbone_file = args.backbone_file[0]
+
+		logging.info('Running bbone_to_initGraph')
 
 		genome_aln_graph = bbone_to_initGraph(bbone_file, parsed_input_dict)
 

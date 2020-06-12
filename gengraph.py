@@ -1052,11 +1052,16 @@ def input_file_check(input_dict):
 	# TODO: Catch invisible chars
 
 	errors_list = []
+	allowed_file_extensions = ['fa', 'fasta']
 
 	# Check if the header is correct
 
 	# Check if fasta files have multi chromosomes
 	for isolate, a_fasta_path in input_dict[1].items():
+
+		# Check file extensions
+		if a_fasta_path.split('.')[-1].lower() not in allowed_file_extensions:
+			errors_list.append('Input file fail - ' + a_fasta_path + ' not a recognised extension (fasta, fa)')
 
 		# Check if files are where they should be
 		if os.path.isfile(a_fasta_path) is False:
@@ -2658,10 +2663,15 @@ def progressiveMauve_alignment(path_to_progressiveMauve, fasta_path_list, out_al
 	"""
 	# Maybe add --skip-gapped-alignment flag?
 
-	print(path_to_progressiveMauve)
+	logging.info(path_to_progressiveMauve)
 	progressiveMauve_call = [path_to_progressiveMauve, '--output=globalAlignment_' + out_aln_name, '--scratch-path-1=./mauveTemp', '--scratch-path-2=./mauveTemp'] + fasta_path_list
 
-	return call(progressiveMauve_call, stdout=open(os.devnull, 'wb'))
+	try:
+		return call(progressiveMauve_call, stdout=open(os.devnull, 'wb'))
+	except OSError:
+		logging.error('progressiveMauve_call error')
+		return 'progressiveMauve_call error'
+
 
 # ---------------------------------------------------- Utility functions
 
