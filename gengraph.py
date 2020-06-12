@@ -1052,11 +1052,16 @@ def input_file_check(input_dict):
 	# TODO: Catch invisible chars
 
 	errors_list = []
+	allowed_file_extensions = ['fa', 'fasta']
 
 	# Check if the header is correct
 
 	# Check if fasta files have multi chromosomes
 	for isolate, a_fasta_path in input_dict[1].items():
+
+		# Check file extensions
+		if a_fasta_path.split('.')[-1].lower() not in allowed_file_extensions:
+			errors_list.append('Input file fail - ' + a_fasta_path + ' not a recognised extension (fasta, fa)')
 
 		# Check if files are where they should be
 		if os.path.isfile(a_fasta_path) is False:
