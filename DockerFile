@@ -38,7 +38,7 @@ RUN curl -fksSL http://darlinglab.org/mauve/snapshots/2015/2015-02-13/linux-x64/
 
 RUN python3 -m pip install networkx
 
-RUN git clone https://github.com/jambler24/GenGraph
+RUN git clone --branch networkx_2_4_fixes https://github.com/jambler24/GenGraph
 
 ENTRYPOINT ["python3", "./GenGraph/gengraphTool.py"]
 
