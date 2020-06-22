@@ -1,6 +1,6 @@
 
 from gengraph import *
-
+import pkg_resources
 
 if __name__ == '__main__':
 
@@ -57,8 +57,20 @@ if __name__ == '__main__':
 
 	args = parser.parse_args()
 
+	print('Running GenGraph Toolkit')
+
 	# Setting up logging
 	logging.basicConfig(filename=args.out_file_name + '.log', level=logging.DEBUG)
+
+	# Check NetworkX version
+	nx_version = pkg_resources.get_distribution("networkx").version
+
+	logging.info('NetworkX version used:' + nx_version)
+
+	nx_version = float(nx_version)
+
+	if nx_version < 2.0:
+		print('You are running NetworkX version', nx_version, 'which may lead to errors. Please use version 2.3 or later.')
 
 	if args.toolkit == 'test_mode':
 		print("Test functions here")
@@ -71,6 +83,8 @@ if __name__ == '__main__':
 		# optional:
 		# --recreate_check
 		# --no_seq
+
+		print('Creating genome graph')
 
 		# Clean this up
 		global_aligner = args.block_aligner
