@@ -69,8 +69,8 @@ if __name__ == '__main__':
 
 	nx_version = float(nx_version)
 
-	if nx_version < 2.0:
-		print('You are running NetworkX version', nx_version, 'which may lead to errors. Please use version 2.3 or later.')
+	if nx_version != 2.3:
+		print('You are running NetworkX version', nx_version, 'which may lead to errors. Please use version 2.3. Support for v2.4 is coming')
 
 	if args.toolkit == 'test_mode':
 		print("Test functions here")
