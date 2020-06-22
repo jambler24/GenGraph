@@ -1,10 +1,11 @@
 FROM ubuntu:latest
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update --fix-missing -qq && apt-get install -y -q \
     mafft \
     python3 \
     python3-pip \
-    python-pip \
     curl \
     wget \
     git-core \
@@ -20,10 +21,7 @@ RUN apt-get update --fix-missing -qq && apt-get install -y -q \
     && apt-get purge
 
 # Install networkx
-RUN python3 -m pip install networkx GenGraph numpy
-
-# Install NetworkX on pypy
-#RUN pypy -m pip install networkx==1.9.1
+RUN python3 -m pip install GenGraph numpy matplotlib biopython pandas
 
 # Install a MSA tool
 # Muscle
@@ -40,8 +38,11 @@ RUN curl -fksSL http://darlinglab.org/mauve/snapshots/2015/2015-02-13/linux-x64/
 
 #CMD echo "This is where we run GG toolkit"
 
+RUN python3 -m pip install networkx==2.3
+
 ENTRYPOINT ["python3", "./GenGraph/gengraphTool.py"]
 
 CMD ["-h"]
 
-# docker run gengraphtoolkit make_genome_graph --out_file_name "test_docker" --seq_file multiGenome6.txt --mount source=./,target=/
+# Build this image
+#docker build -t ggimage -f DockerFile .
