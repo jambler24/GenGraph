@@ -2668,6 +2668,21 @@ def progressiveMauve_alignment(path_to_progressiveMauve, fasta_path_list, out_al
 
 	try:
 		return call(progressiveMauve_call, stdout=open(os.devnull, 'wb'))
+
+		# Check if file was created successfully
+
+		bbone_file = open('globalAlignment_' + out_aln_name + '.backbone')
+
+		number_of_lines = 3
+
+		for i in range(number_of_lines):
+			line = bbone_file.readline()
+			print(len(line.split('\t')))
+			if len(line.split('\t')) <= 1:
+				logging.error('progressiveMauve_call error: output of progressiveMauve empty')
+				print('Error: progressiveMauve_call output appears empty.')
+				quit()
+
 	except OSError:
 		logging.error('progressiveMauve_call error')
 		return 'progressiveMauve_call error'
