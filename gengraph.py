@@ -1117,13 +1117,13 @@ def input_parser(file_path, parse_as='default'):
 	if file_path[-4:] == ".csv":
 		data_table = csv.reader(open(file_path, 'r'), delimiter=',')
 		data_matrix = list(data_table)
-		result = numpy.array(data_matrix)
+		result = np.array(data_matrix)
 		return result
 
 	if file_path[-4:] == ".ssv":
 		data_table = csv.reader(open(file_path, 'r'), delimiter=';')
 		data_matrix = list(data_table)
-		result = numpy.array(data_matrix)
+		result = np.array(data_matrix)
 		return result
 		
 	if file_path[-4:] == ".txt":
