@@ -29,8 +29,6 @@ RUN python3 -m pip install GenGraph numpy matplotlib biopython pandas
 RUN curl -fksSL http://drive5.com/muscle/downloads3.8.31/muscle3.8.31_i86linux64.tar.gz | tar xz && \
     mv muscle3.8.31_i86linux64 /usr/local/bin/muscle3.8.31_i86darwin64
 
-RUN git clone https://github.com/jambler24/GenGraph
-
 # Install MAUVE
 
 RUN curl -fksSL http://darlinglab.org/mauve/snapshots/2015/2015-02-13/linux-x64/mauve_linux_snapshot_2015-02-13.tar.gz | tar xz && \
@@ -38,7 +36,9 @@ RUN curl -fksSL http://darlinglab.org/mauve/snapshots/2015/2015-02-13/linux-x64/
 
 #CMD echo "This is where we run GG toolkit"
 
-RUN python3 -m pip install networkx==2.3
+RUN python3 -m pip install networkx
+
+RUN git clone --branch networkx_2_4_fixes https://github.com/jambler24/GenGraph
 
 ENTRYPOINT ["python3", "./GenGraph/gengraphTool.py"]
 

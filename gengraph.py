@@ -183,11 +183,11 @@ class GgDiGraph(nx.DiGraph):
 
 			for a_node in sub_graph.nodes:
 
-				if alt_name not in sub_graph.node[a_node]['ids'].split(','):
+				if alt_name not in sub_graph.nodes[a_node]['ids'].split(','):
 					print(a_node)
-					print(sub_graph.node[a_node]['ids'])
+					print(sub_graph.nodes[a_node]['ids'])
 
-					total_lone_ref_length += len(sub_graph.node[a_node]['sequence'])
+					total_lone_ref_length += len(sub_graph.nodes[a_node]['sequence'])
 
 			print(total_ref_length)
 			print(total_lone_ref_length)
@@ -221,23 +221,23 @@ class GgDiGraph(nx.DiGraph):
 		# Runs through the graph nodes creating kmers and checking if each of the nodes has an inversion in it
 		for i in graphNodes:
 			currentNodeName = str(i)
-			idsCounter = str(self.node[currentNodeName]['ids']).count(',')
+			idsCounter = str(self.nodes[currentNodeName]['ids']).count(',')
 			idsCounter += 1
-			negCounter = str(self.node[currentNodeName]).count('-')
+			negCounter = str(self.nodes[currentNodeName]).count('-')
 			if idsCounter * 2 == negCounter:
-				ids = str(self.node[currentNodeName]['ids']).split(',')
+				ids = str(self.nodes[currentNodeName]['ids']).split(',')
 				for f in ids:
-					self.node[currentNodeName][str(f) + '_leftend'] = int(
-						self.node[currentNodeName][str(f) + '_leftend']) * -1
-					self.node[currentNodeName][str(f) + '_rightend'] = int(
-						self.node[currentNodeName][str(f) + '_rightend']) * -1
-				self.node[currentNodeName]['sequence'] = str(self.node[currentNodeName]['sequence'])[::-1]
+					self.nodes[currentNodeName][str(f) + '_leftend'] = int(
+						self.nodes[currentNodeName][str(f) + '_leftend']) * -1
+					self.nodes[currentNodeName][str(f) + '_rightend'] = int(
+						self.nodes[currentNodeName][str(f) + '_rightend']) * -1
+				self.nodes[currentNodeName]['sequence'] = str(self.nodes[currentNodeName]['sequence'])[::-1]
 
 			nodeSequence = self.nodes[currentNodeName]['sequence']
 			revNodeSequence = nodeSequence[::-1]
 			nodeKeys = list(self.nodes[currentNodeName])
 			kmerStartPos = 0
-			values = list(dict(self.node[currentNodeName]).values())
+			values = list(dict(self.nodes[currentNodeName]).values())
 			inv = False
 			for num in values:
 				if isinstance(num, int):
@@ -1420,10 +1420,10 @@ def add_missing_nodes(a_graph, input_dict):
 
 		presorted_list = []
 		for a_node in isolate_node_list:
-			presorted_list.append((a_node, abs(a_graph.node[a_node][isolate + '_leftend']), abs(a_graph.node[a_node][isolate + '_rightend'])))
-			if abs(a_graph.node[a_node][isolate + '_leftend']) > abs(a_graph.node[a_node][isolate + '_rightend']):
+			presorted_list.append((a_node, abs(a_graph.nodes[a_node][isolate + '_leftend']), abs(a_graph.nodes[a_node][isolate + '_rightend'])))
+			if abs(a_graph.nodes[a_node][isolate + '_leftend']) > abs(a_graph.nodes[a_node][isolate + '_rightend']):
 				logging.warning('problem node' + str(a_node))
-				logging.warning(a_graph.node[a_node][isolate + '_leftend'])
+				logging.warning(a_graph.nodes[a_node][isolate + '_leftend'])
 
 		sorted_list = sorted(presorted_list, key=itemgetter(1))
 
@@ -1460,10 +1460,10 @@ def node_check(a_graph):
 		#print isolate_node_list
 		presorted_list = []
 		for a_node in isolate_node_list:
-			presorted_list.append((a_node, abs(int(a_graph.node[a_node][isolate + '_leftend'])), abs(int(a_graph.node[a_node][isolate + '_rightend']))))
-			if abs(int(a_graph.node[a_node][isolate + '_leftend'])) > abs(int(a_graph.node[a_node][isolate + '_rightend'])):
+			presorted_list.append((a_node, abs(int(a_graph.nodes[a_node][isolate + '_leftend'])), abs(int(a_graph.nodes[a_node][isolate + '_rightend']))))
+			if abs(int(a_graph.nodes[a_node][isolate + '_leftend'])) > abs(int(a_graph.nodes[a_node][isolate + '_rightend'])):
 				logging.warning('problem node', a_node)
-				logging.warning(a_graph.node[a_node][isolate + '_leftend'])
+				logging.warning(a_graph.nodes[a_node][isolate + '_leftend'])
 
 		sorted_list = sorted(presorted_list,key=itemgetter(1))
 
@@ -1497,7 +1497,7 @@ def node_check(a_graph):
 				logging.error('error 4: start greater than stop')
 				logging.error(isolate)
 				logging.error(sorted_list[count])
-				logging.error(a_graph.node[sorted_list[count][0]])
+				logging.error(a_graph.nodes[sorted_list[count][0]])
 				doespass = False
 
 
@@ -1517,10 +1517,10 @@ def refine_initGraph(a_graph):
 
 		presorted_list = []
 		for a_node in isolate_node_list:
-			presorted_list.append((a_node, abs(a_graph.node[a_node][isolate + '_leftend']), abs(a_graph.node[a_node][isolate + '_rightend'])))
-			if abs(a_graph.node[a_node][isolate + '_leftend']) > abs(a_graph.node[a_node][isolate + '_rightend']):
+			presorted_list.append((a_node, abs(a_graph.nodes[a_node][isolate + '_leftend']), abs(a_graph.nodes[a_node][isolate + '_rightend'])))
+			if abs(a_graph.nodes[a_node][isolate + '_leftend']) > abs(a_graph.nodes[a_node][isolate + '_rightend']):
 				logging.warning('problem node' + str(a_node))
-				logging.warning(a_graph.node[a_node][isolate + '_leftend'])
+				logging.warning(a_graph.nodes[a_node][isolate + '_leftend'])
 
 		sorted_list = sorted(presorted_list, key=itemgetter(1))
 
@@ -1532,14 +1532,14 @@ def refine_initGraph(a_graph):
 				logging.warning('problem node')
 				logging.warning(sorted_list[count])
 				logging.warning(sorted_list[count + 1])
-				logging.warning(a_graph.node[sorted_list[count][0]])
-				for a_node_isolate in a_graph.node[sorted_list[count][0]]['ids'].split(','):
-					if a_graph.node[sorted_list[count][0]][a_node_isolate + '_rightend'] < 0:
-						a_graph.node[sorted_list[count][0]][a_node_isolate + '_rightend'] = a_graph.node[sorted_list[count][0]][a_node_isolate + '_rightend'] + 1
-					if a_graph.node[sorted_list[count][0]][a_node_isolate + '_rightend'] > 0:
-						a_graph.node[sorted_list[count][0]][a_node_isolate + '_rightend'] = a_graph.node[sorted_list[count][0]][a_node_isolate + '_rightend'] - 1
+				logging.warning(a_graph.nodes[sorted_list[count][0]])
+				for a_node_isolate in a_graph.nodes[sorted_list[count][0]]['ids'].split(','):
+					if a_graph.nodes[sorted_list[count][0]][a_node_isolate + '_rightend'] < 0:
+						a_graph.nodes[sorted_list[count][0]][a_node_isolate + '_rightend'] = a_graph.nodes[sorted_list[count][0]][a_node_isolate + '_rightend'] + 1
+					if a_graph.nodes[sorted_list[count][0]][a_node_isolate + '_rightend'] > 0:
+						a_graph.nodes[sorted_list[count][0]][a_node_isolate + '_rightend'] = a_graph.nodes[sorted_list[count][0]][a_node_isolate + '_rightend'] - 1
 
-				logging.warning(a_graph.node[sorted_list[count][0]])
+				logging.warning(a_graph.nodes[sorted_list[count][0]])
 
 			count+=1
 
@@ -1842,7 +1842,7 @@ def add_sequences_to_graph(graph_obj, paths_dict):
 			if is_reversed:
 				node_seq = reverse_compliment(node_seq)
 
-			graph_obj.node[node]['sequence'] = node_seq
+			graph_obj.nodes[node]['sequence'] = node_seq
 
 	return graph_obj
 
@@ -1891,7 +1891,7 @@ def add_sequences_to_graph_fastaObj(graph_obj, imported_fasta_object):
 
 			node_seq = ref_seq[seq_start:seq_end].upper()
 
-			graph_obj.node[node]['sequence'] = node_seq
+			graph_obj.nodes[node]['sequence'] = node_seq
 
 	return graph_obj
 
@@ -1973,8 +1973,8 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 
 	# Calculating overlap
 
-	start_node_pb_length = bp_length_node(graph_obj.node[start_node])
-	stop_node_pb_length = bp_length_node(graph_obj.node[stop_node])
+	start_node_pb_length = bp_length_node(graph_obj.nodes[start_node])
+	stop_node_pb_length = bp_length_node(graph_obj.nodes[stop_node])
 
 	start_node_nonoverlap = start_node_pb_length - start_overlap
 	stop_node_nonoverlap = stop_node_pb_length - stop_overlap
@@ -1996,7 +1996,7 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 		nodes_in_path.append(stop_node)
 
 	for path_node in nodes_in_path:
-		if reference_name in graph_obj.node[path_node]['ids']:
+		if reference_name in graph_obj.nodes[path_node]['ids']:
 			ref_nodes_in_path.append(path_node)
 		else:
 			alt_nodes_in_path.append(path_node)
@@ -2005,13 +2005,13 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 	total_ref_length = 0
 
 	for alt_node in alt_nodes_in_path:
-		total_alt_length = total_alt_length + bp_length_node(graph_obj.node[alt_node])
+		total_alt_length = total_alt_length + bp_length_node(graph_obj.nodes[alt_node])
 
 
 
 	for ref_node in ref_nodes_in_path:
 		if ref_node != start_node and ref_node != stop_node:
-			total_ref_length = total_ref_length + bp_length_node(graph_obj.node[ref_node])
+			total_ref_length = total_ref_length + bp_length_node(graph_obj.nodes[ref_node])
 
 	total_ref_length = total_ref_length + start_overlap + stop_overlap
 
@@ -2024,16 +2024,16 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 
 	for a_node in nodes_in_path:
 		for a_isolate in graph_isolate_list:
-			if a_isolate in graph_obj.node[a_node]['ids'] and reference_name in graph_obj.node[a_node]['ids']:
-				iso_sim_dict[a_isolate] = iso_sim_dict[a_isolate] + bp_length_node(graph_obj.node[a_node])
+			if a_isolate in graph_obj.nodes[a_node]['ids'] and reference_name in graph_obj.nodes[a_node]['ids']:
+				iso_sim_dict[a_isolate] = iso_sim_dict[a_isolate] + bp_length_node(graph_obj.nodes[a_node])
 
-			elif a_isolate in graph_obj.node[a_node]['ids'] and reference_name not in graph_obj.node[a_node]['ids']:
-				iso_diff_dict[a_isolate] = iso_diff_dict[a_isolate] + bp_length_node(graph_obj.node[a_node])
+			elif a_isolate in graph_obj.nodes[a_node]['ids'] and reference_name not in graph_obj.nodes[a_node]['ids']:
+				iso_diff_dict[a_isolate] = iso_diff_dict[a_isolate] + bp_length_node(graph_obj.nodes[a_node])
 
 	for a_iso in graph_isolate_list:
-		if a_iso in graph_obj.node[start_node]['ids']:
+		if a_iso in graph_obj.nodes[start_node]['ids']:
 			iso_sim_dict[a_iso] = iso_sim_dict[a_iso] - start_node_nonoverlap
-		if a_iso in graph_obj.node[stop_node]['ids']:
+		if a_iso in graph_obj.nodes[stop_node]['ids']:
 			iso_sim_dict[a_iso] = iso_sim_dict[a_iso] - stop_node_nonoverlap
 
 	iso_sim_score_dict = {}
@@ -2408,8 +2408,8 @@ def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', or
 			for block_isolate in block_group:
 				if orientation[block_isolate] == '+':
 
-					local_node_network.node[new_node_name][block_isolate + '_leftend'] = int(start_block_list[count]['relative_pos'][block_isolate])
-					local_node_network.node[new_node_name][block_isolate + '_rightend'] = int(end_block_list[count]['relative_pos'][block_isolate])
+					local_node_network.nodes[new_node_name][block_isolate + '_leftend'] = int(start_block_list[count]['relative_pos'][block_isolate])
+					local_node_network.nodes[new_node_name][block_isolate + '_rightend'] = int(end_block_list[count]['relative_pos'][block_isolate])
 
 				elif orientation[block_isolate] == '-':
 
@@ -2418,8 +2418,8 @@ def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', or
 					# len node - pos - 1
 					# So, we need the total length of the nodes, found in seq_len_dict
 
-					local_node_network.node[new_node_name][block_isolate + '_rightend'] = -1 * int(int(seq_len_dict[block_isolate]) - start_block_list[count]['relative_pos'][block_isolate] - 1)
-					local_node_network.node[new_node_name][block_isolate + '_leftend'] = -1 * int(int(seq_len_dict[block_isolate]) - end_block_list[count]['relative_pos'][block_isolate] - 1)
+					local_node_network.nodes[new_node_name][block_isolate + '_rightend'] = -1 * int(int(seq_len_dict[block_isolate]) - start_block_list[count]['relative_pos'][block_isolate] - 1)
+					local_node_network.nodes[new_node_name][block_isolate + '_leftend'] = -1 * int(int(seq_len_dict[block_isolate]) - end_block_list[count]['relative_pos'][block_isolate] - 1)
 
 				else:
 					logging.error("ORIENTATION MISSING")
@@ -2461,11 +2461,11 @@ def local_node_realign_new(in_graph, node_ID, seq_fasta_paths_dict):
 	# TODO: load fasta into memory instead of reading each time.
 
 	logging.info('Fast local node realign: ' + node_ID)
-	logging.info(in_graph.node[node_ID])
+	logging.info(in_graph.nodes[node_ID])
 
 	in_graph = nx.MultiDiGraph(in_graph)
 
-	node_data_dict = in_graph.node[node_ID]
+	node_data_dict = in_graph.nodes[node_ID]
 
 	# Make temp fasta file and record the start positions into a dict
 
@@ -2800,16 +2800,16 @@ def extract_original_seq(graph_obj, seq_name):
 
 			if segment[3] == True:
 				# Node is negative
-				#print reverse_compliment(graph_obj.node[str(segment[2])]['sequence'])
-				extracted_seq = extracted_seq + reverse_compliment(graph_obj.node[str(segment[2])]['sequence'])
+				#print reverse_compliment(graph_obj.nodes[str(segment[2])]['sequence'])
+				extracted_seq = extracted_seq + reverse_compliment(graph_obj.nodes[str(segment[2])]['sequence'])
 			else:
-				extracted_seq = extracted_seq + graph_obj.node[str(segment[2])]['sequence']
+				extracted_seq = extracted_seq + graph_obj.nodes[str(segment[2])]['sequence']
 
 		last_node_line = segment
 
 	# Deal with the end node:
 	'''
-	stop_seq = graph_obj.node[seq_name + '_stop']['sequence']
+	stop_seq = graph_obj.nodes[seq_name + '_stop']['sequence']
 	print stop_seq
 	if len(stop_seq) > 0:
 		print 'stop seq added'
@@ -2995,11 +2995,11 @@ def seq_addition_test(in_graph, node_ID, seq_fasta_paths_dict):
 	# Get seq from node
 	pass_seq_test = True
 
-	the_node_seq = in_graph.node[node_ID]['sequence']
+	the_node_seq = in_graph.nodes[node_ID]['sequence']
 	logging.info('node seq')
 	logging.info(the_node_seq)
 
-	node_seq_iso_list = in_graph.node[node_ID]['ids'].split(',')
+	node_seq_iso_list = in_graph.nodes[node_ID]['ids'].split(',')
 
 	for seq_isolate in node_seq_iso_list:
 
@@ -3008,8 +3008,8 @@ def seq_addition_test(in_graph, node_ID, seq_fasta_paths_dict):
 
 		iso_genome_seq = input_parser(seq_fasta_paths_dict[seq_isolate])
 
-		start_pos = int(in_graph.node[node_ID][seq_isolate + '_leftend'])
-		end_pos = int(in_graph.node[node_ID][seq_isolate + '_rightend'])
+		start_pos = int(in_graph.nodes[node_ID][seq_isolate + '_leftend'])
+		end_pos = int(in_graph.nodes[node_ID][seq_isolate + '_rightend'])
 
 
 		if int(end_pos) < 0:
