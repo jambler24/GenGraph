@@ -7,6 +7,7 @@ from gengraphTool import *
 
 from subprocess import call
 from operator import itemgetter
+from collections import OrderedDict
 
 import argparse
 import sys
@@ -1127,14 +1128,27 @@ def input_parser(file_path, parse_as='default'):
 		return result
 		
 	if file_path[-4:] == ".txt":
-		list_of_dicts  = []
+		# This is used for the input sample file
+		list_of_dicts = []
 		reader = csv.DictReader(open(file_path, 'r'), delimiter='\t')
+		seq_count = 0
 		for row in reader:
-			list_of_dicts.append(row)
+
+			new_ordered_dict = OrderedDict([
+				('seq_name', row['seq_name']),
+				('aln_name', 'seq' + str(seq_count)),
+				('seq_path', row['seq_path']),
+				('annotation_path', row['annotation_path'])
+			])
+
+			list_of_dicts.append(new_ordered_dict)
+			seq_count += 1
+
+		print(list_of_dicts)
 		return list_of_dicts
 		
 	if file_path[-4:] == ".vcf":
-		list_of_dicts  = []
+		list_of_dicts = []
 		# Deal with random info at start
 		in_file = open(file_path, 'r')
 		entry_label = file_path
@@ -1146,7 +1160,19 @@ def input_parser(file_path, parse_as='default'):
 
 			if not line.startswith('#'):
 				entries = line.split('\t')
-				entry_dict = {vcf_header_line[0]:entries[0], vcf_header_line[1]:entries[1], vcf_header_line[2]:entries[2], vcf_header_line[3]:entries[3], vcf_header_line[4]:entries[4], vcf_header_line[5]:entries[5], vcf_header_line[6]:entries[6], vcf_header_line[7]:entries[7], vcf_header_line[8]:entries[8], vcf_header_line[9]:entries[9].strip(), 'ORIGIN':entry_label} 
+				entry_dict = {
+					vcf_header_line[0]: entries[0],
+					vcf_header_line[1]: entries[1],
+					vcf_header_line[2]: entries[2],
+					vcf_header_line[3]: entries[3],
+					vcf_header_line[4]: entries[4],
+					vcf_header_line[5]: entries[5],
+					vcf_header_line[6]: entries[6],
+					vcf_header_line[7]: entries[7],
+					vcf_header_line[8]: entries[8],
+					vcf_header_line[9]: entries[9].strip(),
+					'ORIGIN': entry_label
+				}
 
 				list_of_dicts.append(entry_dict)
 		return list_of_dicts
@@ -3033,7 +3059,6 @@ def seq_addition_test(in_graph, node_ID, seq_fasta_paths_dict):
 			sub_iso_seq = reverse_compliment(sub_iso_seq)
 
 		if sub_iso_seq.upper() == the_node_seq.upper():
-			1 == 1
 			logging.info(seq_isolate + ' - Passed')
 			logging.info(sub_iso_seq)
 		else:
