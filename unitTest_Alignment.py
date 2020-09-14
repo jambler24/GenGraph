@@ -14,10 +14,11 @@ import networkx.algorithms.isomorphism as iso
 # - A large rearrangement where 300bp are reverse complimented in one sequence containing a SNP in the reversed sequence.
 # - One with a general mix of SNPS
 
+test_graph_dir = './TestGraphs/'
 
 class BasicTests(unittest.TestCase):
     noMutationRead = "GCTAATCTCAGCGCTCCGCTGACCCCTCAGCAAAGGGCTTGGCTCAATCTCGTCCAGCCATTGACCATCGTCGAGGGGTTTGCTCTGTTATCCGTGCCGA"
-    noMutationGraph = import_gg_graph('./no_mutation.xml')
+    noMutationGraph = import_gg_graph(test_graph_dir + 'no_mutation.xml')
 
     def test_read_Length(self):
         self.assertEqual(readLength(self.noMutationRead), 100)
@@ -32,7 +33,7 @@ class BasicTests(unittest.TestCase):
 
 class NoMutationsTests(unittest.TestCase):
     noMutationRead = "GCTAATCTCAGCGCTCCGCTGACCCCTCAGCAAAGGGCTTGGCTCAATCTCGTCCAGCCATTGACCATCGTCGAGGGGTTTGCTCTGTTATCCGTGCCGA"
-    noMutationGraph = import_gg_graph('./no_mutation.xml')
+    noMutationGraph = import_gg_graph(test_graph_dir + 'no_mutation.xml')
 
     def test_no_of_nodes(self):
 
@@ -57,7 +58,7 @@ class NoMutationsTests(unittest.TestCase):
 
 class OneSubstitutionTest(unittest.TestCase):
 
-    oneSubstitutionGraph = import_gg_graph('./one_sub.xml')
+    oneSubstitutionGraph = import_gg_graph(test_graph_dir + 'one_sub.xml')
     readWithSubstitution = "CACAGTGTGGCACGCGGTCGTCTCCGAACTTAACGGCGACCCTAAGGTTGACGACGGACCCAGCAGTGATGCTAATCTCAGCGCTCCGCTGACCCCTCAG"
     readWithoutSubstitution = "CACAGTGTGGAACGCGGTCGTCTCCGAACTTAACGGCGACCCTAAGGTTGACGACGGACCCAGCAGTGATGCTAATCTCAGCGCTCCGCTGACCCCTCAG"
 
@@ -90,7 +91,7 @@ class OneSubstitutionTest(unittest.TestCase):
 
 class OneDeletionTest(unittest.TestCase):
 
-    oneDeletionGraph = import_gg_graph('./one_deletion.xml')
+    oneDeletionGraph = import_gg_graph(test_graph_dir + 'one_deletion.xml')
     readWithDeletion = "CACAGTGTGGAACGCGGTCGCTCCGAACTTAACGGCGACCCTAAGGTTGACGACGGACCCAGCAGTGATGCTAATCTCAGCGCTCCGCTGACCCCTCAGC"
     readWithoutDeletion = "CACAGTGTGGAACGCGGTCGTCTCCGAACTTAACGGCGACCCTAAGGTTGACGACGGACCCAGCAGTGATGCTAATCTCAGCGCTCCGCTGACCCCTCAG"
 
@@ -122,7 +123,7 @@ class OneDeletionTest(unittest.TestCase):
 
 class OneInsertionTest(unittest.TestCase):
 
-    oneInsertionGraph = import_gg_graph('./one_insertion.xml')
+    oneInsertionGraph = import_gg_graph(test_graph_dir + 'one_insertion.xml')
     readWithInsertion = "CACAGTGTGGAACGCGGTCGTCTCCGAACTTAGACGGCGACCCTAAGGTTGACGACGGACCCAGCAGTGATGCTAATCTCAGCGCTCCGCTGACCCCTCA"
     readWithoutInsertion = "CACAGTGTGGAACGCGGTCGTCTCCGAACTTAACGGCGACCCTAAGGTTGACGACGGACCCAGCAGTGATGCTAATCTCAGCGCTCCGCTGACCCCTCAG"
     def test_no_of_nodes(self):
@@ -152,9 +153,10 @@ class OneInsertionTest(unittest.TestCase):
         self.assertEqual(isolateSequenceDifferences(self.oneInsertionGraph.get_sequence(0, 999, 'H37Rv'), self.oneInsertionGraph.get_sequence(0, 999, 'H37Rv_One_Deletion')), 1)
         self.assertEqual(isolateSequenceDifferences(self.oneInsertionGraph.get_sequence(0, 999, 'H37Rv_2'), self.oneInsertionGraph.get_sequence(0, 999, 'H37Rv_One_Deletion')), 1)
 
+'''
 class ReverseComplimentTest(unittest.TestCase):
 
-    reverseComplimentGraph = import_gg_graph('./reverse.xml')
+    reverseComplimentGraph = import_gg_graph(test_graph_dir + 'reverse.xml')
     read = "TCTCCGAACTTAACGGCGACCCTAAGGTTGACGACGGACCCAGCAGTGATGGTTAGAGCAGCAACAGCCAACACCACAGACCGCTACACCATCGTCCTAAA"
     def test_no_of_nodes(self):
 
@@ -186,7 +188,7 @@ class ReverseComplimentTest(unittest.TestCase):
 class ReverseComplimentWithSNPTest(unittest.TestCase):
 
 
-    reverseComplimentGraph = import_gg_graph('./reverse_with_snp.xml')
+    reverseComplimentGraph = import_gg_graph(test_graph_dir + 'reverse_with_snp.xml')
     read = "TCTCCGAACTTAACGGCGACCCTAAGGTTGACGACGGACCCAGCAGTGATTGTTAGAGCAGCAACAGCCAACACCACAGACCGCTACACCATCGTCCTAAA"
     def test_no_of_nodes(self):
 
@@ -214,10 +216,11 @@ class ReverseComplimentWithSNPTest(unittest.TestCase):
 
     def test_contain_reverse(self):
         self.assertTrue(containReverse(self.reverseComplimentGraph))
+'''
 
 class MixOfSNPTest(unittest.TestCase):
 
-    mixOfSNPGraph = import_gg_graph("./mix_of_snps.xml")
+    mixOfSNPGraph = import_gg_graph(test_graph_dir +  'mix_of_snps.xml')
     read = "TTGCCCGATGACCCCGGTTCAGGCTTCACCAGAGTGTGGAACGCGGTCGTCTCCGAACTTAACGGCGACCCTAAGGTTGACGACGGACCCAGCAGTGATG"
     def test_no_of_nodes(self):
 
@@ -254,7 +257,7 @@ class MixOfSNPTest(unittest.TestCase):
 
 class GraphSimilarityTest(unittest.TestCase):
     # Can remove section graph aligns to and insert the read, then check whether graphs are similar or the same
-    oneSubstitutionGraph = import_gg_graph('./one_sub.xml')
+    oneSubstitutionGraph = import_gg_graph(test_graph_dir + 'one_sub.xml')
     readWithSubstitution = "CACAGTGTGGCACGCGGTCGTCTCCGAACTTAACGGCGACCCTAAGGTTGACGACGGACCCAGCAGTGATGCTAATCTCAGCGCTCCGCTGACCCCTCAG"
     readwithOneDifference = "CACAGTGTGGCACGCGGTCGTCTCCGAACTTAACGGCGACCCTAAGGTTGACGACGGACCCAGCAGTGATGCTAATCTCAGTGCTCCGCTGACCCCTCAG"
 
@@ -274,7 +277,11 @@ class GraphSimilarityTest(unittest.TestCase):
         self.assertFalse(isIsomorphic(self.oneSubstitutionGraph , changedGraph))
         self.assertEqual(calculateGED(self.oneSubstitutionGraph, changedGraph), 1.0)
 
+class MultipleSequenceAlignmentTest(unittest.TestCase):
 
+    def align_one_read(self):
+
+        self.assertEqual('this', 'this')
 
 if __name__ == '__main__':
     unittest.main()
