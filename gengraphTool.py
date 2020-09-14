@@ -96,6 +96,9 @@ if __name__ == '__main__':
 			print('A sequence file needs to be specified with the --seq_file flag for graph creation.')
 			quit()
 
+		if not args.out_file_name:
+			args.out_file_name = 'default'
+
 		parsed_input_dict = parse_seq_file(args.seq_file)
 
 		check_result = input_file_check(parsed_input_dict)
