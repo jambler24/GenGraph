@@ -5,7 +5,7 @@ from gengraphTool import *
 
 # Built in
 
-from subprocess import call
+from subprocess import call, run
 from operator import itemgetter
 from collections import OrderedDict
 
@@ -2678,36 +2678,39 @@ def mafft_alignment(fasta_unaln_file, out_aln_name):
 	call([path_to_mafft, '--retree', '2', '--maxiterate', '2', '--quiet', '--thread', '-1', fasta_unaln_file], stdout=out_temp_fa)
 
 
-def progressiveMauve_alignment(path_to_progressiveMauve, fasta_path_list, out_aln_name):
+def progressiveMauve_alignment(path_to_progressiveMauve, fasta_path_list, out_aln_name, scratch='./mauveTemp', scratch2='./mauveTemp'):
 	"""
 	A wrapper for progressiveMauve for use in GenGraph for the identification of co-linear blocks
 	:param path_to_progressiveMauve: Absolute path to progressiveMauve executable
 	:param fasta_path_list: List of paths to fasta files
 	:param out_aln_name: Name for alignment file, added to mauve output
+	:param scratch: scratch path for progressiveMauve
+	:param scratch2: second scratch path for progressiveMauve
 	:return:
 
 	"""
 	# Maybe add --skip-gapped-alignment flag?
 
 	logging.info(path_to_progressiveMauve)
-	progressiveMauve_call = [path_to_progressiveMauve, '--output=globalAlignment_' + out_aln_name, '--scratch-path-1=./mauveTemp', '--scratch-path-2=./mauveTemp'] + fasta_path_list
+	progressiveMauve_call = [path_to_progressiveMauve, '--output=globalAlignment_' + out_aln_name, '--scratch-path-1=' + scratch, '--scratch-path-2=' + scratch2] + fasta_path_list
 
 	try:
-		return call(progressiveMauve_call, stdout=open(os.devnull, 'wb'))
+		run(progressiveMauve_call, stdout=open(os.devnull, 'wb'))
 
-		# Check if file was created successfully
+		# Check if file was created successfully - this is not being hit...
 
-		bbone_file = open('globalAlignment_' + out_aln_name + '.backbone')
+		test_bbone_file = open('globalAlignment_' + out_aln_name + '.backbone')
 
 		number_of_lines = 3
 
 		for i in range(number_of_lines):
-			line = bbone_file.readline()
-			print(len(line.split('\t')))
+			line = test_bbone_file.readline()
 			if len(line.split('\t')) <= 1:
 				logging.error('progressiveMauve_call error: output of progressiveMauve empty')
 				print('Error: progressiveMauve_call output appears empty.')
 				quit()
+
+		return 'progressiveMauve_call complete'
 
 	except OSError:
 		logging.error('progressiveMauve_call error')
