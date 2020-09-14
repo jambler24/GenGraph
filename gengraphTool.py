@@ -60,8 +60,11 @@ if __name__ == '__main__':
 	print('Running GenGraph Toolkit')
 
 	# Setting up logging
-	logging.basicConfig(filename=args.out_file_name + '.log', level=logging.DEBUG)
 
+	if not args.out_file_name:
+		logging.basicConfig(filename='new_run.log', level=logging.DEBUG)
+	else:
+		logging.basicConfig(filename=args.out_file_name + '.log', level=logging.DEBUG)
 	# Check NetworkX version
 	nx_version = pkg_resources.get_distribution("networkx").version
 
@@ -88,6 +91,10 @@ if __name__ == '__main__':
 		path_to_progressiveMauve = args.progressiveMauve_path[0]
 
 		start_time = time.time()
+
+		if not args.seq_file:
+			print('A sequence file needs to be specified with the --seq_file flag for graph creation.')
+			quit()
 
 		parsed_input_dict = parse_seq_file(args.seq_file)
 
