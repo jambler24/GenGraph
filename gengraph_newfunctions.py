@@ -1,5 +1,5 @@
 # This is where new untested functions sit until ready for deploy
-
+import itertools
 
 # --------------------- PanGenome related
 
@@ -1156,3 +1156,127 @@ def split_node(in_graph, node, max_length):
 	#	in_graph = link_nodes_2(in_graph, a_isolate)
 
 	return in_graph
+
+
+def calc_GC(a_sequence):
+
+	gc_perc = (a_sequence.count("G") + a_sequence.count("C")) / len(a_sequence)
+
+	return gc_perc
+
+def hash_seq(a_sequence):
+
+	import hashlib
+
+
+	return hash_val
+
+
+def create_encode_dict():
+	import string
+
+	#string.printable
+
+	index_count = 0
+
+	length = 4
+
+	encoding_dict = {}
+
+	possible_chars = ['A', 'C', 'G', 'T']
+
+	end_char = '-'
+
+	for comb in itertools.combinations_with_replacement(possible_chars, length):
+		encoding_dict[''.join(comb)] = string.printable[index_count]
+		index_count += 1
+
+
+
+
+	return encoding_dict
+
+
+def char_encode(a_sequence, encode_dict):
+
+
+
+	return 'dvdjvjvf'
+
+
+def create_freagment_similarity_table(sequence_file, window_size, step_size):
+
+	from gengraph import input_parser
+	import pandas as pd
+
+	seq_info = input_parser(sequence_file)
+
+	print(seq_info)
+
+	enc_dict = create_encode_dict()
+
+	print(enc_dict)
+
+	quit()
+
+	column_names = ['fragment_id', 'GC', 'hash', 'char_encode']
+
+	fragment_table = pd.DataFrame(columns = column_names)
+
+	window_size = 50
+	stepsize = 20
+
+	for a_seq_file in seq_info:
+
+		# Open file and get windows
+
+		seq_strings = input_parser(a_seq_file['seq_path'])
+
+		for a_contig in seq_strings:
+
+			it = iter(a_contig['DNA_seq'])
+
+			count = 0
+
+			result = tuple(islice(it, window_size))
+
+			if len(result) == window_size:
+				print(''.join(result))
+				print('----')
+
+				# The first fragment
+
+			for elem in it:
+
+				result = result[1:] + (elem,)
+
+				if count == stepsize:
+					count = 0
+					result = result[1:] + (elem,)
+					kmer_string = ''.join(result)
+
+					# Here we are dealing with a fragment
+
+					fragment_id = 's2f5'
+					GC_content = calc_GC(kmer_string)
+					hashval = 'oolkjh'
+					char_encoded_value = char_encode(kmer_string, )
+
+					new_df_row = pd.DataFrame([[fragment_id, GC_content, hashval, char_encoded_value]], columns=column_names)
+
+					fragment_table = fragment_table.append(new_df_row, ignore_index=True)
+
+					print(fragment_table)
+
+				count += 1
+
+
+
+
+	return 'dataframe'
+
+
+def global_align_by_composition(sequence_file):
+
+
+	return 'k'

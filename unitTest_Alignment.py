@@ -14,6 +14,9 @@ import networkx.algorithms.isomorphism as iso
 # - A large rearrangement where 300bp are reverse complimented in one sequence containing a SNP in the reversed sequence.
 # - One with a general mix of SNPS
 
+# TO run a specific test: python3 -m unittest -v unitTest_Alignment.MultipleSequenceAlignmentTest.align_one_read
+# To profile do: python3 -m cProfile -o gengraphTool_6genome.prof ./gengraphTool.py make_genome_graph --seq_file ./test_files/multiGenome6.txt --out_file_name test6genome
+
 test_graph_dir = './TestGraphs/'
 
 class BasicTests(unittest.TestCase):
@@ -279,7 +282,19 @@ class GraphSimilarityTest(unittest.TestCase):
 
 class MultipleSequenceAlignmentTest(unittest.TestCase):
 
+    def global_align_test(self):
+
+        from gengraph_newfunctions import global_align_by_composition, create_freagment_similarity_table
+
+        seq_file = './test_files/s_pneumoniae.txt'
+
+        output = create_freagment_similarity_table(seq_file, 100, 50)
+
+        self.assertEqual(output, 'dataframe')
+
     def align_one_read(self):
+
+
 
         self.assertEqual('this', 'this')
 
