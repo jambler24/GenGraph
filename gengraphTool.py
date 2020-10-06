@@ -51,6 +51,8 @@ if __name__ == '__main__':
 
 	parser.add_argument('--locus_ID', type=str, help='The name of the gene or feature')
 
+	parser.add_argument('--scratch_path', type=str, default='./', help='Path for temporary data')
+
 	parser.set_defaults(should_add_seq=True)
 
 	parser.set_defaults(rec_check=False)
@@ -116,7 +118,7 @@ if __name__ == '__main__':
 
 			logging.info(parsed_input_dict)
 
-			progressiveMauve_alignment(path_to_progressiveMauve, parsed_input_dict[2], args.out_file_name)
+			progressiveMauve_alignment(path_to_progressiveMauve, parsed_input_dict[2], args.out_file_name, scratch=args.scratch_path)
 
 			logging.info('progressiveMauve Complete')
 			print('progressiveMauve Complete')
