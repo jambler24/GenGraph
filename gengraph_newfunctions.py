@@ -1,5 +1,10 @@
 # This is where new untested functions sit until ready for deploy
 import itertools
+import gengraph as geng
+import numpy as np
+from scipy.stats import rankdata as rd
+import pandas as pd
+import os
 
 # --------------------- PanGenome related
 
@@ -1280,3 +1285,221 @@ def global_align_by_composition(sequence_file):
 
 
 	return 'k'
+
+#----------------------------------------------------------------------------------------------------------------
+#Phillip code
+#Alignment Functions
+
+def simpleIsSmaller(x, y):
+	'''
+	Small helper function for suffix_array_skew. Lexicographic comparison for strings of length <= 2.
+	:x: First string being compared.
+	:y: Second string.
+	:return: Boolean, True if x < y, False otherwise.
+	'''	
+	if x[0] < y[0]:
+		return True
+	elif (x[0] == y[0] and x[1] < y[1]):		
+			return True		
+	return False
+
+
+def suffix_array_skew(s, check = False):
+	'''
+	Skew algorithm for linear time suffix array construction, courtesy of Juha Karkkainen and Peter Sanders.
+	Notes referenced: http://www.mi.fu-berlin.de/wiki/pub/ABI/SS13Lecture3Materials/script.pdf
+	:s: String or numpy char array that suffix array is being constructed from.	
+	:check: True if array contains integers (ranks), False if strings. There is probably a smarter way to do this.
+	:return: Suffix array of s.
+	'''
+	n = len(s)
+	#Checks if s is a string, if so convert to numpy char array. Adds stop characters.
+	if (isinstance(s, str)):	
+		s = s + "$$$"
+		s = np.char.array([x for x in s])
+	else:
+		s = np.concatenate((s, np.array([-1,-1,-1])), axis=0)	
+	
+	#parameters used later in algorithm.
+	n0 = int((n+2)/3)
+	n1 = int((n+1)/3)
+	n2 = int(n/3)
+	n02 = n0+n2
+	#starting position of substrings of length = 3, where T[i,i+1,i+2] with i != 0 (mod 3).
+	#Basically all 3-mers, but only if start position of 3-mer is not divisible by 3.
+	triple_positions = np.array([x for x in range(1, n+(n0-n1)) if x%3 != 0])
+
+	#Functions for retrieving triples from array.
+	if not (check):
+		y = lambda a: (s[a:a+3])
+	else:
+		y = lambda a: [int(x) for x in (s[a:a+3])]
+
+	#Using pandas to retrieve the rankings (lexicographic) of the triples. Conserves order of original array.
+	#Ties are allowed and ranking starts at 0. For example: Rankings = [0,1,1,0,0]
+	triples = pd.DataFrame.from_records(np.array([y(r) for r in triple_positions]))		
+	cols = triples.columns.tolist()	
+	triples = (triples[cols].apply(tuple, axis=1).rank(method="dense").astype(int)).values-1
+
+	#This is just re-ordering the ranking array. Required for recursion.
+	#Thus: T = triples starting at i%3 == 1, and triples starting at i%3 == 2.	
+	t1 = triples[::2]
+	t2 = triples[1::2]
+	T = np.concatenate((t1,t2), axis = 0)
+
+	#if all ranking name not unique (ties): recursively call algorithm again, else we can calc suffix array of T.	
+	if not (np.unique(T).size == T.size):			
+		print(n0)
+		T = suffix_array_skew(T, True)			
+		suff = [1+3*x if x < n0 else 2+3*(x-n0) for x in T]			
+	else:
+		#construct suffix array of T
+		#value of triples = new index of values of triple_positions at same index		
+		n_trip = len(triples)
+		suff = [0]*n_trip		
+		for i in range(n_trip):
+			suff[triples[i]] = triple_positions[i]				
+
+	#inducing last third of suffixes (those with starting position i%3==0), and sorting them.
+	d0 = {x-1: s[x-1] for x in suff if x%3 == 1}	
+	d_sorted = {k: v for k, v in sorted(d0.items(), key=lambda item: item[1])}	
+	suff2 = list(d_sorted.keys())	
+
+	#We are storing the indices of the triples in triple_positions.
+	t = lambda a: int((a-1)/3) if a%3==1 else int((a-1)/3) + n0		
+	for i in range(n02):
+		triple_positions[t(suff[i])] = i
+
+	#now merge suff and suff2 into one suffix array
+	#renaming terms to keep in line with notes (so its easier to understand following code if you reference notes)
+	a0, a12, og_s, n, n0, ind = suff2, suff, s, n, int((n+2)/3), triple_positions
+
+	#u, v = maximum values for pointers iterating over a0 and a12
+	u = len(a0)
+	v = len(a12)
+	#defining inverse function, inverse of a12, such that inv(a12(i)) = i
+	r12 = lambda a: ind[int((a-1)/3)] if (a%3==1 and a < n) else (ind[int((a-1)/3) +n0] if a < n else 0)
+
+	#x = pointer for a0
+	x = 0
+	#y = pointer for a12. Skip first value of 12 if n%3 == 1
+	if n%3 == 1:
+		y = 1
+	else:
+		y = 0
+
+	out = []
+	#iterating over a0 and 12.
+	while (x < u) and (y < v):
+		i = a0[x]
+		j = a12[y]			
+		#see notes for details. this code determines if i or j should be appended to suffix array first.
+		if j%3 == 1:
+			if (og_s[i] < og_s[j]) or (og_s[i] == og_s[j] and r12(i+1) < r12(j+1)):				
+				out.append(i)
+				x += 1
+			else:											
+				out.append(j)
+				y += 1
+		else:
+			t1 =  og_s[i:i+2]
+			t2 =  og_s[j:j+2]
+
+			if (simpleIsSmaller(t1,t2)) or ((np.array_equal(t1, t2)) and r12(i+2) < r12(j+2)):
+				out.append(i)
+				x += 1
+			else:
+				out.append(j)
+				y += 1
+	#appending the remaining suffixes.
+	for e in range(x, u):
+		out.append(a0[e])
+	for f in range(y, v):
+		out.append(a12[f])
+
+	final_suff = out
+	return final_suff	
+
+def bin_search(T, sa, q_list):
+	'''
+	Simple binary search algorithm to find exact matches using suffix arrays.
+	Prints out locations of exact matches for each query.
+	:param T: Text being searched
+	:param sa: Suffix array of text
+	:param q_list: List containing query sequences as strings. Ex: ["ATGTC","GTGTCA"]
+	'''
+	sa_len = len(sa)
+	#starting location for binary search = middle.
+	current_p = int(sa_len /2)	
+
+	#iterating over list of queries.
+	for q in q_list:
+		print("-------------------")
+		print(q)
+		l = len(q)
+		#Starting range = entire array
+		max_p = len(sa)
+		min_p = 0
+
+		#does search until min and max are not equal
+		while (abs(max_p-min_p)>1):
+			#c_suff = current suffix being compared (extracted from T)
+			c_suff = T[sa[current_p]:]
+			#r = string being compared to q, same length
+			r = c_suff[:l]		
+
+			#if string matches prefix of suffix: print location of this suffix, and
+			#extend upwards and downwards for additional exact matches (since suffix array is sorted all matches will be neighbours)
+			if q == r:								
+				print(sa[current_p])
+				#move up while matches hit and print match locations
+				temp_p = current_p+1				
+				while (temp_p < sa_len):														
+					r = T[sa[temp_p]:][:l]
+					if q == r:
+						print(sa[temp_p])
+						temp_p += 1
+					else:
+						break
+				#move down while matches hit and print match locations
+				temp_p = current_p-1
+				while(temp_p > -1):										
+					r = T[sa[temp_p]:][:l]
+					if q == r:
+						print(sa[temp_p])
+						temp_p -= 1
+					else:
+						break
+				break
+
+			#If query is smaller: make current position the maximum of new search range. 
+			elif q < r:				
+				max_p = current_p
+				current_p = int((max_p+min_p)/2)
+			#If query bigger: make current position minimum of new search range.
+			elif q > r:				
+				min_p = current_p
+				current_p = int((max_p+min_p)/2)
+
+
+def exact_match(graph_path, genome_name, query_list):
+	'''
+	Prints locations (in linear sequence of specific genome) of exact matches with list of queries, using suffix arrays of reference.
+	This could be used for finding initial seeds for a seed-and-extend approach to alignment.
+	This should later be changed to return some dictionary or list containing the locations.
+	:param graph_path: Path to xml containing the graph. Ex. 'kzn_2_pangenome.xml'
+	:param genome_name: Name of genome of interest as string. Ex: "Beijing"
+	:param query_list: List containing query sequences as strings. Ex: ["ATGTC","GTGTCA"]
+	'''
+	print("loading graph, extracting seq")
+	G = geng.import_gg_graph(graph_path)
+	T = geng.extract_original_seq(G, genome_name)
+	T_array = np.array([x for x in T])
+	print("seq extracted")
+	#this prevents command prompt from freezing (in windows this is a problem when code takes >5 minutes to run)
+	os.environ['FOR_DISABLE_CONSOLE_CTRL_HANDLER'] = '1'
+	print("Calculating suffix array of seq (this will take a while, +- 5-10 mins):")
+	sa = suffix_array_skew(T_array, len(T_array))
+	del T_array
+	print("Suffix array done, starting exact match search: ")
+	bin_search(T, sa, query_list)
