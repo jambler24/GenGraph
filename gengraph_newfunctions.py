@@ -1441,7 +1441,7 @@ def bin_search(T, sa, q_list):
 		max_p = len(sa)
 		min_p = 0
 
-		#does search until min and max are not equal
+		#does search until min and max are equal
 		while (abs(max_p-min_p)>1):
 			#c_suff = current suffix being compared (extracted from T)
 			c_suff = T[sa[current_p]:]
@@ -1482,18 +1482,17 @@ def bin_search(T, sa, q_list):
 				current_p = int((max_p+min_p)/2)
 
 
-def exact_match(graph_path, genome_name, query_list):
+def exact_match(graph, genome_name, query_list):
 	'''
 	Prints locations (in linear sequence of specific genome) of exact matches with list of queries, using suffix arrays of reference.
 	This could be used for finding initial seeds for a seed-and-extend approach to alignment.
 	This should later be changed to return some dictionary or list containing the locations.
-	:param graph_path: Path to xml containing the graph. Ex. 'kzn_2_pangenome.xml'
+	:param graph: GenGraph graph object
 	:param genome_name: Name of genome of interest as string. Ex: "Beijing"
 	:param query_list: List containing query sequences as strings. Ex: ["ATGTC","GTGTCA"]
 	'''
-	print("loading graph, extracting seq")
-	G = geng.import_gg_graph(graph_path)
-	T = geng.extract_original_seq(G, genome_name)
+	print("loading graph, extracting seq")	
+	T = geng.extract_original_seq(graph, genome_name)
 	T_array = np.array([x for x in T])
 	print("seq extracted")
 	#this prevents command prompt from freezing (in windows this is a problem when code takes >5 minutes to run)
