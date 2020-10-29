@@ -1508,6 +1508,35 @@ def exact_match(graph, genome_name, query_list):
 #Algorithm can be found here https://academic.oup.com/bioinformatics/article/25/14/1754/225615
 #Authors: Heng Li, Richard Durbin
 
+def bwt_from_sa(T, sa):
+	'''
+	Calculates Burrows Wheeler transform from Text and Suffix array.
+	:param T: Input text
+	:param sa: Suffix Array of T
+	:return: BWT(text), string.
+	'''
+	bw = []
+	for s in sa:
+		if s == 0:
+			bw.append('$')
+		else:
+			bw.append(T[s-1])
+	return ''.join(bw)
+
+def BWT_sa(text):
+	'''
+	Calculates Burrows Wheeler transform from Text.
+	:param text: Input text
+	:return: BWT(text), string.
+	'''
+	text = text + "$"	
+	input_array = np.array([x for x in text])
+	sa = suffix_array_skew(input_array)
+	b  = bwt_from_sa(text, sa)
+	del sa
+
+	return b
+
 def calc_FM_index(B):
 	'''
 	Calculates fm index and offset array. Offset array = c. c[a] = number of characters smaller than a in text.
