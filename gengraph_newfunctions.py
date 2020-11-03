@@ -1292,12 +1292,12 @@ def global_align_by_composition(sequence_file):
 #Alignment Functions
 
 def simpleIsSmaller(x, y):
-	'''
+	"""
 	Small helper function for suffix_array_skew. Lexicographic comparison for strings of length <= 2.
 	:x: First string being compared.
 	:y: Second string.
 	:return: Boolean, True if x < y, False otherwise.
-	'''	
+	"""	
 	if x[0] < y[0]:
 		return True
 	elif (x[0] == y[0] and x[1] < y[1]):		
@@ -1306,13 +1306,13 @@ def simpleIsSmaller(x, y):
 
 
 def suffix_array_skew(s, check = False):
-	'''
+	"""
 	Skew algorithm for linear time suffix array construction, courtesy of Juha Karkkainen and Peter Sanders.
 	Notes referenced: http://www.mi.fu-berlin.de/wiki/pub/ABI/SS13Lecture3Materials/script.pdf
 	:s: String or numpy char array that suffix array is being constructed from.	
 	:check: True if array contains integers (ranks), False if strings. There is probably a smarter way to do this.
 	:return: Suffix array of s.
-	'''
+	"""
 	n = len(s)
 	#Checks if s is a string, if so convert to numpy char array. Adds stop characters.
 	if (isinstance(s, str)):	
@@ -1348,7 +1348,7 @@ def suffix_array_skew(s, check = False):
 	t2 = triples[1::2]
 	T = np.concatenate((t1,t2), axis = 0)
 
-	#if all ranking name not unique (ties): recursively call algorithm again, else we can calc suffix array of T.	
+	#if ranking names are not unique (ties): recursively call algorithm again, else we can calc suffix array of T.	
 	if not (np.unique(T).size == T.size):			
 		print(n0)
 		T = suffix_array_skew(T, True)			
@@ -1422,13 +1422,13 @@ def suffix_array_skew(s, check = False):
 	return final_suff	
 
 def bin_search(T, sa, q_list):
-	'''
+	"""
 	Simple binary search algorithm to find exact matches using suffix arrays.
 	Prints out locations of exact matches for each query.
 	:param T: Text being searched
 	:param sa: Suffix array of text
 	:param q_list: List containing query sequences as strings. Ex: ["ATGTC","GTGTCA"]
-	'''
+	"""
 	sa_len = len(sa)
 	#starting location for binary search = middle.
 	current_p = int(sa_len /2)	
@@ -1484,14 +1484,14 @@ def bin_search(T, sa, q_list):
 
 
 def exact_match(graph, genome_name, query_list):
-	'''
+	"""
 	Prints locations (in linear sequence of specific genome) of exact matches with list of queries, using suffix arrays of reference.
 	This could be used for finding initial seeds for a seed-and-extend approach to alignment.
 	This should later be changed to return some dictionary or list containing the locations.
 	:param graph: GenGraph graph object
 	:param genome_name: Name of genome of interest as string. Ex: "Beijing"
 	:param query_list: List containing query sequences as strings. Ex: ["ATGTC","GTGTCA"]
-	'''
+	"""
 	print("loading graph, extracting seq")	
 	T = geng.extract_original_seq(graph, genome_name)
 	T_array = np.array([x for x in T])
@@ -1509,12 +1509,12 @@ def exact_match(graph, genome_name, query_list):
 #Authors: Heng Li, Richard Durbin
 
 def bwt_from_sa(T, sa):
-	'''
+	"""
 	Calculates Burrows Wheeler transform from Text and Suffix array.
 	:param T: Input text
 	:param sa: Suffix Array of T
 	:return: BWT(text), string.
-	'''
+	"""
 	bw = []
 	for s in sa:
 		if s == 0:
@@ -1524,11 +1524,11 @@ def bwt_from_sa(T, sa):
 	return ''.join(bw)
 
 def BWT_sa(text):
-	'''
+	"""
 	Calculates Burrows Wheeler transform from Text.
 	:param text: Input text
 	:return: BWT(text), string.
-	'''
+	"""
 	text = text + "$"	
 	input_array = np.array([x for x in text])
 	sa = suffix_array_skew(input_array)
@@ -1538,11 +1538,12 @@ def BWT_sa(text):
 	return b
 
 def calc_FM_index(B):
-	'''
-	Calculates fm index and offset array. Offset array = c. c[a] = number of characters smaller than a in text.
+	"""
+	Calculates FM index and offset array. Offset array = c. c[a] = number of characters smaller than a in text.
 
 	:param B: Burrows-Wheeler transform of a string.
-	'''
+	:return: (FM index, c), Tuple containing 2D integer numpy array, and 1D integer numpy array.
+	"""
 	set_b = set(B)
 	len_b = len(B)
 	alphabet_size = len(set_b)
@@ -1550,21 +1551,20 @@ def calc_FM_index(B):
 	d = {k: v for k, v in sorted(alph_temp.items(), key=lambda item: item[0])}			
 	fm = np.zeros((len_b, alphabet_size), dtype= np.uint32)	
 
-	#counting occurences of character a in B[0,i]
+	#FM index calc
 	for i in range(len_b):
 		d[B[i]] += 1		
 		fm[i,] = list(d.values())	
 	
-	c = np.zeros(alphabet_size, dtype=np.uint32)	
+	c = np.zeros(alphabet_size, dtype=np.uint32)
+	#Offset array calc	
 	for i in range(1, alphabet_size):		
 		c[i] = sum(fm[-1,:i])	
-
-	out = (fm, c)	
 	
-	return out
+	return (fm, c)
 
 def InexRecur(W,i,z,k,l, D, c, fm, insertion_penalty = 1, deletion_penalty = 1):
-	'''
+	"""
 	Recursive function used by inexact_match algorithm.
 
 	:param W: Substring being search for
@@ -1578,7 +1578,7 @@ def InexRecur(W,i,z,k,l, D, c, fm, insertion_penalty = 1, deletion_penalty = 1):
 	:param deletion_penalty: Difference score for a deletion, can be tweaked to reflect biological mutation rates. Default = 1.
 
 	:return: Set of suffix array indices which contain matches.
-	'''
+	"""
 	tempset = set()
 	
 	#D[i] = 0 if i < 0, else D[i]. Pruning search.
@@ -1630,7 +1630,7 @@ def InexRecur(W,i,z,k,l, D, c, fm, insertion_penalty = 1, deletion_penalty = 1):
 
 
 def inexact_search(X, W, z):
-	'''
+	"""
 	Basic implementation of inexact match algorithm found in BWA, accounting for mismatches/substitutions, as well as insertions + deletions.
 	Courtesy of Heng Li and Richard Dubin. Paper found here: https://academic.oup.com/bioinformatics/article/25/14/1754/225615
 	This implementation is complete but slow. The full BWA algorithm uses various heuristics and tricks to reduce computation time.
@@ -1641,7 +1641,7 @@ def inexact_search(X, W, z):
 	:param W: Query. Substring (read sequence) being searched for (aligned/mapped)
 	:param z: Maximum amount of mismatches being allowed for (substitutions, indels)
 	:return: Set containing indices of Suffix Array that match query.
-	'''
+	"""
 	#Preprocessing steps. 
 	#Using multiprocessing to calculate BWT of Text and Reversed Text simultaneously.
 	p = Pool(cpu_count())
