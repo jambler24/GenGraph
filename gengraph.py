@@ -3117,6 +3117,7 @@ def generate_graph_report(in_graph, out_file_name):
 
 # ---------------------------------------------------- # GFA
 #GFA Import/Export functions. Code is a bit messy and still needs some testing.
+#Import function in particular won't work for complex cycles - will probably not work for import from vg for majority of graphs.
 
 
 def prune_edges(G, isolate):
@@ -3142,7 +3143,7 @@ def prune_edges(G, isolate):
 def create_GFA(G, filename):
 	"""			
 		Writes a GFA1.0 format file called 'filename'.gfa. 
-		Format follows VG specification to allow importation into VG. Minimal optional fields used, overlap field in path used for path lengths in terms of nucleotides.
+		Format follows VG specification to allow importation into VG or use in GraphAligner. Minimal optional fields used, overlap field in path used for path lengths in terms of nucleotides.
 		Isolates are coded as paths. No overlap between nodes, i.e. Edges are empty. 
 		GFA 1.0 Specification can be found at https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md
 		:param G: GgDiGraph.
@@ -3231,6 +3232,8 @@ def read_GFA(path):
 		Limitations:
 			This function is not as general as it could be. It doesn't handle many optional fields and instead ignores them.
 			Doesn't account for all likely formatting/syntax errors.
+			Will not handle complex cycles appropiately. Simple small cycles will be fine, but the resulting acyclic graph from larger
+			cycles won't be correct - homology will be lost and the structure won't fit gengraph's specification.
 
 		:param path: Path to GFA file. String.		
 		:return: GgDiGraph.
