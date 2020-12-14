@@ -36,7 +36,7 @@ if __name__ == '__main__':
 						help='Set to True to attempt to recreate the input sequences from the graph and compare to the originals')
 
 	parser.add_argument('--extract_sequence', type=str, default='some_isolate',
-						help='To circularise the graph for a sequence, give the name of that sequence')
+						help='Returns the sequence of the selected isolate')
 
 	parser.add_argument('--isolate', type=str, default='some_isolate', help='pass the isolate variable. For graph generation, this should be the genome that best represents the ancesteral state.')
 
@@ -74,6 +74,14 @@ if __name__ == '__main__':
 
 	if args.toolkit == 'test_mode':
 		print("Test functions here")
+
+		test_aln_graph = nx.read_graphml(args.graph_file)
+
+		parsed_input_dict = parse_seq_file(args.seq_file)
+
+		result = seq_recreate_check(test_aln_graph, parsed_input_dict)
+
+		print(result)
 
 	if args.toolkit == 'make_genome_graph':
 		# Requires:
