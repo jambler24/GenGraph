@@ -2,6 +2,10 @@
 
 import networkx as nx
 from gengraphTool import *
+import bisect
+from collections import OrderedDict, defaultdict
+from multiprocessing import Pool, cpu_count, Manager
+from functools import partial
 
 # Built in
 
@@ -3122,5 +3126,579 @@ def generate_graph_report(in_graph, out_file_name):
 
 # Break down into k-mers to either create a hash table, or to create de-bruijn graphs.
 
+class ReadMapper:
+	#param chain_bound, additional "buffer" to bound which decides if kmers get chained or not. Default is 2
+
+	def __init__(self, G, k, L, chain_bound = None):
+		self.G = G
+		self.k = k
+		self.L = L
+		self.W = L-k+1		
+		self.jump_size = self.W*2	
+		self.chain_bound = chain_bound if chain_bound is not None else 2
+		self.max_gaps = 5
+		self.pos_d = self.overall_positions()
+		self.keys = list(self.pos_d.keys())
+		self.index = None
+		self.sorted_nodes = list(nx.topological_sort(self.G))		
+		self.tuples = []		
+		self.reads = []
+		self.results = []		
+	
+	def overall_positions(self, ggraph = None):
+		'''
+		Given a gengraph directed acyclic graph, generates a dictionary that assigns positions to each node.
+		These positions correspond to the amount of bases in the longest path - from starting node to end of current node.	
+		:return: defaultdict with {int position: list of node names}
+		'''
+		if ggraph is None: 
+			ggraph = self.G	
+		#topological sort of nodes.			
+		self.sorted_nodes = list(nx.topological_sort(ggraph))
+		positions = {}		
+		
+		#NOTE: this should be changed. DO this for all graphs with in_degree = 0. Then use the longest one as a starting point.
+		#First node done seperately. Simply the length of the sequence.	
+		positions[self.sorted_nodes[0]] = len(ggraph.nodes[self.sorted_nodes[0]]['sequence'])-1		
+		
+		#iterate over rest of nodes
+		for i,x in enumerate(self.sorted_nodes[1:], 1):
+			
+			s_len = len(ggraph.nodes[x]['sequence'])	
+
+			#if no edge, means nodes at i, i-1 are equal in order
+			#thus we need to resolve their positions differently
+			if not ggraph.has_edge(self.sorted_nodes[i-1], x):
+				#Take the LCA position as a starting point.
+				lca = nx.lowest_common_ancestor(ggraph, self.sorted_nodes[i-1], x)			
+				pos = positions[lca] + s_len			
+				
+				#if there is no edge between current node (x) and lca, walk longest path to determine pos				
+				if not ggraph.has_edge(lca, x):
+					#networkx has no longest path algorithm from source to target, so we manually choose the longest.								
+					longest = max(list(nx.all_simple_paths(ggraph, lca, x)), key=len)								
+					p_len = 0
+					#add all the node lengths inbetween LCA and current node
+					for y in longest[1:-1]:
+						p_len = p_len + len(ggraph.nodes[y]['sequence'])				
+
+					#now add sequence lengths of nodes between ancestor and current node
+					pos = pos + p_len
+
+				#done, add pos to dict				
+				positions[x] = pos
+			#If there is an edge from previous node in sorted list: just add length and update total
+			else:			
+				max_predecessor = max(ggraph.predecessors(x), key= lambda g: positions[g])		
+				mp_len = positions[max_predecessor]					
+				positions[x] = mp_len + s_len
+		
+		#defaultdict since there can be more than one node with same position (ex: SNPs)
+		out = defaultdict(list)
+		#now we reverse the dictionary and make sure it is sorted (it will already be sorted in majority of cases)
+		for k,v in sorted(positions.items(), key=lambda item: item[1]):
+			out[v].append(k)			
+		
+		return out
+
+	#returns true if node has an inversion
+	def has_inversion(self, n):
+		items = list(self.G.nodes[n].copy().items())
+		id_list = [x.decode("utf-8") for x in self.G.ids()]
+		for k,v in items:
+			if k.split('_')[0] in id_list:
+				if v<0:
+					return True
+		return False
+
+	#Extracts all possible sequences of length k that end at: endpoint = node endposition - right offset	
+	def extract_sequence_range(self, k, node, right_offset = 1, seq='', path=[]):
+		
+		#reverse complement function
+		comp = {65:84, 84:65, 71:67, 67:71}
+		rc = lambda s: s.upper()[::-1].translate(comp)		
+
+		node_seq = self.G.nodes[node]['sequence']
+		s_len = len(node_seq)
+		#bases to start not counting current base
+		bases_to_start = s_len-right_offset		
+
+		#if we won't reach start of node, just append current sequence and path to final results
+		if not (bases_to_start+1 < k):
+			final_seq = node_seq[(bases_to_start+1-k):bases_to_start+1] + seq
+			final_path = [node] + path			
+			self.tuples.append((final_seq, final_path))		
+			#if there is an inversion, need to append again with inversion included		
+			if self.has_inversion(node):
+				final_seq = rc(node_seq[(bases_to_start+1-k):bases_to_start+1]) + seq
+				final_path = [node+'*'] + path				
+				self.tuples.append((final_seq, final_path))	
+		#if we do reach the start with length to spare, call function again for each predecessor									
+		else:		
+			new_seq = node_seq[:bases_to_start+1] + seq			
+			new_path = [node] + path
+			for n in self.G.predecessors(node):						
+				self.extract_sequence_range(k-bases_to_start-1, n, 1, new_seq, new_path)
+				#if there is an inversion, need to create a new fork with inverted sequence for this node
+				if self.has_inversion(node):					
+					new_seq = rc(node_seq[:bases_to_start+1]) + seq			
+					new_path = [node+'*'] + path									
+					self.extract_sequence_range(k-bases_to_start-1, n, 1, new_seq, new_path)	
+		
+	
+	#This is a small helper function for index multiprocessing
+	def mp_helper(self, b):
+		pos_b = bisect.bisect_left(self.keys, b)
+		nodes_b = self.pos_d[self.keys[pos_b]]				
+		offset = self.keys[pos_b]-b
+		
+		for n in nodes_b:				
+			self.extract_sequence_range(self.k, n, offset+1)			
+
+		out = self.tuples
+		self.tuples = []
+
+		return out
 
 
+	def create_index(self, mp = False):
+		'''
+		Creates an index using fixed-sampling of kmers.
+		K-mer size = self.k
+		Gap between kmers = w = L-k+1
+		The index is default dictionary, with strings as keys and tuples as values.
+		Tuple contains position and path
+
+		{'sequence': (int position, ['node1', 'node2'])}
+		'''
+		w = self.L-self.k+1			
+		graph_length = self.keys[-1]+1
+		kmer_count = int((graph_length-self.L+1)/w)+1
+		kmer_dict = defaultdict(list)
+
+		#if multiprocessing is enabled, need to use helper function
+		if mp:
+			#list of input positions
+			b_list = [(self.L-1)+((j-1)*w)-1 for j in range(1, kmer_count+1)]			
+			p = Pool()
+			kmers_list = p.map(self.mp_helper, b_list)
+			p.close()
+			p.join()
+			for i,y in enumerate(kmers_list):
+				for t in y:
+					kmer_dict[t[0]].append((b_list[i], t[1]))
+			b = b_list[-1]
+			del kmers_list
+		else:		
+			for j in range(1, kmer_count+1):
+				b = (self.L-1)+((j-1)*w)-1										
+				pos_b = bisect.bisect_left(self.keys, b)
+				nodes_b = self.pos_d[self.keys[pos_b]]				
+				offset = self.keys[pos_b]-b
+
+				if j%100000==0:
+					print("Subgraph %i out of %i..."%(j, kmer_count+1))
+					print(b)
+				
+				for n in nodes_b:
+					self.extract_sequence_range(self.k, n, offset+1)
+					for t in self.tuples:						
+						kmer_dict[t[0]].append((b, t[1]))				
+					self.tuples = []	
+		
+		#k-mer at very end of graph needs to be added seperately if not already in
+		if graph_length-1 != b:	
+			b = graph_length-1			
+			pos_b = bisect.bisect_left(self.keys, b)
+			nodes_b = self.pos_d[self.keys[pos_b]]
+			offset = self.keys[pos_b]-b
+			
+			for n in nodes_b:
+					self.extract_sequence_range(self.k, n, offset+1)
+					for t in self.tuples:						
+						kmer_dict[t[0]].append((b, t[1]))				
+					self.tuples = []
+
+		print('indexing done\n')
+		self.index = kmer_dict		
+
+	def short_length(self, graph, node1, node2, pos_1, pos_2):
+		shortest_length = nx.shortest_path_length(graph, node1, node2, weight='weight')
+
+		#Now we need to modify length by adding bases to end of t1 node, then subtracting bases from t2 to end of t2 node
+		pos_t1 = bisect.bisect_left(self.keys, pos_1)					
+		t1_offset = self.keys[pos_t1]-pos_1
+
+		pos_t2 = bisect.bisect_left(self.keys, pos_2)					
+		t2_offset = self.keys[pos_t2]-pos_2
+
+		shortest_length = shortest_length + t1_offset - t2_offset	
+
+		return shortest_length
+
+
+	def shortest_distance2(self, t1, t2):
+
+		#filters out inversion naming 
+		i_filter = lambda s: s[:-1] if s[-1] == '*' else s
+		t1_first = i_filter(t1[-1][0])
+		t2_first = i_filter(t2[-1][0])
+		node_1 = i_filter(t1[-1][-1])
+		node_2 = i_filter(t2[-1][-1])
+
+		
+		#induce subgraph containing only nodes specified by kmer hits
+		hit_nodes = set([i_filter(n) for n in t1[-1] + t2[-1]])
+		#if only one node in set, just return diff in positions
+		if len(hit_nodes) == 1:
+			return t2[0] - t1[0]
+
+		subg = self.G.subgraph(list(hit_nodes))
+
+		#if there is a consistent path from start of t1 to start of t2 in subgraph:
+		#take shortest distance within subgraph (this prevents taking shorter routes not specified by k-mer hits)
+		if (nx.has_path(subg, t1_first, t2_first)):
+			s_len = 0
+			try:
+				s_len = self.short_length(subg, node_1, node_2, t1[0], t2[0])
+			except:
+				#should try removing this if check, it might add invalid paths
+				if not self.G.has_edge(node_1, node_2) and nx.has_path(self.G, t1_first, node_2):
+					try:
+						s_len = self.short_length(self.G, node_1, node_2, t1[0], t2[0])
+					except: 
+						s_len = float("inf")
+				else:
+					s_len = float("inf")
+			return s_len
+		#if no path from start to end, subgraph is disconnected, this is fine.
+		elif not nx.has_path(subg, t1_first, node_2):
+			s_len = 0
+			try:
+				s_len = self.short_length(self.G, node_1, node_2, t1[0], t2[0])
+			except:
+				s_len = float("inf")
+			return s_len
+		#if there is no path between first nodes and there is an edge between end nodes,
+		#these hits specify imcompatible paths, and thus they shouldnt be considered
+		#so we return a number that will never be smaller than bound
+		else:
+			return float("inf")
+
+
+	def add_weights(self):
+		#adds weights to graph edges, equal to sequence length of target node
+		for node in self.sorted_nodes:
+			for e in self.G.in_edges(node):
+				self.G[e[0]][e[1]]['weight'] = len(self.G.nodes[e[1]]['sequence'])
+
+	def calc_offset(self, p):
+		pos_b = bisect.bisect_left(self.keys, p)
+		offset = self.keys[pos_b]-p
+
+		return offset
+
+
+	def chain_kmers(self, hits, read_length = None, record = None, longest = None):
+
+		#POSSIBLE IMPROVEMENT:
+		#del from hits at same that you append to traversed
+		#that way dont have to iterate over traversed again
+
+		if record is None:
+			record = 0
+		#longest stores all chains that are equally the longest
+		if longest is None:
+			longest = defaultdict(list)	
+		
+		read_positions = list(hits.keys())
+		
+		j= read_positions[0]	
+
+		#start with first hit in potential chain
+		out = []
+		#second potential chain formed from hits not added to first chain
+		discarded = []
+		#list of nodes that have been traversed, Tuple (key, index of entry in value)
+		traversed = []	
+		
+		gap_counter = 1		
+		
+		index_max = read_length - self.k + 1	
+		t1 = hits[j][0]
+		old_j = j
+		traversed.append((j, 0))		
+		out.append((j, hits[j][0][0], hits[j][0][1]))
+
+	
+		while (j <= index_max):
+			if gap_counter > self.max_gaps:				
+				break			
+			
+			j = j+self.jump_size			
+			t2 = hits.get(j)
+
+			#if hits returned for kmer at position j in read:
+			#iterate over hits found at t2, adding the best viable hit found to the chain
+			#if no hits at all, or no viable hit, do nothing but add to gap_counter
+			if t2:
+				viable = []
+				for i, t in enumerate(t2):
+					if (t[0] > t1[0]):
+						#l_dist = t[0]-t1[0]
+						#if (j-old_j)-self.chain_bound < l_dist < (j-old_j)+self.chain_bound:
+							#viable.append((i, l_dist))
+						#else:
+						s_dist =  self.shortest_distance2(t1, t)						
+						if (j-old_j)-self.chain_bound < s_dist < (j-old_j)+self.chain_bound:						
+							viable.append((i, s_dist))
+				if viable:
+					if len(viable) == 1:
+						i = viable[0][0]
+						t1 = hits[j][i]
+						old_j = j
+						traversed.append((j, i))
+						
+						out.append((j, hits[j][i][0], hits[j][i][1]))
+						del hits[j][i]
+						if not hits[j]:
+							del hits[j]
+						
+
+						gap_counter = 0
+					#if more than one viable hit, take one closest to jump size						
+					else:
+						best = min(viable, key=lambda tup: abs(self.jump_size-tup[0]))
+						i = best[0]
+						t1 = hits[j][i]
+						old_j = j
+						traversed.append((j, i))
+						
+						out.append((j, hits[j][i][0], hits[j][i][1]))
+						del hits[j][i]
+						if not hits[j]:
+							del hits[j]
+						
+
+						gap_counter = 0
+						
+				else:
+					gap_counter += 1
+			else:
+				gap_counter += 1
+
+		#deleting first entry now since we are done accessing hits
+		j = read_positions[0]
+		i = 0			
+		del hits[j][i]
+		if not hits[j]:
+			del hits[j]
+
+		out_start_pos = out[0][1]
+		out_end_pos = out[-1][1]
+
+		#The following commented code is for adding a path check before joining chains together
+		#idea is to only join them together if they lie on same path
+		#out_nodes = set()
+		#for t in out:
+			#out_nodes.add(set([n for n in t[1]]))
+
+
+		#Now we check if current chain overlaps with any chains in longest.
+		#I.e. the chains can be combined into a longer chain	
+		#we iterate through chains starting at the longest one
+		#if we find an overlapping chain: join chains and then stop
+		if bool(longest):
+			for k,v in sorted(longest.items(), key = lambda t: t[0]):
+				#only join chains once
+				#if joined:
+					#break
+
+				#short read variation: < self.W*2+1
+				if len(v) == 1:				
+					#checking if they overlap, i.e. start or end positions within read_len from each other					
+					if abs(out_start_pos - v[0][0][1]) < int(read_length/2) or abs(out_end_pos - v[0][-1][1]) < int(read_length/2):
+						#would check here if they lie on same path
+						out = out + v[0]
+						#joined = True											
+						del longest[k]
+											
+				elif len(v) > 1:
+					for i,c in enumerate(v):						
+						#checking if they overlap, i.e. start or end positions within read_len from each other
+						if abs(out_start_pos - c[0][1]) < int(read_length/2) or abs(out_end_pos - c[-1][1]) < int(read_length/2):
+							#would check here if they lie on same path
+							out = out + c
+							#joined = True																																
+							del longest[k][i]
+							if not longest[k]:
+								del longest[k]							
+					
+											
+			#sort by positions
+			out = sorted(out, key = lambda t: t[0])
+			
+		
+		chain_length = len(out)
+		if chain_length >= record:
+			record = chain_length				
+			longest[chain_length].append(out)
+		
+		#if a potentially longer chain can be formed, run again
+		c_traversed = len(traversed)
+		c_keys = len(hits.keys())
+		#if c_keys+c_traversed >= record and c_keys  > 0:
+		if c_keys+c_traversed >= record and c_keys > 0:					
+			return self.chain_kmers(hits, read_length, record, longest)
+		else:
+			chain_lengths_sorted = sorted(longest.keys())
+			first = chain_lengths_sorted[-1]
+			out = longest[first]
+			'''
+			if len(chain_lengths_sorted) > 2:
+				second = chain_lengths_sorted[-2]
+				if first-second < 2:				
+					out = out + longest[second]						
+			'''
+			
+			#return longest, aka entry with highest key value.
+			#if second longest chain only 1 less in length, return that also
+			return out
+
+	#maps one read (string) to reference kmer index
+	def map_read(self, r, do_print = None):
+		if do_print is None:
+			do_print = False		
+		
+
+		r_len = len(r)
+		#read kmers:
+		r_kmers = [r[i:i+self.k] for i in range(r_len-self.k+1)]		
+	
+		
+		hits = defaultdict(list)
+		for i, s in enumerate(r_kmers):
+			if self.index.get(s):
+				for t in self.index.get(s):
+					hits[i].append((t[0], t[1]))
+
+		if do_print:
+			print(hits)
+			print()		
+
+		if hits:		
+			
+			chains = self.chain_kmers(hits = hits, read_length = r_len)				
+
+			if do_print:				
+				print(chains)
+				print()
+
+			#now we have a list containing the one or more chains with the longest length
+			#now we extract paths
+			paths = []
+			for c in chains:
+				path = set()
+				for t in c:
+					for n in t[2]:
+						path.add(n)
+				paths.append(list(path))			
+				
+			end_hits = [c[-1] for c in chains]
+
+			if do_print:
+				print(paths)
+				print()						
+
+			#this end position calculation isnt 100% accurate
+			#it just adds to position number, without account for indel events
+			#to fix it: check if adding (len(r_kmers)-1-t[0]) reaches the end of the node in end_hits
+			#if it does, you need to consider the nodes successors, and their positions	
+			end_positions = [t[1]+len(r_kmers)-1-t[0] for t in end_hits]			
+
+			if do_print:				
+				print(list(zip(end_positions, paths)))
+				print("----------------")
+			out = list(zip(end_positions, paths))
+
+			#filtering out identical multimaps
+			pos_set = set()
+			to_del = set()			
+			for i,t in enumerate(out):
+				if t[0] in pos_set:
+					to_del.add(i)
+				else:
+					pos_set.add(t[0])
+
+			filtered = [out[i] for i in range(len(out)) if i not in to_del]
+
+			return filtered
+		else:			
+			return None
+		
+
+	def map_read_mp(self, r):
+		result = self.map_read(r)
+		if result:
+			return [t for t in result]
+		else:
+			return None
+
+	def map_fastqa(self, fastq_file = None, fasta_file = None, mp = None, read_max = None, write = False):
+		if mp is None:
+			mp = False
+
+		#adding weights to graph (used in chaining algo)			
+		self.add_weights()		
+		#get read list from fastq (jsut take odd numbered = pos strand)
+		read_list = []
+		
+		if fastq_file:
+			with open(fastq_file) as f:
+				c = 0
+				for x in f:
+					if read_max:
+						if c >= read_max*8:
+							break
+					if c%8 == 0:
+						name = x.strip()[1:]
+					if c%8 == 1:
+						read = x.strip()
+						read_list.append(read)
+					c+=1
+				f.close()
+
+		elif fasta_file:
+			with open(fasta_file) as f:
+				c = 1
+				read_counter = 0
+				for x in f:			
+					if read_counter >= read_max:
+						break
+					if c%2 == 1:
+						name = x.strip()[1:]
+					if c%2 == 0:
+						read = x.strip()
+						read_list.append(read)				
+					c+=1
+				f.close()
+		else:
+			print("No Fastq or Fasta file found")
+			return	
+	
+		#doing the mapping
+		if mp:						
+			p = Pool()
+			results = p.map(self.map_read_mp, read_list)
+			p.close()
+			p.join()
+		else:
+			for r in read_list:				
+				result = self.map_read(r)			
+
+				if result:			
+					results.append([t for t in self.map_read(r)])
+				else:
+					results.append(None)		
+	
+		return results
