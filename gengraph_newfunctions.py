@@ -1164,6 +1164,7 @@ def calc_GC(a_sequence):
 
 	return gc_perc
 
+
 def hash_seq(a_sequence):
 
 	import hashlib
@@ -1204,7 +1205,7 @@ def char_encode(a_sequence, encode_dict):
 	return 'dvdjvjvf'
 
 
-def create_freagment_similarity_table(sequence_file, window_size, step_size):
+def create_fragment_similarity_table(sequence_file, window_size, step_size):
 
 	from gengraph import input_parser
 	import pandas as pd
