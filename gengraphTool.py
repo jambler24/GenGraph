@@ -138,7 +138,7 @@ if __name__ == '__main__':
 
 		refine_initGraph(genome_aln_graph)
 
-		add_missing_nodes(genome_aln_graph, parsed_input_dict)
+		add_missing_nodes(genome_aln_graph)
 
 		nx.write_graphml(genome_aln_graph, 'intermediate_Graph.xml')
 

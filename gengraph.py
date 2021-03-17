@@ -1426,40 +1426,79 @@ def export_to_fasta(sequence, header, filename):
 # ---------------------------------------------------- Graph generating functions
 
 
-def add_missing_nodes(a_graph, input_dict):
+def add_missing_nodes(a_graph):
+	"""
+	This function looks for any regions that are not represented as a node in the graph. It then creates a node to fill
+	that gap.
+	:param a_graph: graph object
+	:return:
+	"""
+	current_node_prefix = 'Aln'
 
 	from operator import itemgetter
 
-	logging.info(input_dict[1].keys())
-
+	# Get list of all isolates
 	iso_list = a_graph.graph['isolates'].split(',')
+	isolate_count = 1
 
 	for isolate in iso_list:
 
-		isolate_Seq = input_parser(input_dict[1][isolate])
-		isolate_Seq = isolate_Seq[0]['DNA_seq']
-
+		# Get a list of all the nodes belonging to this isolate
 		isolate_node_list = []
 		for node, data in a_graph.nodes(data=True):
 			if isolate in data['ids'].split(','):
 				isolate_node_list.append(node)
 
+		# Create list of tupples with the node start and end points. These are converted to positive values for sorting
 		presorted_list = []
 		for a_node in isolate_node_list:
 			presorted_list.append((a_node, abs(a_graph.nodes[a_node][isolate + '_leftend']), abs(a_graph.nodes[a_node][isolate + '_rightend'])))
+
+			# Check to make sure the convention of the node start value (leftend) being less than the end (rightend) value
 			if abs(a_graph.nodes[a_node][isolate + '_leftend']) > abs(a_graph.nodes[a_node][isolate + '_rightend']):
 				logging.warning('problem node' + str(a_node))
 				logging.warning(a_graph.nodes[a_node][isolate + '_leftend'])
 
+		# Sort the list of all the nodes
 		sorted_list = sorted(presorted_list, key=itemgetter(1))
+
+		# Check to see if there is a start / stop node missing.
+
+		if sorted_list[0][1] != 1:
+			print('Start node missing for:', isolate)
+
+			# Node data dict
+			new_node_dict = {
+				isolate + '_leftend': 1,
+				isolate + '_rightend': sorted_list[1][1] - 1,
+				'ids': isolate
+			}
+			# Node name taken from last node + isolate_count to make sure no nodes with the same name are created
+			# Need to find the last node globally
+			node_ID = current_node_prefix + "_" + str(int(sorted(list(a_graph.nodes))[-1].split('_')[1]) + isolate_count)
+
+			att_node_dict = {node_ID: new_node_dict}
+
+			print('New node created', att_node_dict)
+
+			# Add the node
+			a_graph.add_node(node_ID)
+			# Add the node data
+			nx.set_node_attributes(a_graph, att_node_dict)
+
 
 		count = 0
 
 		while count < len(sorted_list) - 1:
 
+			# Check to see if there is a gap between the end of the current node and the start of the next one?
+			#TODO: Write a check here to detect problems where nodes are overlapping in strange ways
 			if sorted_list[count][2] != sorted_list[count + 1][1] - 1:
-				new_node_dict = {isolate + '_leftend':sorted_list[count][2] + 1, isolate + '_rightend':sorted_list[count + 1][1] - 1, 'ids':isolate}
-				new_node_dict['sequence'] = isolate_Seq[sorted_list[count][2]:sorted_list[count + 1][1] - 1]
+				new_node_dict = {
+					isolate + '_leftend':sorted_list[count][2] + 1,
+					isolate + '_rightend':sorted_list[count + 1][1] - 1,
+					'ids':isolate
+				}
 
 				node_ID = isolate + "_" + str(count)
 				att_node_dict = {node_ID: new_node_dict}
@@ -1468,6 +1507,8 @@ def add_missing_nodes(a_graph, input_dict):
 				nx.set_node_attributes(a_graph, att_node_dict)
 
 			count += 1
+
+		isolate_count += 1
 
 
 def node_check(a_graph):
