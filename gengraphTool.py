@@ -185,7 +185,9 @@ if __name__ == '__main__':
 			make_circular(genome_aln_graph, args.make_circular)
 			print('Graph circularised')
 
+		# Do the recreate check to see if the original sequence is correctly recalled from the graph
 		if args.rec_check:
+			print('Doing recreate check')
 			seq_recreate_check(genome_aln_graph, parsed_input_dict)
 
 		# Saving output

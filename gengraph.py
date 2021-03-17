@@ -1463,19 +1463,21 @@ def add_missing_nodes(a_graph):
 		sorted_list = sorted(presorted_list, key=itemgetter(1))
 
 		# Check to see if there is a start / stop node missing.
-
 		if sorted_list[0][1] != 1:
 			print('Start node missing for:', isolate)
+			print(sorted_list[0])
+			print(sorted_list[1])
 
 			# Node data dict
 			new_node_dict = {
 				isolate + '_leftend': 1,
-				isolate + '_rightend': sorted_list[1][1] - 1,
+				isolate + '_rightend': sorted_list[0][1] - 1,
 				'ids': isolate
 			}
 			# Node name taken from last node + isolate_count to make sure no nodes with the same name are created
 			# Need to find the last node globally
-			node_ID = current_node_prefix + "_" + str(int(sorted(list(a_graph.nodes))[-1].split('_')[1]) + isolate_count)
+			#node_ID = current_node_prefix + "_" + str(int(sorted(list(a_graph.nodes))[-1].split('_')[1]) + isolate_count)
+			node_ID = current_node_prefix + "_" + isolate
 
 			att_node_dict = {node_ID: new_node_dict}
 
@@ -2628,20 +2630,42 @@ def local_node_realign_new(in_graph, node_ID, seq_fasta_paths_dict):
 
 def seq_recreate_check(graph_obj, input_dict):
 	for isolate in input_dict[1].keys():
+
+		# Check the node start and stops
+
+		# Get a list of all the nodes belonging to this isolate
+		isolate_node_list = []
+		for node, data in graph_obj.nodes(data=True):
+			if isolate in data['ids'].split(','):
+				isolate_node_list.append(node)
+
+		# Create list of tupples with the node start and end points. These are converted to positive values for sorting
+		presorted_list = []
+		for a_node in isolate_node_list:
+			presorted_list.append((a_node, abs(graph_obj.nodes[a_node][isolate + '_leftend']), abs(graph_obj.nodes[a_node][isolate + '_rightend'])))
+
+		# Sort the list
+		sorted_list = sorted(presorted_list, key=itemgetter(1))
+
+		# inspect to make sure none are missing
+		print('Checking for missing nodes')
+		count = 0
+		while count < len(sorted_list) - 1:
+
+			# Check to see if there is a gap between the end of the current node and the start of the next one?
+			if sorted_list[count][2] != sorted_list[count + 1][1] - 1:
+				print(sorted_list[count])
+				print(sorted_list[count + 1])
+
+			count += 1
+
+
+
 		extracted_seq = extract_original_seq(graph_obj, isolate)
 		original_seq_from_fasta = input_parser(input_dict[1][isolate])
 
-		count = 0
 
-		while count < len(extracted_seq):
-			if extracted_seq[count] != original_seq_from_fasta[0]['DNA_seq'][count]:
-				logging.warning(count)
-				logging.warning(extracted_seq[count])
-				logging.warning(original_seq_from_fasta[0]['DNA_seq'][count])
-				logging.warning(extracted_seq[count-10:count + 10])
-				logging.warning(original_seq_from_fasta[0]['DNA_seq'][count-10:count + 10])
-			count += 1
-
+		print('Comparing extracted sequences')
 
 		if extracted_seq.upper() == original_seq_from_fasta[0]['DNA_seq'].upper():
 			logging.info('Sequence recreate pass')
