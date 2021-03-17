@@ -1932,7 +1932,7 @@ def make_circular(graph_obj, seq_name):
 	return graph_obj
 
 
-def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, threshold=1.0, return_dict=False, simmilarity_measure='percentage'):
+def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, threshold=1.0, return_dict=False, similarity_measure='percentage'):
 	'''Retrieve the nodes from a graph spanning a region'''
 
 	print(start_pos, stop_pos)
@@ -1959,7 +1959,6 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 		if reference_name in data['ids'].split(','):
 
 			if int(data[node_leftend_label]) > 0:
-				#print 'positive'
 				if abs(int(data[node_leftend_label])) <= int(start_pos) <= abs(int(data[node_rightend_label])):
 					start_node = node
 					print('Ping')
@@ -2066,12 +2065,12 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 
 	# Calculating percentage similarity
 
-	if simmilarity_measure == 'percentage':
+	if similarity_measure == 'percentage':
 
 		for a_isolate in graph_isolate_list:
 			iso_sim_score_dict[a_isolate] = float(iso_sim_dict[a_isolate] - iso_diff_dict[a_isolate]) / float(iso_sim_dict[reference_name])
 
-	if simmilarity_measure == 'levenshtein':
+	if similarity_measure == 'levenshtein':
 
 		levenshtein(seq_1, seq_2)
 
@@ -2616,6 +2615,7 @@ def seq_recreate_check(graph_obj, input_dict):
 			logging.error(extracted_seq[:10])
 			logging.error(original_seq_from_fasta[0]['DNA_seq'][:10])
 			recreate_check_result = 'Fail'
+			print('Sequence recreate fail for isolate:', isolate)
 
 
 def add_graph_data(graph_obj):
@@ -3122,5 +3122,151 @@ def generate_graph_report(in_graph, out_file_name):
 
 # Break down into k-mers to either create a hash table, or to create de-bruijn graphs.
 
+
+
+
+
+
+
+# --------------------------------------------------------------- PanGenome related ---------------------------------------------------------------
+
+
+
+def extract_anno_pan_genome_csv(graph_obj, gtf_dict, out_file_name, refseq='', sim_threshold=1.0):
+
+	isolate_list = gtf_dict.keys()
+
+
+
+	added_list = []
+
+	outfile_obj = open(out_file_name + 'anno.csv', 'w')
+
+	csv_header = 'gene'
+
+	# Create header for csv file
+
+	for iso in isolate_list:
+		csv_header = csv_header + ',' + iso
+
+	csv_header = csv_header + '\n'
+
+	outfile_obj.write(csv_header)
+
+	for isolate in isolate_list:
+		gtf_lol = input_parser(gtf_dict[isolate], parse_as='gtf')
+		timer = 0
+
+		# For each gene for this isolate, see which other isolates have the same sequence
+
+		for entry in gtf_lol:
+
+			# For this gene for this isolate
+			#print entry
+
+			if entry[2] == 'gene':
+
+				# Entries that are genes
+
+				print(entry)
+
+				found_in_list = check_isolates_in_region(graph_obj, entry[3], entry[4], isolate, threshold=sim_threshold, return_dict=False)
+
+				if abs(int(entry[4])) < abs(int(entry[3])):
+					logging.info(entry)
+				# this gene, is also found in these isolates
+				logging.info(found_in_list)
+
+				if len(list(set(found_in_list) & set(added_list))) < 1:
+					line_str = csv_header
+
+					logging.info(entry[8].keys())
+
+					if 'locus_tag' in entry[8].keys():
+						curr_gene = entry[8]['locus_tag']
+
+
+					logging.info(curr_gene)
+
+					logging.info(line_str)
+					#line_str = line_str.replace('gene',curr_gene)
+					line_str = line_str.replace(isolate,curr_gene)
+					line_str = line_str.replace('gene',curr_gene)
+					logging.info(line_str)
+
+					#print 'here we get the other iso annotations'
+
+					for found_iso in found_in_list:
+
+						found_iso = str(found_iso)
+
+						#print '------'
+						#print entry
+						#print isolate
+						#print str(found_iso)
+
+						#print convert_coordinate(graph_obj, 100029, isolate, 'CDC1551')
+
+						#new_coord_dict = convert_coordinates(graph_obj, entry[3], entry[4], isolate, str(found_iso))
+
+						left_pos = convert_coordinate(graph_obj, entry[3], isolate, str(found_iso))
+
+						right_pos = convert_coordinate(graph_obj, entry[4], isolate, str(found_iso))
+
+						#print 'the pos list'
+						logging.info('new pos')
+						logging.info(left_pos, right_pos)
+						#print 'old pos'
+						#print entry[3], entry[4]
+
+						iso_gtf_lol = input_parser(gtf_dict[found_iso])
+
+						#print iso_gtf_lol
+
+						#print found_iso
+
+						if left_pos != 'pos not found' and right_pos != 'pos not found':
+							homo_gene = get_anno_from_coordinates(iso_gtf_lol, left_pos[str(found_iso)], right_pos[str(found_iso)], 10)
+
+							logging.info('gene found!!')
+							logging.info(homo_gene)
+							logging.info(found_iso)
+
+							line_string_list = line_str.split(',')
+							for n,i in enumerate(line_string_list):
+								if str(i).replace('\n','') == found_iso:
+									logging.info('yes')
+									line_string_list[n] = homo_gene
+
+							line_str = ','.join(line_string_list)
+							logging.info('line string')
+							logging.info(line_str)
+						else:
+
+							line_str = line_str.replace(found_iso, 'partial')
+
+
+					for remaining_iso in isolate_list:
+						line_string_list = line_str.split(',')
+						for n,i in enumerate(line_string_list):
+							if i.replace('\n','') == remaining_iso:
+								line_string_list[n] = '0'
+						line_str = ','.join(line_string_list)
+
+					logging.info('NB OUT --------------------------------------------')
+					logging.info(line_str)
+
+					timer += 1
+
+					if line_str[-2:] != '\n':
+						line_str = line_str + '\n'
+
+					logging.info('Writing line')
+					logging.info(line_str)
+
+					outfile_obj.write(line_str)
+
+
+		added_list.append(isolate)
 
 
