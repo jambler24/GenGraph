@@ -1,5 +1,11 @@
 # This is where new untested functions sit until ready for deploy
 import itertools
+import gengraph as geng
+import numpy as np
+from scipy.stats import rankdata as rd
+import pandas as pd
+import os
+from multiprocessing import Pool, cpu_count
 
 # --------------------- PanGenome related
 
@@ -1281,3 +1287,411 @@ def global_align_by_composition(sequence_file):
 
 
 	return 'k'
+
+#----------------------------------------------------------------------------------------------------------------
+#Phillip code
+#Alignment Functions
+
+def simpleIsSmaller(x, y):
+	"""
+	Small helper function for suffix_array_skew. Lexicographic comparison for strings of length <= 2.
+	:x: First string being compared.
+	:y: Second string.
+	:return: Boolean, True if x < y, False otherwise.
+	"""	
+	if x[0] < y[0]:
+		return True
+	elif (x[0] == y[0] and x[1] < y[1]):		
+			return True		
+	return False
+
+
+def suffix_array_skew(s, check = False):
+	"""
+	Skew algorithm for linear time suffix array construction, courtesy of Juha Karkkainen and Peter Sanders.
+	Notes referenced: http://www.mi.fu-berlin.de/wiki/pub/ABI/SS13Lecture3Materials/script.pdf
+	:s: String or numpy char array that suffix array is being constructed from.	
+	:check: True if array contains integers (ranks), False if strings. There is probably a smarter way to do this.
+	:return: Suffix array of s.
+	"""
+	n = len(s)
+	#Checks if s is a string, if so convert to numpy char array. Adds stop characters.
+	if (isinstance(s, str)):	
+		s = s + "$$$"
+		s = np.char.array([x for x in s])
+	else:
+		s = np.concatenate((s, np.array([-1,-1,-1])), axis=0)	
+	
+	#parameters used later in algorithm.
+	n0 = int((n+2)/3)
+	n1 = int((n+1)/3)
+	n2 = int(n/3)
+	n02 = n0+n2
+	#starting position of substrings of length = 3, where T[i,i+1,i+2] with i != 0 (mod 3).
+	#Basically all 3-mers, but only if start position of 3-mer is not divisible by 3.
+	triple_positions = np.array([x for x in range(1, n+(n0-n1)) if x%3 != 0])
+
+	#Functions for retrieving triples from array.
+	if not (check):
+		y = lambda a: (s[a:a+3])
+	else:
+		y = lambda a: [int(x) for x in (s[a:a+3])]
+
+	#Using pandas to retrieve the rankings (lexicographic) of the triples. Conserves order of original array.
+	#Ties are allowed and ranking starts at 0. For example: Rankings = [0,1,1,0,0]
+	triples = pd.DataFrame.from_records(np.array([y(r) for r in triple_positions]))		
+	cols = triples.columns.tolist()	
+	triples = (triples[cols].apply(tuple, axis=1).rank(method="dense").astype(int)).values-1
+
+	#This is just re-ordering the ranking array. Required for recursion.
+	#Thus: T = triples starting at i%3 == 1, and triples starting at i%3 == 2.	
+	t1 = triples[::2]
+	t2 = triples[1::2]
+	T = np.concatenate((t1,t2), axis = 0)
+
+	#if ranking names are not unique (ties): recursively call algorithm again, else we can calc suffix array of T.	
+	if not (np.unique(T).size == T.size):			
+		print(n0)
+		T = suffix_array_skew(T, True)			
+		suff = [1+3*x if x < n0 else 2+3*(x-n0) for x in T]			
+	else:
+		#construct suffix array of T
+		#value of triples = new index of values of triple_positions at same index		
+		n_trip = len(triples)
+		suff = [0]*n_trip		
+		for i in range(n_trip):
+			suff[triples[i]] = triple_positions[i]				
+
+	#inducing last third of suffixes (those with starting position i%3==0), and sorting them.
+	d0 = {x-1: s[x-1] for x in suff if x%3 == 1}	
+	d_sorted = {k: v for k, v in sorted(d0.items(), key=lambda item: item[1])}	
+	suff2 = list(d_sorted.keys())	
+
+	#We are storing the indices of the triples in triple_positions.
+	t = lambda a: int((a-1)/3) if a%3==1 else int((a-1)/3) + n0		
+	for i in range(n02):
+		triple_positions[t(suff[i])] = i
+
+	#now merge suff and suff2 into one suffix array
+	#renaming terms to keep in line with notes (so its easier to understand following code if you reference notes)
+	a0, a12, og_s, n, n0, ind = suff2, suff, s, n, int((n+2)/3), triple_positions
+
+	#u, v = maximum values for pointers iterating over a0 and a12
+	u = len(a0)
+	v = len(a12)
+	#defining inverse function, inverse of a12, such that inv(a12(i)) = i
+	r12 = lambda a: ind[int((a-1)/3)] if (a%3==1 and a < n) else (ind[int((a-1)/3) +n0] if a < n else 0)
+
+	#x = pointer for a0
+	x = 0
+	#y = pointer for a12. Skip first value of 12 if n%3 == 1
+	if n%3 == 1:
+		y = 1
+	else:
+		y = 0
+
+	out = []
+	#iterating over a0 and 12.
+	while (x < u) and (y < v):
+		i = a0[x]
+		j = a12[y]			
+		#see notes for details. this code determines if i or j should be appended to suffix array first.
+		if j%3 == 1:
+			if (og_s[i] < og_s[j]) or (og_s[i] == og_s[j] and r12(i+1) < r12(j+1)):				
+				out.append(i)
+				x += 1
+			else:											
+				out.append(j)
+				y += 1
+		else:
+			t1 =  og_s[i:i+2]
+			t2 =  og_s[j:j+2]
+
+			if (simpleIsSmaller(t1,t2)) or ((np.array_equal(t1, t2)) and r12(i+2) < r12(j+2)):
+				out.append(i)
+				x += 1
+			else:
+				out.append(j)
+				y += 1
+	#appending the remaining suffixes.
+	for e in range(x, u):
+		out.append(a0[e])
+	for f in range(y, v):
+		out.append(a12[f])
+
+	final_suff = out
+	return final_suff	
+
+def bin_search(T, sa, q_list):
+	"""
+	Simple binary search algorithm to find exact matches using suffix arrays.
+	Prints out locations of exact matches for each query.
+	:param T: Text being searched
+	:param sa: Suffix array of text
+	:param q_list: List containing query sequences as strings. Ex: ["ATGTC","GTGTCA"]
+	"""
+	sa_len = len(sa)
+	#starting location for binary search = middle.
+	current_p = int(sa_len /2)	
+
+	#iterating over list of queries.
+	for q in q_list:
+		print("-------------------")
+		print(q)
+		l = len(q)
+		#Starting range = entire array
+		max_p = len(sa)
+		min_p = 0
+
+		#does search until min and max are equal
+		while (abs(max_p-min_p)>1):
+			#c_suff = current suffix being compared (extracted from T)
+			c_suff = T[sa[current_p]:]
+			#r = string being compared to q, same length
+			r = c_suff[:l]		
+
+			#if string matches prefix of suffix: print location of this suffix, and
+			#extend upwards and downwards for additional exact matches (since suffix array is sorted all matches will be neighbours)
+			if q == r:								
+				print(sa[current_p])
+				#move up while matches hit and print match locations
+				temp_p = current_p+1				
+				while (temp_p < sa_len):														
+					r = T[sa[temp_p]:][:l]
+					if q == r:
+						print(sa[temp_p])
+						temp_p += 1
+					else:
+						break
+				#move down while matches hit and print match locations
+				temp_p = current_p-1
+				while(temp_p > -1):										
+					r = T[sa[temp_p]:][:l]
+					if q == r:
+						print(sa[temp_p])
+						temp_p -= 1
+					else:
+						break
+				break
+
+			#If query is smaller: make current position the maximum of new search range. 
+			elif q < r:				
+				max_p = current_p
+				current_p = int((max_p+min_p)/2)
+			#If query bigger: make current position minimum of new search range.
+			elif q > r:				
+				min_p = current_p
+				current_p = int((max_p+min_p)/2)
+
+
+def exact_match(graph, genome_name, query_list):
+	"""
+	Prints locations (in linear sequence of specific genome) of exact matches with list of queries, using suffix arrays of reference.
+	This could be used for finding initial seeds for a seed-and-extend approach to alignment.
+	This should later be changed to return some dictionary or list containing the locations.
+	:param graph: GenGraph graph object
+	:param genome_name: Name of genome of interest as string. Ex: "Beijing"
+	:param query_list: List containing query sequences as strings. Ex: ["ATGTC","GTGTCA"]
+	"""
+	print("loading graph, extracting seq")	
+	T = geng.extract_original_seq(graph, genome_name)
+	T_array = np.array([x for x in T])
+	print("seq extracted")
+	#this prevents command prompt from freezing (in windows this is a problem when code takes >5 minutes to run)
+	os.environ['FOR_DISABLE_CONSOLE_CTRL_HANDLER'] = '1'
+	print("Calculating suffix array of seq (this will take a while, +- 5-10 mins):")
+	sa = suffix_array_skew(T_array)
+	del T_array
+	print("Suffix array done, starting exact match search: ")
+	bin_search(T, sa, query_list)
+
+#Functions for inexact match following BWA backward search algorithm
+#Algorithm can be found here https://academic.oup.com/bioinformatics/article/25/14/1754/225615
+#Authors: Heng Li, Richard Durbin
+
+def bwt_from_sa(T, sa):
+	"""
+	Calculates Burrows Wheeler transform from Text and Suffix array.
+	:param T: Input text
+	:param sa: Suffix Array of T
+	:return: BWT(text), string.
+	"""
+	bw = []
+	for s in sa:
+		if s == 0:
+			bw.append('$')
+		else:
+			bw.append(T[s-1])
+	return ''.join(bw)
+
+def BWT_sa(text):
+	"""
+	Calculates Burrows Wheeler transform from Text.
+	:param text: Input text
+	:return: BWT(text), string.
+	"""
+	text = text + "$"	
+	input_array = np.array([x for x in text])
+	sa = suffix_array_skew(input_array)
+	b  = bwt_from_sa(text, sa)
+	del sa
+
+	return b
+
+def calc_FM_index(B):
+	"""
+	Calculates FM index and offset array. Offset array = c. c[a] = number of characters smaller than a in text.
+
+	:param B: Burrows-Wheeler transform of a string.
+	:return: (FM index, c), Tuple containing 2D integer numpy array, and 1D integer numpy array.
+	"""
+	set_b = set(B)
+	len_b = len(B)
+	alphabet_size = len(set_b)
+	alph_temp = {a:0 for a in set_b}
+	d = {k: v for k, v in sorted(alph_temp.items(), key=lambda item: item[0])}			
+	fm = np.zeros((len_b, alphabet_size), dtype= np.uint32)	
+
+	#FM index calc
+	for i in range(len_b):
+		d[B[i]] += 1		
+		fm[i,] = list(d.values())	
+	
+	c = np.zeros(alphabet_size, dtype=np.uint32)
+	#Offset array calc	
+	for i in range(1, alphabet_size):		
+		c[i] = sum(fm[-1,:i])	
+	
+	return (fm, c)
+
+def InexRecur(W,i,z,k,l, D, c, fm, insertion_penalty = 1, deletion_penalty = 1):
+	"""
+	Recursive function used by inexact_match algorithm.
+
+	:param W: Substring being search for
+	:param i: Current index of W being compared. Since this is a backward search, i starts at end of W.
+	:param z: Mismatches, starts at max differences, and gets reduced each time mismatch is found.
+	:param k: Initial floor of search range
+	:param l: Initial ceiling of search range
+	:param D: Array of size |W|, used to prune search tree and reduce amount of comparisons.
+	:param fm: FM-index of text being searched.
+	:param insertion_penalty: Difference score for an insertion, can be tweaked to reflect biological mutation rates. Default = 1.
+	:param deletion_penalty: Difference score for a deletion, can be tweaked to reflect biological mutation rates. Default = 1.
+
+	:return: Set of suffix array indices which contain matches.
+	"""
+	tempset = set()
+	
+	#D[i] = 0 if i < 0, else D[i]. Pruning search.
+	if (i < 0):
+		maxDifferences = 0
+	else:
+		maxDifferences = D[i]
+
+	#Base cases for recursion, stops if z (mismatches) or i (index) reach allowed minimum.
+	#Return empty if maxDifferences have been reached, i.e. no match.
+	if (z < maxDifferences):		
+		return set()
+	#i < 0 implies we have backward searched through whole query. We are done, return range k->l+1.
+	if i < 0:	
+		for m in range(k,l+1):
+			tempset.add(m)								
+		return tempset
+
+	result = set()
+	#if insertions allowed, add results from searching i-1, with insertion penalty added.
+	result = result.union(InexRecur(W, i-1, z-insertion_penalty, k, l, D, c, fm))
+
+	order = {'$':0, 'A':1,'C':2,'G':3,'T':4}
+	t = lambda y: order[y]	
+
+	#If W[i] matches b (characters: $,A,C,G,T), go to next letter without mismatch penalty. Else add mismatch penalty.
+	for b in list(order.keys())[1:]:
+		#New search range, changing k (floor) and l (ceiling)
+		#fm[i] = 0 for i < 0, hence the two if statements.
+		if (k-1 < 0):
+			newMin = c[t(b)] + 1
+		else:
+			newMin = c[t(b)] + fm[k-1, t(b)] + 1
+		if (l < 0):
+			newMax = c[t(b)] 
+		else:
+			newMax = c[t(b)] + fm[l, t(b)]		
+
+		if newMin <= newMax:				
+			result = result.union(InexRecur(W, i, z-deletion_penalty, newMin, newMax, D, c, fm))
+			if b == W[i]:
+				#Match found - go to next letter			
+				result = result.union(InexRecur(W, i-1, z, newMin, newMax, D, c, fm))
+			else:
+				#No Match found - go to next letter but substract one from max differences allowed.				
+				result = result.union(InexRecur(W, i-1, z-1, newMin, newMax, D, c, fm))
+
+	return result
+
+
+def inexact_search(X, W, z):
+	"""
+	Basic implementation of inexact match algorithm found in BWA, accounting for mismatches/substitutions, as well as insertions + deletions.
+	Courtesy of Heng Li and Richard Dubin. Paper found here: https://academic.oup.com/bioinformatics/article/25/14/1754/225615
+	This implementation is complete but slow. The full BWA algorithm uses various heuristics and tricks to reduce computation time.
+	One rather easy improvement would be to implement seeding. This can be done by writing a function which considers the first m characters of a query only.
+	Where m = seed length. Then allow only up to n differences for the seed. Then only align the full reads which have seeds that find matches are aligned.
+	
+	:param X: Text (genome sequence) being searched
+	:param W: Query. Substring (read sequence) being searched for (aligned/mapped)
+	:param z: Maximum amount of mismatches being allowed for (substitutions, indels)
+	:return: Set containing indices of Suffix Array that match query.
+	"""
+	#Preprocessing steps. 
+	#Using multiprocessing to calculate BWT of Text and Reversed Text simultaneously.
+	p = Pool(cpu_count())
+	data = p.map(BWT_sa, [X, X[::-1]])
+	p.close()	
+	print("BWT done")	
+	B = data[0]
+	B_rev = data[1]	
+
+	#Calculaying FM-Index and offset-array for BWT(X) and BWT(X_reversed)
+	p = Pool(cpu_count())
+	data = p.map(calc_FM_index, [B, B_rev])
+	p.close()
+	print("FM index done")
+
+	fm = data[0][0]
+	c = data[0][1]-1
+	fm_r = data[1][0]		
+
+	#Calculating D (array used to prune search-tree and reduce runtime)
+	#Variables used for calculating D
+	k = 0	#Floor
+	l = len(B)-1	#Ceiling
+	zz = 0
+	alph = set(W)	#Alphabet
+	D = [0]*len(W)
+
+	#Alphabet dictionary. Hardcoded for genomes, but can calculate it from set(W) to generalise.
+	#The alternative is to just use pandas so u have named columns in the first place.
+	order = {'$':0, 'A':1,'C':2,'G':3,'T':4}	
+	t = lambda y: order[y]
+	
+	for i in range(0, len(W)):
+		if (k-1 < 0):
+			k = c[t(W[i])] + 1
+		else:
+			k = c[t(W[i])] + fm_r[k-1, t(W[i])] + 1	
+		if (l < 0):
+			l = c[t(W[i])]
+		else:
+			l = c[t(W[i])] + fm_r[l, t(W[i])]
+
+		if k > l:
+			k = 0
+			l = len(B)-1
+			zz = zz+1
+		D[i] = zz
+
+	#Now that we have D, can use recursion function to find indices in Suffix Array that contains matches.
+	sa_range = InexRecur(W,len(W)-1,z,0,len(B)-1, D, c, fm)	
+
+	return sa_range
