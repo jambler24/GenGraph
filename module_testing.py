@@ -443,10 +443,41 @@ def create_query_kmers(q_sequence, kmer_size):
         window_start += 1
         window_stop += 1
 
+    # Try clean up
+    #del window_stop
+    #del window_start
+    #del q_seq_length
+
     return q_kmers
 
 
 def create_kmer_dict(in_graph_obj, kmer_size):
+    """
+    Takes in the genome graph and extracts all possible k-mers including their positions
+    :param in_graph_obj: Graph created by GenGraph
+    :param kmer_size: The size of the k-mers to be created
+    :return: a dict of kmers, containing lists that describe where the k-mer is found in the reference graph.
+
+    Structure of returned dict:
+
+    {
+        k-mer: [
+            [
+                ['nodes', 'align start position'],
+            ]
+        ]
+    }
+
+    EG:
+    {'TAAACAACGGCCCCGACCCC':
+        [
+            [['Aln_69_59', 1676], ['Aln_69_60', 1], ['H37Rv_104', 1], ['Aln_70_1', 1]],
+            [['Aln_69_59', 1676], ['Aln_230', 1]]
+        ]
+    }
+
+
+    """
 
     total_nodes = len(in_graph_obj.nodes())
 
@@ -494,10 +525,12 @@ def create_kmer_graph(in_graph_obj, kmer_size):
 
 def align_seq_hash(q_sequence, ref_hash_dict, kmer_size, use_qual=True):
     """
-
-    :param q_sequence:
-    :param ref_hash_dict:
-    :param kmer_size:
+    Breaks up the query sequence into k-mers of given size matching that of the reference hash dictionary. Finds the
+    kmer in the ref_hash_dict, returns the k-mers and any matching positions.
+    :param q_sequence: Query sequence as produced by the process_fastq_lines() function representing the 4 lines of a
+    fastq file in a list.
+    :param ref_hash_dict: The reference genome hash created by create_kmer_dict()
+    :param kmer_size: The size of the k-mers to be used
     :param use_qual:
     :return: Dictionary of mapped positions
 
@@ -536,6 +569,9 @@ def align_seq_hash(q_sequence, ref_hash_dict, kmer_size, use_qual=True):
 
         q_kmer_dict[kmer] += kmer_graph_pos
 
+    # Try clean up a bit
+    #del q_kmers
+
     return q_kmer_dict
 
 
@@ -559,7 +595,7 @@ def create_hash_info(in_matrix, method='testHash'):
 
     for k_mer in in_matrix:
 
-        if method is 'testHash':
+        if method == 'testHash':
 
             hash_val = testHash(k_mer[0])
 
@@ -626,6 +662,9 @@ quit()
 '''
 # ----------------------------------------------------------------- ><
 
+''' 
+# ------------------------- Testing the use of encoding to compress the created graph -------------------------
+
 encode_dict = create_encoding_dict(4)
 
 test_string = 'GCAGATCGAGCCTACGGCTACGGACGCGGCGGCGGCATATACGCATACGACTACTCTATACTCGG'
@@ -640,11 +679,13 @@ print(encoded_test_string)
 print(encode_dict['decode']['p'])
 print(encode_dict)
 quit()
+'''
 
 path_to_GG_file = 'test_files/latest2genome.xml'
 
-#path_to_reads = './test_files/minSRR1144793.fastq'
-path_to_reads = '/Volumes/External/SAWC_507/MTB__S507_LFO46Pool91_3128__L8_GTCCGC_L008_R1_001.fastq'
+#path_to_reads = 'test_files/minSRR1144793.fastq'
+path_to_reads = '/Users/panix/data/gg_data/MTB__S507_LFO46Pool91_3128__L8_GTCCGC_L008_R2_001.fastq'
+#path_to_reads = '/Users/panix/data/gg_data/160k_subset.fastq'
 
 graph_obj = import_gg_graph(path_to_GG_file)
 
@@ -671,58 +712,91 @@ def process_fastq_lines(lines=None):
 
 def align_fastq_to_kmer_graph(fastq_file, reference_kmer_dict):
     """
-
-    :param fastq_file:
-    :param reference_kmer_dict:
+    This function seeks to align reads from a fastq file into a k-mer graph.
+    :param fastq_file: Path to the fastq file
+    :param reference_kmer_dict: A k-mer dict created before hand, used to kmow the position of k-mers in the reference
+    genome. For example using the create_kmer_dict function.
     :return:
     """
 
     set_kmer = 20
 
+    graph_write_limit = 16000
+
+    graph_write_count = 0
+
+    graph_read_count = 0
+
     in_fasta = open(fastq_file, 'r')
 
-    out_graph = nx.MultiGraph()
+    # networkx, none, neo4j
+    graph_db = 'networkx'
+
+    slim_graph = True
+
+    if graph_db == 'networkx':
+
+        out_graph = nx.MultiGraph()
 
     n = 4
     lines = []
+
+
+
     for a_line in in_fasta:
+
         lines.append(a_line.rstrip())
         if len(lines) == n:
-            record = process_fastq_lines(lines)
+
+            graph_read_count += 1
+
+            fastq_record = process_fastq_lines(lines)
             lines = []
 
             # Align the sequence to hash
-            align_res = align_seq_hash(record, reference_kmer_dict, set_kmer)
+
+            align_res = align_seq_hash(fastq_record, reference_kmer_dict, set_kmer)
+            # Returns the aligmnent positions of all kmers of the fastq_record
 
             # process alignment result
             previous_node = False
             for key, val in align_res.items():
 
                 try:
+                    # Check if an alignment to the ref was found.
                     kmer_node_name = val[2][0][0] + '-' + str(val[2][0][1])
 
                     if kmer_node_name not in out_graph.nodes():
                         ref_node_pos = val[2][0][0] + '-' + str(val[2][0][1])
-                        node_dict = {'nuc': key[0], 'ref': ref_node_pos, 'kmer': key, 'qual': val[1]}
-                        out_graph.add_node(kmer_node_name, **node_dict)
+                        if slim_graph:
+                            out_graph.add_node(kmer_node_name)
+                        else:
+                            node_dict = {'nuc': key[0], 'ref': ref_node_pos, 'kmer': key, 'qual': val[1]}
+                            out_graph.add_node(kmer_node_name, **node_dict)
                     else:
-                        old_qual = out_graph.nodes[kmer_node_name]['qual']
-                        out_graph.nodes[kmer_node_name]['qual'] = old_qual + ',' + val[1]
+                        if not slim_graph:
+                            old_qual = out_graph.nodes[kmer_node_name]['qual']
+                            out_graph.nodes[kmer_node_name]['qual'] = old_qual + ',' + val[1]
 
                 except IndexError:
-                    # Create a new node for the query seq
+                    # Create a new node for the query seq if no alignment to the ref was found.
                     kmer_node_name = key
 
                     if kmer_node_name not in out_graph.nodes():
-                        ref_node_pos = 'alt' + str(val[0])
-                        node_dict = {'nuc': key[0], 'ref': ref_node_pos, 'kmer': key, 'qual': val[1]}
-                        out_graph.add_node(kmer_node_name, **node_dict)
+                        if slim_graph:
+                            out_graph.add_node(kmer_node_name)
+                        else:
+                            ref_node_pos = 'alt' + str(val[0])
+                            node_dict = {'nuc': key[0], 'ref': ref_node_pos, 'kmer': key, 'qual': val[1]}
+                            out_graph.add_node(kmer_node_name, **node_dict)
 
                     else:
-                        old_qual = out_graph.nodes[kmer_node_name]['qual']
-                        out_graph.nodes[kmer_node_name]['qual'] = old_qual + ',' + val[1]
+                        if not slim_graph:
+                            old_qual = out_graph.nodes[kmer_node_name]['qual']
+                            out_graph.nodes[kmer_node_name]['qual'] = old_qual + ',' + val[1]
 
                 if previous_node is not False:
+                    # This links k-mers from the same read
                     if out_graph.has_edge(previous_node, kmer_node_name):
                         current_weight = out_graph[previous_node][kmer_node_name]['a']['weight']
                         out_graph[previous_node][kmer_node_name]['a']['weight'] = current_weight + 1
@@ -731,6 +805,24 @@ def align_fastq_to_kmer_graph(fastq_file, reference_kmer_dict):
 
                 previous_node = kmer_node_name
 
+            if graph_read_count == graph_write_limit:
+
+                print('read align limit')
+
+                graph_write_count += 1
+
+                #with open('temp/' + str(graph_write_count) + '_aligned_kmer.pickle', 'wb') as handle:
+                #    pickle.dump(out_graph, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+                del out_graph
+
+                print(graph_write_count)
+
+                out_graph = nx.MultiGraph()
+
+                graph_read_count = 0
+
+
     return out_graph
 
 
@@ -738,7 +830,16 @@ res_of_the_thing = align_fastq_to_kmer_graph(path_to_reads, kmer_dict_out)
 
 print(datetime.datetime.now() - begin_time)
 
-nx.write_graphml(res_of_the_thing, 'aligned_kmer.xml')
+#nx.write_graphml(res_of_the_thing, 'aligned_kmer.xml')
+
+# --------------------- Working up to here --------------------- --------------------- ---------------------
+
+'''
+# Strange output 
+for kmer, list in kmer_dict_out.items():
+    if len(list) > 1:
+        print(kmer_dict_out[kmer], kmer)
+'''
 
 quit()
 

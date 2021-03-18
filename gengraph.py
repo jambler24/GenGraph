@@ -1836,7 +1836,7 @@ def link_nodes(graph_obj, sequence_name, node_prefix='gn'):
 
 			print(node_1)
 			print(node_2)
-			nx.write_graphml(graph_obj, 'problemG')
+			#nx.write_graphml(graph_obj, 'problemG')
 			print(graph_obj.get_edge_data(node_1, node_2))
 			print(graph_obj.get_edge_data(node_1, node_2)[0]['ids'])
 			print(graph_obj.get_edge_data(node_1, node_2)[0]['ids'].split(','))
@@ -2629,6 +2629,12 @@ def local_node_realign_new(in_graph, node_ID, seq_fasta_paths_dict):
 
 
 def seq_recreate_check(graph_obj, input_dict):
+	"""
+	Function to check if the original sequences can be extracted from the graph.
+	:param graph_obj: Input created graph object
+	:param input_dict: Input dictionary from the parsed sequence file
+	:return:
+	"""
 	for isolate in input_dict[1].keys():
 
 		# Check the node start and stops
@@ -2913,6 +2919,22 @@ def extract_original_seq(graph_obj, seq_name):
 	return extracted_seq
 
 
+def extract_original_seq_by_path(graph_obj, seq_name):
+	"""
+	Given a networkx graph object created by GenGraph, return the sequence of an individual isolate
+	as a string. This method uses path traversal to make sure nodes are linked correctly.
+	:param graph_obj: A networkx graph object created by or formatted in a similar way to GenGraph.
+	:param seq_name: The identifier of the sequence to be extracted, as was used in the sequence file and found in the
+	node attributes.
+	:return: A string.
+	"""
+	extracted_seq = ''
+
+
+
+	return extracted_seq
+
+
 def extract_original_seq_region(graph_obj, region_start, region_stop, seq_name):
 	"""
 	Retrieve a subsequence from the graph for an isolate given the positions. This can be used for example to extract
@@ -3085,6 +3107,13 @@ def extract_gene(seq_locus_id, seq_isolate_origin, graph_obj, annotation_path_di
 
 
 def seq_addition_test(in_graph, node_ID, seq_fasta_paths_dict):
+	"""
+	TODO: doc
+	:param in_graph: The created graph genome
+	:param node_ID: The isolate
+	:param seq_fasta_paths_dict:
+	:return:
+	"""
 
 	# Get seq from node
 	pass_seq_test = True
