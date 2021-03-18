@@ -1426,40 +1426,81 @@ def export_to_fasta(sequence, header, filename):
 # ---------------------------------------------------- Graph generating functions
 
 
-def add_missing_nodes(a_graph, input_dict):
+def add_missing_nodes(a_graph):
+	"""
+	This function looks for any regions that are not represented as a node in the graph. It then creates a node to fill
+	that gap.
+	:param a_graph: graph object
+	:return:
+	"""
+	current_node_prefix = 'Aln'
 
 	from operator import itemgetter
 
-	logging.info(input_dict[1].keys())
-
+	# Get list of all isolates
 	iso_list = a_graph.graph['isolates'].split(',')
+	isolate_count = 1
 
 	for isolate in iso_list:
 
-		isolate_Seq = input_parser(input_dict[1][isolate])
-		isolate_Seq = isolate_Seq[0]['DNA_seq']
-
+		# Get a list of all the nodes belonging to this isolate
 		isolate_node_list = []
 		for node, data in a_graph.nodes(data=True):
 			if isolate in data['ids'].split(','):
 				isolate_node_list.append(node)
 
+		# Create list of tupples with the node start and end points. These are converted to positive values for sorting
 		presorted_list = []
 		for a_node in isolate_node_list:
 			presorted_list.append((a_node, abs(a_graph.nodes[a_node][isolate + '_leftend']), abs(a_graph.nodes[a_node][isolate + '_rightend'])))
+
+			# Check to make sure the convention of the node start value (leftend) being less than the end (rightend) value
 			if abs(a_graph.nodes[a_node][isolate + '_leftend']) > abs(a_graph.nodes[a_node][isolate + '_rightend']):
 				logging.warning('problem node' + str(a_node))
 				logging.warning(a_graph.nodes[a_node][isolate + '_leftend'])
 
+		# Sort the list of all the nodes
 		sorted_list = sorted(presorted_list, key=itemgetter(1))
+
+		# Check to see if there is a start / stop node missing.
+		if sorted_list[0][1] != 1:
+			print('Start node missing for:', isolate)
+			print(sorted_list[0])
+			print(sorted_list[1])
+
+			# Node data dict
+			new_node_dict = {
+				isolate + '_leftend': 1,
+				isolate + '_rightend': sorted_list[0][1] - 1,
+				'ids': isolate
+			}
+			# Node name taken from last node + isolate_count to make sure no nodes with the same name are created
+			# Need to find the last node globally
+			#node_ID = current_node_prefix + "_" + str(int(sorted(list(a_graph.nodes))[-1].split('_')[1]) + isolate_count)
+			node_ID = current_node_prefix + "_" + isolate
+
+			att_node_dict = {node_ID: new_node_dict}
+
+			print('New node created', att_node_dict)
+
+			# Add the node
+			a_graph.add_node(node_ID)
+			# Add the node data
+			nx.set_node_attributes(a_graph, att_node_dict)
+
 
 		count = 0
 
 		while count < len(sorted_list) - 1:
 
+			# Check to see if there is a gap between the end of the current node and the start of the next one?
+			#TODO: Write a check here to detect problems where nodes are overlapping in strange ways
 			if sorted_list[count][2] != sorted_list[count + 1][1] - 1:
-				new_node_dict = {isolate + '_leftend':sorted_list[count][2] + 1, isolate + '_rightend':sorted_list[count + 1][1] - 1, 'ids':isolate}
-				new_node_dict['sequence'] = isolate_Seq[sorted_list[count][2]:sorted_list[count + 1][1] - 1]
+				new_node_dict = {
+					isolate + '_leftend':sorted_list[count][2] + 1,
+					isolate + '_rightend':sorted_list[count + 1][1] - 1,
+					'ids':isolate
+				}
 
 				node_ID = isolate + "_" + str(count)
 				att_node_dict = {node_ID: new_node_dict}
@@ -1468,6 +1509,8 @@ def add_missing_nodes(a_graph, input_dict):
 				nx.set_node_attributes(a_graph, att_node_dict)
 
 			count += 1
+
+		isolate_count += 1
 
 
 def node_check(a_graph):
@@ -1932,7 +1975,7 @@ def make_circular(graph_obj, seq_name):
 	return graph_obj
 
 
-def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, threshold=1.0, return_dict=False, simmilarity_measure='percentage'):
+def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, threshold=1.0, return_dict=False, similarity_measure='percentage'):
 	'''Retrieve the nodes from a graph spanning a region'''
 
 	print(start_pos, stop_pos)
@@ -1959,7 +2002,6 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 		if reference_name in data['ids'].split(','):
 
 			if int(data[node_leftend_label]) > 0:
-				#print 'positive'
 				if abs(int(data[node_leftend_label])) <= int(start_pos) <= abs(int(data[node_rightend_label])):
 					start_node = node
 					print('Ping')
@@ -2066,12 +2108,12 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 
 	# Calculating percentage similarity
 
-	if simmilarity_measure == 'percentage':
+	if similarity_measure == 'percentage':
 
 		for a_isolate in graph_isolate_list:
 			iso_sim_score_dict[a_isolate] = float(iso_sim_dict[a_isolate] - iso_diff_dict[a_isolate]) / float(iso_sim_dict[reference_name])
 
-	if simmilarity_measure == 'levenshtein':
+	if similarity_measure == 'levenshtein':
 
 		levenshtein(seq_1, seq_2)
 
@@ -2588,20 +2630,42 @@ def local_node_realign_new(in_graph, node_ID, seq_fasta_paths_dict):
 
 def seq_recreate_check(graph_obj, input_dict):
 	for isolate in input_dict[1].keys():
+
+		# Check the node start and stops
+
+		# Get a list of all the nodes belonging to this isolate
+		isolate_node_list = []
+		for node, data in graph_obj.nodes(data=True):
+			if isolate in data['ids'].split(','):
+				isolate_node_list.append(node)
+
+		# Create list of tupples with the node start and end points. These are converted to positive values for sorting
+		presorted_list = []
+		for a_node in isolate_node_list:
+			presorted_list.append((a_node, abs(graph_obj.nodes[a_node][isolate + '_leftend']), abs(graph_obj.nodes[a_node][isolate + '_rightend'])))
+
+		# Sort the list
+		sorted_list = sorted(presorted_list, key=itemgetter(1))
+
+		# inspect to make sure none are missing
+		print('Checking for missing nodes')
+		count = 0
+		while count < len(sorted_list) - 1:
+
+			# Check to see if there is a gap between the end of the current node and the start of the next one?
+			if sorted_list[count][2] != sorted_list[count + 1][1] - 1:
+				print(sorted_list[count])
+				print(sorted_list[count + 1])
+
+			count += 1
+
+
+
 		extracted_seq = extract_original_seq(graph_obj, isolate)
 		original_seq_from_fasta = input_parser(input_dict[1][isolate])
 
-		count = 0
 
-		while count < len(extracted_seq):
-			if extracted_seq[count] != original_seq_from_fasta[0]['DNA_seq'][count]:
-				logging.warning(count)
-				logging.warning(extracted_seq[count])
-				logging.warning(original_seq_from_fasta[0]['DNA_seq'][count])
-				logging.warning(extracted_seq[count-10:count + 10])
-				logging.warning(original_seq_from_fasta[0]['DNA_seq'][count-10:count + 10])
-			count += 1
-
+		print('Comparing extracted sequences')
 
 		if extracted_seq.upper() == original_seq_from_fasta[0]['DNA_seq'].upper():
 			logging.info('Sequence recreate pass')
@@ -2616,6 +2680,7 @@ def seq_recreate_check(graph_obj, input_dict):
 			logging.error(extracted_seq[:10])
 			logging.error(original_seq_from_fasta[0]['DNA_seq'][:10])
 			recreate_check_result = 'Fail'
+			print('Sequence recreate fail for isolate:', isolate)
 
 
 def add_graph_data(graph_obj):
@@ -3122,5 +3187,151 @@ def generate_graph_report(in_graph, out_file_name):
 
 # Break down into k-mers to either create a hash table, or to create de-bruijn graphs.
 
+
+
+
+
+
+
+# --------------------------------------------------------------- PanGenome related ---------------------------------------------------------------
+
+
+
+def extract_anno_pan_genome_csv(graph_obj, gtf_dict, out_file_name, refseq='', sim_threshold=1.0):
+
+	isolate_list = gtf_dict.keys()
+
+
+
+	added_list = []
+
+	outfile_obj = open(out_file_name + 'anno.csv', 'w')
+
+	csv_header = 'gene'
+
+	# Create header for csv file
+
+	for iso in isolate_list:
+		csv_header = csv_header + ',' + iso
+
+	csv_header = csv_header + '\n'
+
+	outfile_obj.write(csv_header)
+
+	for isolate in isolate_list:
+		gtf_lol = input_parser(gtf_dict[isolate], parse_as='gtf')
+		timer = 0
+
+		# For each gene for this isolate, see which other isolates have the same sequence
+
+		for entry in gtf_lol:
+
+			# For this gene for this isolate
+			#print entry
+
+			if entry[2] == 'gene':
+
+				# Entries that are genes
+
+				print(entry)
+
+				found_in_list = check_isolates_in_region(graph_obj, entry[3], entry[4], isolate, threshold=sim_threshold, return_dict=False)
+
+				if abs(int(entry[4])) < abs(int(entry[3])):
+					logging.info(entry)
+				# this gene, is also found in these isolates
+				logging.info(found_in_list)
+
+				if len(list(set(found_in_list) & set(added_list))) < 1:
+					line_str = csv_header
+
+					logging.info(entry[8].keys())
+
+					if 'locus_tag' in entry[8].keys():
+						curr_gene = entry[8]['locus_tag']
+
+
+					logging.info(curr_gene)
+
+					logging.info(line_str)
+					#line_str = line_str.replace('gene',curr_gene)
+					line_str = line_str.replace(isolate,curr_gene)
+					line_str = line_str.replace('gene',curr_gene)
+					logging.info(line_str)
+
+					#print 'here we get the other iso annotations'
+
+					for found_iso in found_in_list:
+
+						found_iso = str(found_iso)
+
+						#print '------'
+						#print entry
+						#print isolate
+						#print str(found_iso)
+
+						#print convert_coordinate(graph_obj, 100029, isolate, 'CDC1551')
+
+						#new_coord_dict = convert_coordinates(graph_obj, entry[3], entry[4], isolate, str(found_iso))
+
+						left_pos = convert_coordinate(graph_obj, entry[3], isolate, str(found_iso))
+
+						right_pos = convert_coordinate(graph_obj, entry[4], isolate, str(found_iso))
+
+						#print 'the pos list'
+						logging.info('new pos')
+						logging.info(left_pos, right_pos)
+						#print 'old pos'
+						#print entry[3], entry[4]
+
+						iso_gtf_lol = input_parser(gtf_dict[found_iso])
+
+						#print iso_gtf_lol
+
+						#print found_iso
+
+						if left_pos != 'pos not found' and right_pos != 'pos not found':
+							homo_gene = get_anno_from_coordinates(iso_gtf_lol, left_pos[str(found_iso)], right_pos[str(found_iso)], 10)
+
+							logging.info('gene found!!')
+							logging.info(homo_gene)
+							logging.info(found_iso)
+
+							line_string_list = line_str.split(',')
+							for n,i in enumerate(line_string_list):
+								if str(i).replace('\n','') == found_iso:
+									logging.info('yes')
+									line_string_list[n] = homo_gene
+
+							line_str = ','.join(line_string_list)
+							logging.info('line string')
+							logging.info(line_str)
+						else:
+
+							line_str = line_str.replace(found_iso, 'partial')
+
+
+					for remaining_iso in isolate_list:
+						line_string_list = line_str.split(',')
+						for n,i in enumerate(line_string_list):
+							if i.replace('\n','') == remaining_iso:
+								line_string_list[n] = '0'
+						line_str = ','.join(line_string_list)
+
+					logging.info('NB OUT --------------------------------------------')
+					logging.info(line_str)
+
+					timer += 1
+
+					if line_str[-2:] != '\n':
+						line_str = line_str + '\n'
+
+					logging.info('Writing line')
+					logging.info(line_str)
+
+					outfile_obj.write(line_str)
+
+
+		added_list.append(isolate)
 
 

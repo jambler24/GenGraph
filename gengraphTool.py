@@ -1,5 +1,6 @@
 
 from gengraph import *
+
 import pkg_resources
 
 if __name__ == '__main__':
@@ -137,7 +138,7 @@ if __name__ == '__main__':
 
 		refine_initGraph(genome_aln_graph)
 
-		add_missing_nodes(genome_aln_graph, parsed_input_dict)
+		add_missing_nodes(genome_aln_graph)
 
 		nx.write_graphml(genome_aln_graph, 'intermediate_Graph.xml')
 
@@ -184,7 +185,9 @@ if __name__ == '__main__':
 			make_circular(genome_aln_graph, args.make_circular)
 			print('Graph circularised')
 
+		# Do the recreate check to see if the original sequence is correctly recalled from the graph
 		if args.rec_check:
+			print('Doing recreate check')
 			seq_recreate_check(genome_aln_graph, parsed_input_dict)
 
 		# Saving output
