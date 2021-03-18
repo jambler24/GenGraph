@@ -1976,7 +1976,17 @@ def make_circular(graph_obj, seq_name):
 
 
 def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, threshold=1.0, return_dict=False, similarity_measure='percentage'):
-	'''Retrieve the nodes from a graph spanning a region'''
+	"""
+	Retrieve the nodes from a graph spanning a region
+	:param graph_obj:
+	:param start_pos:
+	:param stop_pos:
+	:param reference_name:
+	:param threshold:
+	:param return_dict:
+	:param similarity_measure:
+	:return:
+	"""
 
 	print(start_pos, stop_pos)
 
