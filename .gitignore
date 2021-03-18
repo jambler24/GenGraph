@@ -1,6 +1,13 @@
 
+.DS_Store
+.idea/
 
-
+mprofile_*
+test_*
 *.pyc
+*.icloud
+*.sh
+*.log
+*.xml
 
 
