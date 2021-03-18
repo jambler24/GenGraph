@@ -3209,6 +3209,241 @@ def generate_graph_report(in_graph, out_file_name):
 	return nx_summary
 
 
+# ---------------------------------------------------- # GFA
+#GFA Import/Export functions. Code is a bit messy and still needs some testing.
+#Import function in particular won't work for complex cycles - will probably not work for import from vg for majority of graphs.
+
+
+def prune_edges(G, isolate):
+	"""
+		Function used by create_GFA.			
+		Scans for nodes with out_degree > 1, then removes edges until out_degree = 1. Preverves hamiltonian path.
+		:param G: Subgraph of Isolate. GgDiGraph or nx.DiGraph.
+		:param isolate: Name of Isolate being pruned. String.
+		:return: Pruned Subgraph. nx.DiGraph.
+	"""
+
+	#n = tuple with (node_name, out_degree)
+	for n in G.out_degree:
+		if n[1] > 1:							
+			s = list(G.successors(n[0]))
+			for m in s:
+				if G.in_degree[m] > 1:
+					G.remove_edge(n[0], m)		
+
+	return G
+
+
+def create_GFA(G, filename):
+	"""			
+		Writes a GFA1.0 format file called 'filename'.gfa. 
+		Format follows VG specification to allow importation into VG or use in GraphAligner. Minimal optional fields used, overlap field in path used for path lengths in terms of nucleotides.
+		Isolates are coded as paths. No overlap between nodes, i.e. Edges are empty. 
+		GFA 1.0 Specification can be found at https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md
+		:param G: GgDiGraph.
+		:param filename: Name of file being written. String.
+		:return: None.
+	"""
+
+	#renaming nodes, since VG only accepts integer names for nodes	
+	mapping = dict(zip(G, range(1, G.number_of_nodes()+1)))
+	G = nx.relabel_nodes(G, mapping)	
+	
+
+	#Three categories of data needed for GFA (nodes = S, links = L, paths = P)
+	#nodes = {x:(y,str(len(y))) for x,y in G.nodes.data('sequence')}	#dict with node_name:(sequence,len(sequence)) as key,value pairs
+	nodes = {}
+	for x,y in G.nodes.data('sequence'):		 
+		if not (type(y)==str):
+			#print(x)
+			#print(y)
+			nodes[x] = (y, '0')
+			print("Empty node detected, problem with graph")			
+		else:
+			nodes[x] = (y, str(len(y)))
+
+	links = set()
+	paths = {}	#dict with isolate_name:list containing edge pairs describing path
+
+	isolate_list = G.graph['isolates'].split(',')
+	#iterate over isolates, extracting paths and links for GFA
+	for i in isolate_list:	
+		#list of nodes containing isolate_one
+		nodes_i = [x for x,y in G.nodes.data('ids') if i in y.split(',')]	
+		#inducing subgraph containing only nodes with isolate i
+		J = G.subgraph(nodes_i).copy()
+
+		#pruning edges that aren't needed (so that edge list = path by default):
+		J = prune_edges(J, i)
+
+		#now we need to find inversions, and note the nodes that are inverted
+		inversions_i = set()
+		for x,y in J.nodes.data('%s_leftend'%(i)):
+			if y <0:
+				inversions_i.add(x)		
+
+		#sort edges in order of sequence, so path goes from start to finish
+		#list(J.edges) = list of tuples, (start_node, end_node)
+		edge_list_i = list(J.edges)		
+		edges_sorted = sorted(edge_list_i, key=lambda y: J.nodes[y[1]]['%s_leftend'%(i)]) 				
+		
+		#path: add - instead of + when node in inversion_isolate_one
+		t = lambda y: str(y)+'-' if y in inversions_i else str(y)+'+'
+		path_i = [(t(a),t(b)) for a,b in edges_sorted]
+
+		#adding path to dictionary in GFA format
+		paths[i] = [path_i[0][0]] + [t[1] for t in path_i]
+
+		#add links from path to link set
+		for p in path_i:
+			links.add(p)	
+			
+	#We have everything, now write GFA file	
+	with open('%s.gfa'%filename, 'w', newline = '\n') as f:	
+		f.write('H\tVN:Z:1.0\n')
+		#writing sequences
+		for k in nodes.keys():
+			f.write('S\t%i\t%s\n'%(k, nodes[k][0]))
+		#writing links
+		for m in links:
+			f.write('L\t%s\t%s\t%s\t%s\t0M\n'%(m[0][:-1], m[0][-1], m[1][:-1], m[1][-1]))
+		#writing paths		
+		for p in paths.keys():			
+			f.write('P\t%s\t%s\t%sM\n'%(p, ','.join(paths[p]), 'M,'.join([ nodes[int(n[:-1])][1] for n in paths[p]])))
+	f.close()
+	
+	return
+
+def read_GFA(path):
+	"""			
+		Imports a GFA1.0 format file specified by path and returns a GgDiGraph.	
+		GFA 1.0 Specification can be found at https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md
+
+		Formatting:
+			Inverted nodes should be specified in paths with a '-' character.
+			GFA should preferably contain no loops/cycles, but this function will try to handle them by duplicating revisited nodes.
+
+		Limitations:
+			This function is not as general as it could be. It doesn't handle many optional fields and instead ignores them.
+			Doesn't account for all likely formatting/syntax errors.
+			Will not handle complex cycles appropiately. Simple small cycles will be fine, but the resulting acyclic graph from larger
+			cycles won't be correct - homology will be lost and the structure won't fit gengraph's specification.
+
+		:param path: Path to GFA file. String.		
+		:return: GgDiGraph.
+	"""
+	
+	G = nx.DiGraph()
+	paths = []	
+
+	with open(path, 'r') as f:
+		header = f.readline()
+
+		line_num = 1
+		for line in f:						
+			k = line.rstrip().strip('\r\n').split('\t')	
+
+			#If 'S': adds node with given sequence and name
+			if k[0] == 'S':				
+				try:
+					G.add_node(str(k[1]), sequence = k[2].upper())
+				except IndexError:
+					raise Exception("GFA format error. Empty or invalid node found.\n Line number: %i"%(line_num))
+
+			#if 'L': adds given link (does not consider +/-, since gengraph handles inversions with node attributes and not paths)
+			elif k[0] == 'L':
+				if (k[1] not in (set(G.nodes))) or (k[3] not in (set(G.nodes))):
+					raise Exception("Invalid edge, node not specified.\n Line number: %i"%(line_num))
+				else:			
+					G.add_edge(k[1], k[3])				
+
+			#if P: iterate through path, adding attributes
+			elif k[0] == 'P':
+				path_name = str(k[1])
+				visited_nodes = set()	
+				c = 0
+
+				#paths = list of path names, added to graph attributes later as "isolates"
+				paths.append(path_name)
+				#path as list of node names together with orientation(+/-)				
+				path = k[2].split(',')
+
+				#try get node lengths from GFA, else populate lengths manually later
+				try:
+					node_lengths = [int(x) for x in (k[3]+',').split('M,')[:-1]]
+				except:					
+					node_lengths = []
+
+				#iterate over nodes in path, adding attributes
+				for p in path:
+					node_name = str(p[:-1])
+					
+					#Dealing with cycles: Make a new node with same sequence as node being revisited.
+					if node_name in visited_nodes:
+						old_name = node_name
+						node_name = node_name + '_' + node_name
+						G.add_node(node_name, sequence = G.nodes[old_name]['sequence'])
+						G.add_edge(str(path[c-1][:-1]), node_name)
+						#Adding edge towards next node in path 
+						try:
+							G.add_edge(str(path[c+1][:-1]), node_name)
+						except:
+							pass
+
+					visited_nodes.add(node_name)								
+
+					#Now we add attributes
+					#left end position
+					try:
+						if c == 0:
+							G.nodes[node_name][path_name+'_leftend'] = 1
+						else:						
+							G.nodes[node_name][path_name+'_leftend'] = pos + 1
+					except KeyError:
+						raise Exception("Invalid path %s: check that all nodes are valid and contain orientation (+/-).\n Line number: %i, Path node number: %i"%(path_name, line_num+1, c+1))
+
+					#right end position
+					if node_lengths: 
+						G.nodes[node_name][path_name+'_rightend'] = G.nodes[node_name][path_name+'_leftend'] + node_lengths[c] - 1
+						pos = G.nodes[node_name][path_name+'_rightend']	
+					else:
+						G.nodes[node_name][path_name+'_rightend'] = G.nodes[node_name][path_name+'_leftend'] + len(G.nodes[node_name]['sequence']) - 1
+						pos = G.nodes[node_name][path_name+'_rightend']							
+					
+					#Adding id to node					
+					try:
+						G.nodes[node_name]['ids'] = G.nodes[node_name]['ids'] + ',' + path_name
+					except:
+						G.nodes[node_name]['ids'] = path_name
+
+					#inversion = '+' or '-'
+					inversion = p[-1]
+					#if inversion, make positions negative and swap positions.
+					if inversion == '-':
+						G.nodes[node_name][path_name+'_leftend'], G.nodes[node_name][path_name+'_rightend']  = -(G.nodes[node_name][path_name+'_rightend']), -(G.nodes[node_name][path_name+'_leftend'])
+					elif inversion != '+':
+						print("GFA format error, path %s orientation character not + or -.\n Line number: %i, Path node number: %i"%(path_name, line_num+1, c+1))
+						print("Will try to assume +, but check file for error")						
+
+					c += 1
+
+			#if comment: pass line
+			elif k[0][0] == '#':
+				pass
+			#else input line type specification is invalid, ignore and continue
+			else:
+				print("Invalid line type field, only 'H','S','P','L' allowed. Ignoring line.\n Line number: %i"%(line_num))
+
+			line_num+=1
+
+		G.graph['isolates'] = ','.join(paths)
+	
+	G = GgDiGraph(G)
+	f.close()
+	return G
+
+
+
 # ---------------------------------------------------- # read alignment
 # Functions to align reads to the GenGraph genome graph.
 

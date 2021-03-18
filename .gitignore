@@ -1,2 +1,6 @@
 
-__pycache__/gengraph.cpython-38.pyc
+
+
+*.pyc
+
+
