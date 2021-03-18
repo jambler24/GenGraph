@@ -298,5 +298,14 @@ class MultipleSequenceAlignmentTest(unittest.TestCase):
 
         self.assertEqual('this', 'this')
 
+
+class HashTesting(unittest.TestCase):
+
+    def test_one(self):
+
+        self.assertEqual('dataframe', 'dataframe')
+
+
+
 if __name__ == '__main__':
     unittest.main()
