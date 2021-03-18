@@ -352,11 +352,12 @@ if __name__ == '__main__':
 		# Extracting the csv from the graph
 		print('Extracting annotated pan genome csv')
 		extract_anno_pan_genome_csv(graph_obj, test_gtf_dict, args.out_file_name, sim_threshold=0.95)
-		print('Extracting pan genome csv')
-		extract_pan_genome_csv(graph_obj, test_gtf_dict, args.out_file_name, hom_threshold=0.95, refseq=ref_isolate)
-		print('Extracting pan genome transcriptome')
-		create_fasta_from_pangenome_csv(args.out_file_name + '.csv', test_gtf_dict, parsed_input_dict,
-										args.out_file_name)
+
+		# These are not quite ready
+		#print('Extracting pan genome csv')
+		#extract_pan_genome_csv(graph_obj, test_gtf_dict, args.out_file_name, hom_threshold=0.95, refseq=ref_isolate)
+		#print('Extracting pan genome transcriptome')
+		#create_fasta_from_pangenome_csv(args.out_file_name + '.csv', test_gtf_dict, parsed_input_dict, args.out_file_name)
 
 	# Converting the csv to a fasta file of transcripts
 	# create_fasta_from_pangenome_csv(args.input_file, test_gtf_dict, parsed_input_dict, args.out_file_name)
