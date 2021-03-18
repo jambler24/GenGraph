@@ -1988,7 +1988,6 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 	:return:
 	"""
 
-	print(start_pos, stop_pos)
 
 	graph_isolate_list = graph_obj.graph['isolates'].split(',')
 
@@ -2006,30 +2005,21 @@ def check_isolates_in_region(graph_obj, start_pos, stop_pos, reference_name, thr
 
 	# Identify the nodes that contain the start and stop positions
 
-	print(reference_name)
-
 	for node, data in graph_obj.nodes(data=True):
 		if reference_name in data['ids'].split(','):
 
 			if int(data[node_leftend_label]) > 0:
 				if abs(int(data[node_leftend_label])) <= int(start_pos) <= abs(int(data[node_rightend_label])):
 					start_node = node
-					print('Ping')
-					print(start_pos)
 					start_overlap = bp_distance(data[node_rightend_label], start_pos)
 
 				if abs(int(data[node_leftend_label])) <= int(stop_pos) <= abs(int(data[node_rightend_label])) or abs(int(data[node_leftend_label])) >= int(stop_pos) >= abs(int(data[node_rightend_label])):
-					print('ping')
 					stop_node = node
-					print(stop_pos)
 					stop_overlap = bp_distance(stop_pos, data[node_leftend_label])
 
 			if int(data[node_leftend_label]) < 0:
 				if abs(int(data[node_leftend_label])) <= int(start_pos) <= abs(int(data[node_rightend_label])):
 					start_node = node
-					print('Ping')
-					print('neg node')
-					print(start_pos)
 					start_overlap =  bp_distance(data[node_rightend_label], start_pos)
 
 				if abs(int(data[node_leftend_label])) <= int(stop_pos) <= abs(int(data[node_rightend_label])):
@@ -3475,8 +3465,6 @@ def extract_anno_pan_genome_csv(graph_obj, gtf_dict, out_file_name, refseq='', s
 
 	isolate_list = gtf_dict.keys()
 
-
-
 	added_list = []
 
 	outfile_obj = open(out_file_name + 'anno.csv', 'w')
@@ -3501,13 +3489,10 @@ def extract_anno_pan_genome_csv(graph_obj, gtf_dict, out_file_name, refseq='', s
 		for entry in gtf_lol:
 
 			# For this gene for this isolate
-			#print entry
 
 			if entry[2] == 'gene':
 
 				# Entries that are genes
-
-				print(entry)
 
 				found_in_list = check_isolates_in_region(graph_obj, entry[3], entry[4], isolate, threshold=sim_threshold, return_dict=False)
 
@@ -3528,41 +3513,22 @@ def extract_anno_pan_genome_csv(graph_obj, gtf_dict, out_file_name, refseq='', s
 					logging.info(curr_gene)
 
 					logging.info(line_str)
-					#line_str = line_str.replace('gene',curr_gene)
 					line_str = line_str.replace(isolate,curr_gene)
 					line_str = line_str.replace('gene',curr_gene)
 					logging.info(line_str)
-
-					#print 'here we get the other iso annotations'
 
 					for found_iso in found_in_list:
 
 						found_iso = str(found_iso)
 
-						#print '------'
-						#print entry
-						#print isolate
-						#print str(found_iso)
-
-						#print convert_coordinate(graph_obj, 100029, isolate, 'CDC1551')
-
-						#new_coord_dict = convert_coordinates(graph_obj, entry[3], entry[4], isolate, str(found_iso))
-
 						left_pos = convert_coordinate(graph_obj, entry[3], isolate, str(found_iso))
 
 						right_pos = convert_coordinate(graph_obj, entry[4], isolate, str(found_iso))
 
-						#print 'the pos list'
 						logging.info('new pos')
 						logging.info(left_pos, right_pos)
-						#print 'old pos'
-						#print entry[3], entry[4]
 
 						iso_gtf_lol = input_parser(gtf_dict[found_iso])
-
-						#print iso_gtf_lol
-
-						#print found_iso
 
 						if left_pos != 'pos not found' and right_pos != 'pos not found':
 							homo_gene = get_anno_from_coordinates(iso_gtf_lol, left_pos[str(found_iso)], right_pos[str(found_iso)], 10)
@@ -3609,3 +3575,28 @@ def extract_anno_pan_genome_csv(graph_obj, gtf_dict, out_file_name, refseq='', s
 		added_list.append(isolate)
 
 
+def get_anno_from_coordinates(in_gtf_lol, start_pos, stop_pos, tollerence):
+
+	if int(start_pos) > int(stop_pos):
+		temp_start = stop_pos
+		temp_stop = start_pos
+		start_pos = temp_start
+		stop_pos = temp_stop
+
+
+	for anno in in_gtf_lol:
+		'''
+		if anno[2] == 'exon':
+			if abs(int(anno[3]) - int(start_pos)) <= int(tollerence) and abs(int(anno[4]) - int(stop_pos)) <= int(tollerence):
+				return anno[8]['gene_id']
+		'''
+		# if using gff3
+		if anno[2] == 'gene':
+			if abs(int(anno[3]) - int(start_pos)) <= int(tollerence) and abs(int(anno[4]) - int(stop_pos)) <= int(tollerence):
+				return anno[8]['locus_tag']
+			if abs(int(anno[4]) - int(start_pos)) <= int(tollerence) and abs(int(anno[3]) - int(stop_pos)) <= int(tollerence):
+				logging.warning('get_anno_from_coordinates problem')
+				quit()
+
+	else:
+		return '1'
