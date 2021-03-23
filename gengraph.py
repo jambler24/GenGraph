@@ -2772,7 +2772,10 @@ def progressiveMauve_alignment(path_to_progressiveMauve, fasta_path_list, out_al
 
 		test_bbone_file = open('globalAlignment_' + out_aln_name + '.backbone')
 
-		number_of_lines = 3
+		# This checks to see if there are at least 2 lines in the backbone file. Changed from 3.
+		# In the case of a 2 line file, it means all sequences are represented in 1 block and are completely co-linear,
+		# but may contain SNP like differences.
+		number_of_lines = 2
 
 		for i in range(number_of_lines):
 			line = test_bbone_file.readline()
