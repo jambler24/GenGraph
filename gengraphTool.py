@@ -78,11 +78,14 @@ if __name__ == '__main__':
 
 		test_aln_graph = nx.read_graphml(args.graph_file)
 
-		parsed_input_dict = parse_seq_file(args.seq_file)
+		#parsed_input_dict = parse_seq_file(args.seq_file)
 
-		result = seq_recreate_check(test_aln_graph, parsed_input_dict)
+		kmer_dict = create_kmer_dict(test_aln_graph, 30)
 
-		print(result)
+		print('Writing to file')
+
+		with open('kmer_30.txt', 'w') as outfile:
+			json.dump(kmer_dict, outfile)
 
 	if args.toolkit == 'make_genome_graph':
 		# Requires:

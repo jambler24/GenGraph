@@ -6,9 +6,11 @@ from gengraphTool import *
 # Built in
 
 from subprocess import call, run
+import multiprocessing as mp
 from operator import itemgetter
 from collections import OrderedDict
 
+import json
 import argparse
 import sys
 import os
@@ -958,9 +960,9 @@ def get_neighbours_context(graph, source_node, label, dir='out'):
 	for (a,b,c) in out_edges:
 		if label in c.strip(','):
 			list_of_neighbours.append(b)
-		
-	list_of_neighbours = list(set(list_of_neighbours)) # to remove any duplicates (like bi_correct_node)	
-		
+
+	list_of_neighbours = list(set(list_of_neighbours)) # to remove any duplicates (like bi_correct_node)
+
 	return list_of_neighbours
 
 
@@ -1098,13 +1100,13 @@ def input_parser(file_path, parse_as='default'):
 				sequence_details = line
 			else:
 				sequence += line
-		
+
 		sequence_details = sequence_details.strip()
-		
+
 		sequence = sequence.strip()
 		sequence = sequence.replace("\n","")
 		sequence = sequence.replace(" ","")
-		
+
 		gene_ID_dict = {"gene_details": sequence_details[1:], "DNA_seq" : sequence}
 
 		output_list.append(gene_ID_dict)
@@ -1114,7 +1116,7 @@ def input_parser(file_path, parse_as='default'):
 	if file_path[-4:] == ".bim":
 		input_file = open(file_path, "r")
 		return input_file
-		
+
 	if file_path[-4:] == ".csv":
 		data_table = csv.reader(open(file_path, 'r'), delimiter=',')
 		data_matrix = list(data_table)
@@ -1126,7 +1128,7 @@ def input_parser(file_path, parse_as='default'):
 		data_matrix = list(data_table)
 		result = np.array(data_matrix)
 		return result
-		
+
 	if file_path[-4:] == ".txt":
 		# This is used for the input sample file
 		list_of_dicts = []
@@ -1146,7 +1148,7 @@ def input_parser(file_path, parse_as='default'):
 
 		print(list_of_dicts)
 		return list_of_dicts
-		
+
 	if file_path[-4:] == ".vcf":
 		list_of_dicts = []
 		# Deal with random info at start
@@ -1176,7 +1178,7 @@ def input_parser(file_path, parse_as='default'):
 
 				list_of_dicts.append(entry_dict)
 		return list_of_dicts
-	
+
 	if file_path[-5:] == ".diff":
 		list_of_dicts  = []
 		reader = csv.DictReader(open(file_path, 'r'), delimiter='\t')
@@ -1226,7 +1228,7 @@ def input_parser(file_path, parse_as='default'):
 		list_of_lists  = []
 		in_file = open(file_path, 'r')
 		entry_label = file_path
-		
+
 		if parse_as == 'default':
 			for line in in_file:
 				if not line.startswith('#'):
@@ -1243,7 +1245,7 @@ def input_parser(file_path, parse_as='default'):
 							extra_info_dict[info_byte[0]] = info_byte[1]
 
 						entries[8] = extra_info_dict
-				
+
 						list_of_lists.append(entries)
 		if parse_as == 'gtf':
 			# Reformatting as gtf
@@ -1269,7 +1271,7 @@ def input_parser(file_path, parse_as='default'):
 							gtf_info_dict['locus_tag'] = extra_info_dict['locus_tag']
 
 							entries[8] = gtf_info_dict
-					
+
 							list_of_lists.append(entries)
 		return list_of_lists
 
@@ -1284,7 +1286,7 @@ def input_parser(file_path, parse_as='default'):
 				entries_extra_info = entries[8].split(';')
 
 				if entries[2] == 'gene':
-					
+
 					NOTE = ''
 					for add_info in entries_extra_info:
 						if 'locus_tag' in add_info:
@@ -1296,7 +1298,7 @@ def input_parser(file_path, parse_as='default'):
 
 
 
-						#row['LOCUS'] row['SYMBOL'] row['SYNOYM'] row['LENGTH']  row['START'] row['STOP']  row['STRAND']  row['NAME']  row['CHROMOSOME']  row['GENOME ONTOLOGY']  row['ENZYME CODE']  row['KEGG']  row['PATHWAY']  row['REACTION'] row['COG'] row['PFAM']  row['OPERON'] 
+						#row['LOCUS'] row['SYMBOL'] row['SYNOYM'] row['LENGTH']  row['START'] row['STOP']  row['STRAND']  row['NAME']  row['CHROMOSOME']  row['GENOME ONTOLOGY']  row['ENZYME CODE']  row['KEGG']  row['PATHWAY']  row['REACTION'] row['COG'] row['PFAM']  row['OPERON']
 
 					entry_dict = {'CHROM':entries[0], 'LOCUS':LOCUS, 'START':entries[3], 'STOP':entries[4], 'STRAND':entries[6], 'SYMBOL':SYMBOL, 'INFO':entries_extra_info, 'NOTE':NOTE}
 					list_of_dicts.append(entry_dict)
@@ -3216,7 +3218,7 @@ def generate_graph_report(in_graph, out_file_name):
 
 def prune_edges(G, isolate):
 	"""
-		Function used by create_GFA.			
+		Function used by create_GFA.
 		Scans for nodes with out_degree > 1, then removes edges until out_degree = 1. Preverves hamiltonian path.
 		:param G: Subgraph of Isolate. GgDiGraph or nx.DiGraph.
 		:param isolate: Name of Isolate being pruned. String.
@@ -3225,40 +3227,40 @@ def prune_edges(G, isolate):
 
 	#n = tuple with (node_name, out_degree)
 	for n in G.out_degree:
-		if n[1] > 1:							
+		if n[1] > 1:
 			s = list(G.successors(n[0]))
 			for m in s:
 				if G.in_degree[m] > 1:
-					G.remove_edge(n[0], m)		
+					G.remove_edge(n[0], m)
 
 	return G
 
 
 def create_GFA(G, filename):
-	"""			
-		Writes a GFA1.0 format file called 'filename'.gfa. 
+	"""
+		Writes a GFA1.0 format file called 'filename'.gfa.
 		Format follows VG specification to allow importation into VG or use in GraphAligner. Minimal optional fields used, overlap field in path used for path lengths in terms of nucleotides.
-		Isolates are coded as paths. No overlap between nodes, i.e. Edges are empty. 
+		Isolates are coded as paths. No overlap between nodes, i.e. Edges are empty.
 		GFA 1.0 Specification can be found at https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md
 		:param G: GgDiGraph.
 		:param filename: Name of file being written. String.
 		:return: None.
 	"""
 
-	#renaming nodes, since VG only accepts integer names for nodes	
+	#renaming nodes, since VG only accepts integer names for nodes
 	mapping = dict(zip(G, range(1, G.number_of_nodes()+1)))
-	G = nx.relabel_nodes(G, mapping)	
-	
+	G = nx.relabel_nodes(G, mapping)
+
 
 	#Three categories of data needed for GFA (nodes = S, links = L, paths = P)
 	#nodes = {x:(y,str(len(y))) for x,y in G.nodes.data('sequence')}	#dict with node_name:(sequence,len(sequence)) as key,value pairs
 	nodes = {}
-	for x,y in G.nodes.data('sequence'):		 
+	for x,y in G.nodes.data('sequence'):
 		if not (type(y)==str):
 			#print(x)
 			#print(y)
 			nodes[x] = (y, '0')
-			print("Empty node detected, problem with graph")			
+			print("Empty node detected, problem with graph")
 		else:
 			nodes[x] = (y, str(len(y)))
 
@@ -3267,9 +3269,9 @@ def create_GFA(G, filename):
 
 	isolate_list = G.graph['isolates'].split(',')
 	#iterate over isolates, extracting paths and links for GFA
-	for i in isolate_list:	
+	for i in isolate_list:
 		#list of nodes containing isolate_one
-		nodes_i = [x for x,y in G.nodes.data('ids') if i in y.split(',')]	
+		nodes_i = [x for x,y in G.nodes.data('ids') if i in y.split(',')]
 		#inducing subgraph containing only nodes with isolate i
 		J = G.subgraph(nodes_i).copy()
 
@@ -3280,13 +3282,13 @@ def create_GFA(G, filename):
 		inversions_i = set()
 		for x,y in J.nodes.data('%s_leftend'%(i)):
 			if y <0:
-				inversions_i.add(x)		
+				inversions_i.add(x)
 
 		#sort edges in order of sequence, so path goes from start to finish
 		#list(J.edges) = list of tuples, (start_node, end_node)
-		edge_list_i = list(J.edges)		
-		edges_sorted = sorted(edge_list_i, key=lambda y: J.nodes[y[1]]['%s_leftend'%(i)]) 				
-		
+		edge_list_i = list(J.edges)
+		edges_sorted = sorted(edge_list_i, key=lambda y: J.nodes[y[1]]['%s_leftend'%(i)])
+
 		#path: add - instead of + when node in inversion_isolate_one
 		t = lambda y: str(y)+'-' if y in inversions_i else str(y)+'+'
 		path_i = [(t(a),t(b)) for a,b in edges_sorted]
@@ -3296,10 +3298,10 @@ def create_GFA(G, filename):
 
 		#add links from path to link set
 		for p in path_i:
-			links.add(p)	
-			
-	#We have everything, now write GFA file	
-	with open('%s.gfa'%filename, 'w', newline = '\n') as f:	
+			links.add(p)
+
+	#We have everything, now write GFA file
+	with open('%s.gfa'%filename, 'w', newline = '\n') as f:
 		f.write('H\tVN:Z:1.0\n')
 		#writing sequences
 		for k in nodes.keys():
@@ -3307,44 +3309,44 @@ def create_GFA(G, filename):
 		#writing links
 		for m in links:
 			f.write('L\t%s\t%s\t%s\t%s\t0M\n'%(m[0][:-1], m[0][-1], m[1][:-1], m[1][-1]))
-		#writing paths		
-		for p in paths.keys():			
+		#writing paths
+		for p in paths.keys():
 			f.write('P\t%s\t%s\t%sM\n'%(p, ','.join(paths[p]), 'M,'.join([ nodes[int(n[:-1])][1] for n in paths[p]])))
 	f.close()
-	
+
 	return
 
 def read_GFA(path):
-	"""			
-		Imports a GFA1.0 format file specified by path and returns a GgDiGraph.	
-		GFA 1.0 Specification can be found at https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md
-
-		Formatting:
-			Inverted nodes should be specified in paths with a '-' character.
-			GFA should preferably contain no loops/cycles, but this function will try to handle them by duplicating revisited nodes.
-
-		Limitations:
-			This function is not as general as it could be. It doesn't handle many optional fields and instead ignores them.
-			Doesn't account for all likely formatting/syntax errors.
-			Will not handle complex cycles appropiately. Simple small cycles will be fine, but the resulting acyclic graph from larger
-			cycles won't be correct - homology will be lost and the structure won't fit gengraph's specification.
-
-		:param path: Path to GFA file. String.		
-		:return: GgDiGraph.
 	"""
-	
+	Imports a GFA1.0 format file specified by path and returns a GgDiGraph.
+	GFA 1.0 Specification can be found at https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md
+
+	Formatting:
+		Inverted nodes should be specified in paths with a '-' character.
+		GFA should preferably contain no loops/cycles, but this function will try to handle them by duplicating revisited nodes.
+
+	Limitations:
+		This function is not as general as it could be. It doesn't handle many optional fields and instead ignores them.
+		Doesn't account for all likely formatting/syntax errors.
+		Will not handle complex cycles appropiately. Simple small cycles will be fine, but the resulting acyclic graph from larger
+		cycles won't be correct - homology will be lost and the structure won't fit gengraph's specification.
+
+	:param path: Path to GFA file. String.
+	:return: GgDiGraph.
+	"""
+
 	G = nx.DiGraph()
-	paths = []	
+	paths = []
 
 	with open(path, 'r') as f:
 		header = f.readline()
 
 		line_num = 1
-		for line in f:						
-			k = line.rstrip().strip('\r\n').split('\t')	
+		for line in f:
+			k = line.rstrip().strip('\r\n').split('\t')
 
 			#If 'S': adds node with given sequence and name
-			if k[0] == 'S':				
+			if k[0] == 'S':
 				try:
 					G.add_node(str(k[1]), sequence = k[2].upper())
 				except IndexError:
@@ -3354,63 +3356,63 @@ def read_GFA(path):
 			elif k[0] == 'L':
 				if (k[1] not in (set(G.nodes))) or (k[3] not in (set(G.nodes))):
 					raise Exception("Invalid edge, node not specified.\n Line number: %i"%(line_num))
-				else:			
-					G.add_edge(k[1], k[3])				
+				else:
+					G.add_edge(k[1], k[3])
 
 			#if P: iterate through path, adding attributes
 			elif k[0] == 'P':
 				path_name = str(k[1])
-				visited_nodes = set()	
+				visited_nodes = set()
 				c = 0
 
 				#paths = list of path names, added to graph attributes later as "isolates"
 				paths.append(path_name)
-				#path as list of node names together with orientation(+/-)				
+				#path as list of node names together with orientation(+/-)
 				path = k[2].split(',')
 
 				#try get node lengths from GFA, else populate lengths manually later
 				try:
 					node_lengths = [int(x) for x in (k[3]+',').split('M,')[:-1]]
-				except:					
+				except:
 					node_lengths = []
 
 				#iterate over nodes in path, adding attributes
 				for p in path:
 					node_name = str(p[:-1])
-					
+
 					#Dealing with cycles: Make a new node with same sequence as node being revisited.
 					if node_name in visited_nodes:
 						old_name = node_name
 						node_name = node_name + '_' + node_name
 						G.add_node(node_name, sequence = G.nodes[old_name]['sequence'])
 						G.add_edge(str(path[c-1][:-1]), node_name)
-						#Adding edge towards next node in path 
+						#Adding edge towards next node in path
 						try:
 							G.add_edge(str(path[c+1][:-1]), node_name)
 						except:
 							pass
 
-					visited_nodes.add(node_name)								
+					visited_nodes.add(node_name)
 
 					#Now we add attributes
 					#left end position
 					try:
 						if c == 0:
 							G.nodes[node_name][path_name+'_leftend'] = 1
-						else:						
+						else:
 							G.nodes[node_name][path_name+'_leftend'] = pos + 1
 					except KeyError:
 						raise Exception("Invalid path %s: check that all nodes are valid and contain orientation (+/-).\n Line number: %i, Path node number: %i"%(path_name, line_num+1, c+1))
 
 					#right end position
-					if node_lengths: 
+					if node_lengths:
 						G.nodes[node_name][path_name+'_rightend'] = G.nodes[node_name][path_name+'_leftend'] + node_lengths[c] - 1
-						pos = G.nodes[node_name][path_name+'_rightend']	
+						pos = G.nodes[node_name][path_name+'_rightend']
 					else:
 						G.nodes[node_name][path_name+'_rightend'] = G.nodes[node_name][path_name+'_leftend'] + len(G.nodes[node_name]['sequence']) - 1
-						pos = G.nodes[node_name][path_name+'_rightend']							
-					
-					#Adding id to node					
+						pos = G.nodes[node_name][path_name+'_rightend']
+
+					#Adding id to node
 					try:
 						G.nodes[node_name]['ids'] = G.nodes[node_name]['ids'] + ',' + path_name
 					except:
@@ -3423,7 +3425,7 @@ def read_GFA(path):
 						G.nodes[node_name][path_name+'_leftend'], G.nodes[node_name][path_name+'_rightend']  = -(G.nodes[node_name][path_name+'_rightend']), -(G.nodes[node_name][path_name+'_leftend'])
 					elif inversion != '+':
 						print("GFA format error, path %s orientation character not + or -.\n Line number: %i, Path node number: %i"%(path_name, line_num+1, c+1))
-						print("Will try to assume +, but check file for error")						
+						print("Will try to assume +, but check file for error")
 
 					c += 1
 
@@ -3437,7 +3439,7 @@ def read_GFA(path):
 			line_num+=1
 
 		G.graph['isolates'] = ','.join(paths)
-	
+
 	G = GgDiGraph(G)
 	f.close()
 	return G
@@ -3450,6 +3452,171 @@ def read_GFA(path):
 # ------------------ Traditional approaches.
 
 # Break down into k-mers to either create a hash table, or to create de-bruijn graphs.
+
+def get_next_base(kmer_length, kmer_matrix, graph_obj):
+	"""
+	Starting at a nucleotide in a node, get all kmers of the required length
+	:param kmer_length:
+	:param kmer_matrix:
+	:param graph_obj:
+	:return:
+	"""
+
+	new_matrix = []
+
+	for a_kmer_list in kmer_matrix:
+
+		kmer_seq = a_kmer_list[0][0]
+		kmer_last_node = a_kmer_list[1][-1][0]
+
+		if len(kmer_seq) < kmer_length:
+			# This k-mer is not at the required length
+
+			last_node_seq = graph_obj.nodes[kmer_last_node]['sequence']
+			last_node_length = len(last_node_seq)
+
+			node_start_index = a_kmer_list[1][-1][1]
+
+			# Add nucleotides from the current node until either the kmer is long enough or the node sequence ends
+			while len(a_kmer_list[0][0]) < kmer_length and node_start_index < last_node_length:
+
+				a_kmer_list[0][0] += last_node_seq[node_start_index]
+
+				node_start_index += 1
+
+			# If it is still not long enough, move onto the next node.
+			if len(a_kmer_list[0][0]) < kmer_length:
+
+				# Need to move to next node
+
+				# Find which nodes are next
+				neighbors = graph_obj.neighbors(kmer_last_node)
+
+				# Need to replace the current one, then add more?
+				for neighbor in neighbors:
+
+					new_kmer_list = pickle.loads(pickle.dumps(a_kmer_list, -1))
+
+					new_kmer_list[1].append([neighbor, 1])
+
+					new_kmer_list[0][0] += graph_obj.nodes[neighbor]['sequence'][0]
+
+					new_matrix.append(new_kmer_list)
+			else:
+				new_matrix.append(a_kmer_list)
+
+		else:
+			new_matrix.append(a_kmer_list)
+
+	is_complete = True
+
+	# Check if pass here
+	for kmer, a_path in new_matrix:
+
+		if len(kmer[0]) < kmer_length:
+			is_complete = False
+
+	if is_complete is False:
+
+		return get_next_base(kmer_length, new_matrix, graph_obj)
+
+	else:
+		return new_matrix
+
+
+def get_node_kmers(a_node, graph_obj, kmer_length, return_structure):
+	"""
+	Returns a list structure of all possible kmers from a node, including the positions, and nodes that the sequences
+	extend into.
+	:param a_node: A string node ID from the graph object
+	:param graph_obj: A GenGraph graph object
+	:param kmer_length:
+	:param return_structure:
+	:return:
+	"""
+
+	# Reversed nodes?
+	node_length = len(graph_obj.nodes[a_node]['sequence'])
+	current_base_pos = 1
+
+	kmer_matrix = []
+
+	while current_base_pos <= node_length:
+		kmer_matrix.append([
+			[graph_obj.nodes[a_node]['sequence'][current_base_pos - 1]],
+			[[a_node, current_base_pos]]
+		])
+
+		kmer_matrix = get_next_base(kmer_length, kmer_matrix, graph_obj)
+
+		current_base_pos += 1
+
+	kmer_matrix = get_next_base(kmer_length, kmer_matrix, graph_obj)
+
+	if return_structure == 'list':
+
+		return kmer_matrix
+
+	elif return_structure == 'kmer_dict':
+
+		kmer_dict = {}
+
+		for a_kmer in kmer_matrix:
+			if a_kmer[0][0] in kmer_dict.keys():
+				kmer_dict[a_kmer[0][0]] += [a_kmer[1]]
+			else:
+				kmer_dict[a_kmer[0][0]] = [a_kmer[1]]
+
+		return kmer_dict
+
+
+def create_kmer_dict(in_graph_obj, kmer_size):
+	"""
+	Takes in the genome graph and extracts all possible k-mers including their positions
+	:param in_graph_obj: Graph created by GenGraph
+	:param kmer_size: The size of the k-mers to be created
+	:return: a dict of kmers, containing lists that describe where the k-mer is found in the reference graph.
+
+	Structure of returned dict:
+
+	{
+		k-mer: [
+			[
+				['nodes', 'align start position'],
+			]
+		]
+	}
+
+	EG:
+	{'TAAACAACGGCCCCGACCCC':
+		[
+			[['Aln_69_59', 1676], ['Aln_69_60', 1], ['H37Rv_104', 1], ['Aln_70_1', 1]],
+			[['Aln_69_59', 1676], ['Aln_230', 1]]
+		]
+	}
+
+
+	"""
+
+	total_nodes = len(in_graph_obj.nodes())
+
+	count = 0
+
+	all_kmer_positions = {}
+
+	pool = mp.Pool(mp.cpu_count())
+
+	per_node_kmer_list = pool.starmap(get_node_kmers, [(a_node, in_graph_obj, kmer_size, 'kmer_dict') for a_node in
+	                                                   in_graph_obj.nodes()])
+
+	for a_node_kmers in per_node_kmer_list:
+		for key, value in a_node_kmers.items():
+			if key in all_kmer_positions.keys():
+				all_kmer_positions[key] += value
+			else:
+				all_kmer_positions[key] = value
+
+	return all_kmer_positions
 
 
 
