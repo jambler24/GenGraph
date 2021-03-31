@@ -218,12 +218,14 @@ if __name__ == '__main__':
 		generate_graph_report(genome_aln_graph, out_put_dir + args.out_file_name)
 
 	if args.toolkit == 'make_graph_from_fasta':
-
-		# Requires:
-		# --input_file
-		# --out_file_name
-
-
+		"""
+		This allows you to create a graph genome from a fasta formatted alignment file
+		
+		Requires:
+			--input_file < alignment.fa >
+			--out_file_name
+		
+		"""
 
 		fasta_object = input_parser(args.input_file)
 
