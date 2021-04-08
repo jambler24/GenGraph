@@ -3,7 +3,9 @@
 .idea/
 globalAlignment*
 mprofile_*
-test_*
+test_files
+test_genomes
+test_scripts
 *.pyc
 *.icloud
 *.sh
