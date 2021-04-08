@@ -1,4 +1,4 @@
-from gengraph import *
+from GenGraph import *
 
 from itertools import combinations, combinations_with_replacement
 import multiprocessing as mp
@@ -654,55 +654,7 @@ def encode_nucleotides(nuc_string, encoding_dict, kmer_size):
     return encoded_result
 
 
-'''
-a_matrix = get_node_kmers('Aln_79_27', graph_obj, 20)
-print(a_matrix)
-print(len(a_matrix))
-quit()
-'''
-# ----------------------------------------------------------------- ><
-
-''' 
-# ------------------------- Testing the use of encoding to compress the created graph -------------------------
-
-encode_dict = create_encoding_dict(4)
-
-test_string = 'GCAGATCGAGCCTACGGCTACGGACGCGGCGGCGGCATATACGCATACGACTACTCTATACTCGG'
-
-encoded_test_string = encode_nucleotides(test_string, encode_dict['encode'], 4)
-
-print(sys.getsizeof(test_string))
-print(sys.getsizeof(encoded_test_string))
-
-print(test_string)
-print(encoded_test_string)
-print(encode_dict['decode']['p'])
-print(encode_dict)
-quit()
-'''
-
-path_to_GG_file = 'test_files/latest2genome.xml'
-
-#path_to_reads = 'test_files/minSRR1144793.fastq'
-path_to_reads = '/Users/panix/data/gg_data/MTB__S507_LFO46Pool91_3128__L8_GTCCGC_L008_R2_001.fastq'
-#path_to_reads = '/Users/panix/data/gg_data/160k_subset.fastq'
-
-graph_obj = import_gg_graph(path_to_GG_file)
-
-#begin_time = datetime.datetime.now()
-
-#kmer_dict_out = create_kmer_dict(graph_obj, 20)
-
-#print(datetime.datetime.now() - begin_time)
-
-#print(kmer_dict_out)
-
-#with open('kmer_dict_multi.pickle', 'wb') as handle:
-#    pickle.dump(kmer_dict_out, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-kmer_dict_out = pickle.load(open("kmer_dict_multi.pickle", "rb"))
-
-begin_time = datetime.datetime.now()
+# Some alignment testing
 
 
 def process_fastq_lines(lines=None):
@@ -826,6 +778,60 @@ def align_fastq_to_kmer_graph(fastq_file, reference_kmer_dict):
     return out_graph
 
 
+
+
+'''
+a_matrix = get_node_kmers('Aln_79_27', graph_obj, 20)
+print(a_matrix)
+print(len(a_matrix))
+quit()
+
+# ----------------------------------------------------------------- ><
+
+
+# ------------------------- Testing the use of encoding to compress the created graph -------------------------
+
+encode_dict = create_encoding_dict(4)
+
+test_string = 'GCAGATCGAGCCTACGGCTACGGACGCGGCGGCGGCATATACGCATACGACTACTCTATACTCGG'
+
+encoded_test_string = encode_nucleotides(test_string, encode_dict['encode'], 4)
+
+print(sys.getsizeof(test_string))
+print(sys.getsizeof(encoded_test_string))
+
+print(test_string)
+print(encoded_test_string)
+print(encode_dict['decode']['p'])
+print(encode_dict)
+quit()
+
+
+path_to_GG_file = 'test_files/latest2genome.xml'
+
+#path_to_reads = 'test_files/minSRR1144793.fastq'
+path_to_reads = '/Users/panix/data/gg_data/MTB__S507_LFO46Pool91_3128__L8_GTCCGC_L008_R2_001.fastq'
+#path_to_reads = '/Users/panix/data/gg_data/160k_subset.fastq'
+
+graph_obj = import_gg_graph(path_to_GG_file)
+
+#begin_time = datetime.datetime.now()
+
+#kmer_dict_out = create_kmer_dict(graph_obj, 20)
+
+#print(datetime.datetime.now() - begin_time)
+
+#print(kmer_dict_out)
+
+#with open('kmer_dict_multi.pickle', 'wb') as handle:
+#    pickle.dump(kmer_dict_out, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+kmer_dict_out = pickle.load(open("kmer_dict_multi.pickle", "rb"))
+
+begin_time = datetime.datetime.now()
+
+
+
 res_of_the_thing = align_fastq_to_kmer_graph(path_to_reads, kmer_dict_out)
 
 print(datetime.datetime.now() - begin_time)
@@ -834,12 +840,12 @@ print(datetime.datetime.now() - begin_time)
 
 # --------------------- Working up to here --------------------- --------------------- ---------------------
 
-'''
+
 # Strange output 
 for kmer, list in kmer_dict_out.items():
     if len(list) > 1:
         print(kmer_dict_out[kmer], kmer)
-'''
+
 
 quit()
 
@@ -916,7 +922,7 @@ graph_obj.plot_subgraph(1557101, 1565448, 'H37Rv', neighbours=1)
 
 quit()
 
-'''
+
 G = graph_obj.get_region_subgraph(3232, 13033, 'W_148', neighbours=1)
 
 pos=nx.spring_layout(G)
@@ -925,7 +931,7 @@ nx.draw_networkx_labels(G, pos)
 nx.draw_networkx_edges(G, pos, arrows=True)
 plt.show()
 
-'''
+
 
 
 #a_seq = graph_obj.get_sequence(1289, 1289, 'W_148')
@@ -977,4 +983,4 @@ print(len(a_seq))
 print('')
 print(h37rv_genome[0]['DNA_seq'][start_pos-1: stop_pos])
 
-
+'''
