@@ -1,7 +1,7 @@
 
 .DS_Store
 .idea/
-
+globalAlignment*
 mprofile_*
 test_*
 *.pyc
@@ -9,5 +9,12 @@ test_*
 *.sh
 *.log
 *.xml
+*.json
+*.JSON
+*.pickle
+
+old_files/
+plots/
+docker_tests/
 
 
