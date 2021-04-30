@@ -284,7 +284,7 @@ class MultipleSequenceAlignmentTest(unittest.TestCase):
 
     def global_align_test(self):
 
-        from gengraph_newfunctions import global_align_by_composition, create_freagment_similarity_table
+        from test_code.gengraph_newfunctions import global_align_by_composition, create_freagment_similarity_table
 
         seq_file = './test_files/s_pneumoniae.txt'
 

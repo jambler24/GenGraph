@@ -1,13 +1,22 @@
 
 .DS_Store
 .idea/
-
+globalAlignment*
 mprofile_*
-test_*
+test_files
+test_genomes
+test_scripts
 *.pyc
 *.icloud
 *.sh
 *.log
 *.xml
+*.json
+*.JSON
+*.pickle
+
+old_files/
+plots/
+docker_tests/
 
 
