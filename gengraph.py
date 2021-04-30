@@ -63,13 +63,13 @@ Orientation is relative to the sequence in the node, which is default the refere
 class GgDiGraph(nx.DiGraph):
 
 	def get_sequence(self, region_start, region_stop, seq_name):
-		'''
+		"""
 		Returns the sequence found between the given coordinates for a strain.
 		:param region_start: The start coordinate
 		:param region_stop: The stop coordinate
 		:param seq_name: The ID for the sequence that the coordinates refer to. Often the isolate.
 		:return: A sequence string
-		'''
+		"""
 
 		# Old slow version
 		#seq_string = extract_original_seq_region(self, region_start, region_stop, seq_name)
@@ -80,7 +80,7 @@ class GgDiGraph(nx.DiGraph):
 		return seq_string
 
 	def transfer_annotations(self, annofile, source_seq_id, target_seq_id, out_file_name, chr_name=''):
-		'''
+		"""
 		Given a annotation file (GTF, GFF) for a sequence, convert the coordinates relative to another sequence.
 		:param graph: Genome graph object
 		:param annofile: The filepath to the annotation file
@@ -88,7 +88,7 @@ class GgDiGraph(nx.DiGraph):
 		:param target_seq_id:
 		:param out_file_name:
 		:return:
-		'''
+		"""
 
 		# parse the annotation file
 
@@ -3450,6 +3450,7 @@ def read_GFA(path):
 
 
 # ---------------------------------------------------- # read alignment
+
 # Functions to align reads to the GenGraph genome graph.
 
 # ------------------ Traditional approaches.
@@ -3610,7 +3611,7 @@ def create_kmer_dict(in_graph_obj, kmer_size):
 	pool = mp.Pool(mp.cpu_count())
 
 	per_node_kmer_list = pool.starmap(get_node_kmers, [(a_node, in_graph_obj, kmer_size, 'kmer_dict') for a_node in
-	                                                   in_graph_obj.nodes()])
+										in_graph_obj.nodes()])
 
 	for a_node_kmers in per_node_kmer_list:
 		for key, value in a_node_kmers.items():
