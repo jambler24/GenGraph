@@ -3467,7 +3467,6 @@ def get_next_base(kmer_length, kmer_matrix, graph_obj):
 	"""
 
 	new_matrix = []
-
 	for a_kmer_list in kmer_matrix:
 
 		kmer_seq = a_kmer_list[0][0]
@@ -3545,15 +3544,30 @@ def get_node_kmers(a_node, graph_obj, kmer_length, return_structure):
 
 	kmer_matrix = []
 
+	# This block of code is slow  -------
 	while current_base_pos <= node_length:
-		kmer_matrix.append([
-			[graph_obj.nodes[a_node]['sequence'][current_base_pos - 1]],
-			[[a_node, current_base_pos]]
-		])
 
-		kmer_matrix = get_next_base(kmer_length, kmer_matrix, graph_obj)
+		if current_base_pos < (node_length - kmer_length):
 
-		current_base_pos += 1
+			kmer_matrix.append([
+				[graph_obj.nodes[a_node]['sequence'][current_base_pos - 1 :current_base_pos + kmer_length - 1]],
+				[[a_node, current_base_pos]]
+			])
+
+			current_base_pos += 1
+
+		else:
+
+			kmer_matrix.append([
+				[graph_obj.nodes[a_node]['sequence'][current_base_pos - 1]],
+				[[a_node, current_base_pos]]
+			])
+			# This is the slowest part it seems. Adding new bases until kmer is right length
+			kmer_matrix = get_next_base(kmer_length, kmer_matrix, graph_obj)
+
+			current_base_pos += 1
+
+	# To here ----------
 
 	kmer_matrix = get_next_base(kmer_length, kmer_matrix, graph_obj)
 
@@ -3574,11 +3588,12 @@ def get_node_kmers(a_node, graph_obj, kmer_length, return_structure):
 		return kmer_dict
 
 
-def create_kmer_dict(in_graph_obj, kmer_size):
+def create_kmer_dict(in_graph_obj, kmer_size, do_multicore=True):
 	"""
 	Takes in the genome graph and extracts all possible k-mers including their positions
 	:param in_graph_obj: Graph created by GenGraph
 	:param kmer_size: The size of the k-mers to be created
+	:param do_multicore: Whether to enable  multicore run
 	:return: a dict of kmers, containing lists that describe where the k-mer is found in the reference graph.
 
 	Structure of returned dict:
@@ -3608,10 +3623,27 @@ def create_kmer_dict(in_graph_obj, kmer_size):
 
 	all_kmer_positions = {}
 
-	pool = mp.Pool(mp.cpu_count())
+	if do_multicore:
+		print('Running on ' + str(mp.cpu_count()) + ' cores.')
+		pool = mp.Pool(mp.cpu_count())
 
-	per_node_kmer_list = pool.starmap(get_node_kmers, [(a_node, in_graph_obj, kmer_size, 'kmer_dict') for a_node in
-										in_graph_obj.nodes()])
+		per_node_kmer_list = pool.starmap(get_node_kmers, [(a_node, in_graph_obj, kmer_size, 'kmer_dict') for a_node in
+											in_graph_obj.nodes()])
+
+	else:
+		print('No multicore')
+
+		per_node_kmer_list = []
+
+		for a_node in in_graph_obj.nodes():
+
+			per_node_kmer_list.append(get_node_kmers(a_node, in_graph_obj, kmer_size, 'kmer_dict'))
+
+			count += 1
+
+			print(count, '/', total_nodes)
+
+	print('Restructuring')
 
 	for a_node_kmers in per_node_kmer_list:
 		for key, value in a_node_kmers.items():
@@ -3625,6 +3657,116 @@ def create_kmer_dict(in_graph_obj, kmer_size):
 
 
 
+def process_fastq_lines(lines=None):
+	ks = ['name', 'sequence', 'optional', 'quality']
+	return {k: v for k, v in zip(ks, lines)}
+
+
+def rank_kmer_q_alignments():
+	"""
+	The purpose of this function is to take the k-mer alignment info from the query sequence, and rank them based on
+	which alignment is best.
+	:return:
+	"""
+
+	return []
+
+
+def find_kmer_matches(q_sequence, ref_hash_dict, kmer_size, use_qual=True):
+	"""
+	Breaks up the query sequence into k-mers of given size matching that of the reference hash dictionary. Finds the
+	kmer in the ref_hash_dict, returns the k-mers and any matching positions.
+	:param q_sequence: Query sequence as produced by the process_fastq_lines() function representing the 4 lines of a
+	fastq file in a list.
+	:param ref_hash_dict: The reference genome hash created by create_kmer_dict()
+	:param kmer_size: The size of the k-mers to be used
+	:param use_qual:
+	:return: Dictionary of mapped positions
+
+	{kmer: [
+		'k-mer_first_nucleotode_seq',
+		'quality_string',
+			[
+				[aligned_node, aligned_node_position],
+				[aligned_node2, aligned_node_position2]
+			]
+		]
+	}
+	"""
+
+	exact_align = 0
+	multi_align = 0
+	no_align = 0
+	reversed_align = 0
+
+	q_kmers = create_query_kmers(q_sequence, kmer_size)
+
+	q_kmer_dict = {k: [v] for v, k in enumerate(q_kmers)}
+
+	if use_qual:
+		for a_seq_kmer, val_list in q_kmer_dict.items():
+			q_kmer_dict[a_seq_kmer].append(q_sequence['quality'][val_list[0]])
+
+	for kmer, position in q_kmer_dict.items():
+
+		try:
+			kmer_graph_pos = ref_hash_dict[kmer]
+
+		except KeyError:
+			kmer_graph_pos = []
+
+		q_kmer_dict[kmer] += kmer_graph_pos
+
+	# Try clean up a bit
+	#del q_kmers
+
+	return q_kmer_dict
+
+
+
+def create_gene_counts(input_fastq, input_pan_transcriptome, graph_kmer_index, index_kmer_used):
+	"""
+	This function assigns reads to genes found in the pan-transcriptome.
+	:param input_fastq:
+	:param input_pan_transcriptome:
+	:param graph_kmer_index:
+	:return:
+	"""
+
+	# Some initial values
+
+	graph_read_count = 0
+
+	gene_counts = []
+
+	# First, parse the fastq file.
+
+	in_fasta = open(input_fastq, 'r')
+
+	# Find k-mer matches
+
+	n = 4
+	lines = []
+
+	for a_line in in_fasta:
+		lines.append(a_line.rstrip())
+		if len(lines) == n:
+
+			# Cound as a read
+			graph_read_count += 1
+
+			# Process as a fasta entry
+			fastq_record = process_fastq_lines(lines)
+
+			# Blank out the lines object
+			lines = []
+
+			align_result = find_kmer_matches(fastq_record, reference_kmer_dict, index_kmer_used)
+
+
+
+
+	return gene_counts
 
 
 
