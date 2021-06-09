@@ -19,11 +19,15 @@ if __name__ == '__main__':
 
 	parser.add_argument('--out_format', nargs=1, default='default', help='Format for the output')
 
-	parser.add_argument('--block_aligner', nargs=1, default=['progressiveMauve'], help='Block aligner to use')
+	parser.add_argument('--block_aligner', nargs=1, default=['progressiveMauve'], help='Block aligner used to identify large structural differences')
+
+	parser.add_argument('--block_aligner_params', nargs=1, help='Parameter file for the block aligner')
 
 	parser.add_argument('--progressiveMauve_path', nargs=1, default=['progressiveMauve'], help='Path to progressiveMauve if not in PATH')
 
 	parser.add_argument('--node_msa_tool', nargs=1, default='mafft', help='MSA tool to use')
+
+	parser.add_argument('--node_msa_params', nargs=1, help='Parameter file for the multiple sequence aligner used to realign nodes')
 
 	parser.add_argument('--seq_file', type=str, help='Tab delimited text file with paths to the aligned sequences')
 
