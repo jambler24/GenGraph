@@ -21,13 +21,13 @@ if __name__ == '__main__':
 
 	parser.add_argument('--block_aligner', nargs=1, default=['progressiveMauve'], help='Block aligner used to identify large structural differences')
 
-	parser.add_argument('--block_aligner_params', nargs=1, help='Parameter file for the block aligner')
+	parser.add_argument('--block_aligner_params', type=str, help='Parameter file for the block aligner')
 
 	parser.add_argument('--progressiveMauve_path', nargs=1, default=['progressiveMauve'], help='Path to progressiveMauve if not in PATH')
 
 	parser.add_argument('--node_msa_tool', nargs=1, default='mafft', help='MSA tool to use')
 
-	parser.add_argument('--node_msa_params', nargs=1, help='Parameter file for the multiple sequence aligner used to realign nodes')
+	parser.add_argument('--node_msa_params', type=str, help='Parameter file for the multiple sequence aligner used to realign nodes')
 
 	parser.add_argument('--seq_file', type=str, help='Tab delimited text file with paths to the aligned sequences')
 
@@ -96,12 +96,26 @@ if __name__ == '__main__':
 		# optional:
 		# --recreate_check
 		# --no_seq
+		# --block_aligner_params
+		# --node_msa_params
 
 		print('Creating genome graph')
 
 		# Clean this up
 		global_aligner = args.block_aligner
 		local_aligner = args.node_msa_tool
+
+		# Look for parameter files for the MSA and block alignment
+		if args.node_msa_params:
+			node_msa_params = parse_parameter_file(args.node_msa_params)
+		else:
+			node_msa_params = {}
+
+		if args.block_aligner_params:
+			block_aligner_params = parse_parameter_file(args.block_aligner_params)
+		else:
+			block_aligner_params = {}
+
 
 		path_to_progressiveMauve = args.progressiveMauve_path[0]
 
@@ -131,7 +145,7 @@ if __name__ == '__main__':
 
 			logging.info(parsed_input_dict)
 
-			progressiveMauve_alignment(path_to_progressiveMauve, parsed_input_dict[2], args.out_file_name, scratch=args.scratch_path)
+			progressiveMauve_alignment(path_to_progressiveMauve, parsed_input_dict[2], args.out_file_name, scratch=args.scratch_path, custom_params=block_aligner_params)
 
 			logging.info('progressiveMauve Complete')
 			print('progressiveMauve Complete')
@@ -167,7 +181,7 @@ if __name__ == '__main__':
 
 		print('Conducting local node realignment')
 
-		genome_aln_graph = realign_all_nodes(genome_aln_graph, parsed_input_dict)
+		genome_aln_graph = realign_all_nodes(genome_aln_graph, parsed_input_dict, custom_params=node_msa_params)
 
 		add_graph_data(genome_aln_graph)
 

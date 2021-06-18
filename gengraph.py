@@ -1303,6 +1303,33 @@ def input_parser(file_path, parse_as='default'):
 		return list_of_dicts
 
 
+def parse_parameter_file(file_path):
+	"""
+
+
+	:param file_path:
+	:return:
+	"""
+	param_dict = {}
+
+	if not os.path.isfile(file_path):
+		print('Parameter file not found', file_path)
+		quit()
+
+	with open(file_path) as fp:
+		for line in fp:
+			param_line = line.strip().replace(' ', '').split('=')
+			if len(param_line[0]) > 1:
+				if param_line[0][0] != '#':
+					if param_line[0][0] != '-':
+						param_line[0] = '--' + param_line[0]
+						param_dict[param_line[0]] = param_line[1]
+					else:
+						param_dict[param_line[0]] = param_line[1]
+
+	return param_dict
+
+
 def reshape_fastaObj(in_obj):
 	out_fastaObj = {}
 
@@ -1755,7 +1782,7 @@ def bbone_to_initGraph(bbone_file, input_dict):
 	return genome_network
 
 
-def realign_all_nodes(inGraph, input_dict):
+def realign_all_nodes(inGraph, input_dict, custom_params={}):
 	logging.info('Running realign_all_nodes')
 
 	realign_node_list = []
@@ -1774,7 +1801,7 @@ def realign_all_nodes(inGraph, input_dict):
 	# Realign the nodes. This is where multiprocessing will come in.
 	for a_node in realign_node_list:
 
-		inGraph = local_node_realign_new(inGraph, a_node, input_dict[1])
+		inGraph = local_node_realign_new(inGraph, a_node, input_dict[1], custom_params=custom_params)
 
 	nx.write_graphml(inGraph, 'intermediate_split_unlinked.xml')
 
@@ -2517,12 +2544,13 @@ def fasta_alignment_to_subnet(fasta_aln_file, true_start={}, node_prefix='X', or
 	return local_node_network
 
 
-def local_node_realign_new(in_graph, node_ID, seq_fasta_paths_dict):
+def local_node_realign_new(in_graph, node_ID, seq_fasta_paths_dict, custom_params={}):
 	"""
 	This used a multiple sequence aligner to realign the nodes that represent blocks of sequences.
 	:param in_graph: input graph object that represents the blocks of co-linear sequences
 	:param node_ID: The node to realign. String.
 	:param seq_fasta_paths_dict: Dict containing the paths to the fasta sequences.
+	:param custom_params: TODO
 	:return:
 	"""
 	# TODO: This fails if there are multiple chromosomes in the input fasta file.
@@ -2580,7 +2608,7 @@ def local_node_realign_new(in_graph, node_ID, seq_fasta_paths_dict):
 	if local_aligner == 'mafft':
 		logging.info('conducting mafft alignment')
 		logging.info(node_seq_len_est)
-		mafft_alignment('temp_unaligned.fasta', 'temp_aln.fasta')
+		mafft_alignment('temp_unaligned.fasta', 'temp_aln.fasta', custom_params=custom_params)
 
 	if local_aligner == 'clustalo':
 		logging.info('conducting clustal alignment')
@@ -2721,6 +2749,25 @@ def add_graph_data(graph_obj):
 
 # ---------------------------------------------------- Alignment functions
 
+
+def create_call_list(param_dict):
+	param_list = []
+
+	for key, value in param_dict.items():
+
+		if key[0:2] != '--':
+			key =  '--' + key
+
+		if value == 'flag':
+			param_list.append(key)
+
+		else:
+			param_list.append(key)
+			param_list.append(str(value))
+
+	return param_list
+
+
 def kalign_alignment(fasta_unaln_file, out_aln_name):
 
 	kalign_command_call = [path_to_kalign, '-i', fasta_unaln_file, '-o', out_aln_name, '-f', 'fasta', '-q']
@@ -2742,14 +2789,35 @@ def clustalo_alignment(fasta_unaln_file, out_aln_name):
 	return call(clustalo_command_call)
 
 
-def mafft_alignment(fasta_unaln_file, out_aln_name):
+def mafft_alignment(fasta_unaln_file, out_aln_name, custom_params={}):
 
 	out_temp_fa = open(out_aln_name, 'w')
 
-	call([path_to_mafft, '--retree', '2', '--maxiterate', '2', '--quiet', '--thread', '-1', fasta_unaln_file], stdout=out_temp_fa)
+	# Default mafft params here
+	mafft_parameter_dict = {
+		'--retree': 2,
+		'--maxiterate': '2',
+		'--quiet': 'flag',
+		'--thread': '-1',
+	}
+
+	# Alter or add params here:
+	#TODO: Add ability to remove params like --quiet flags
+
+	for key, value in custom_params.items():
+		if key in mafft_parameter_dict.keys():
+			mafft_parameter_dict[key] = custom_params[key]
+		else:
+			mafft_parameter_dict[key] = value
+
+	param_list = create_call_list(mafft_parameter_dict)
+
+	call_list = [path_to_mafft] + param_list + [fasta_unaln_file]
+
+	call(call_list, stdout=out_temp_fa)
 
 
-def progressiveMauve_alignment(path_to_progressiveMauve, fasta_path_list, out_aln_name, scratch='./mauveTemp', scratch2='./mauveTemp'):
+def progressiveMauve_alignment(path_to_progressiveMauve, fasta_path_list, out_aln_name, scratch='./mauveTemp', scratch2='./mauveTemp', custom_params={}):
 	"""
 	A wrapper for progressiveMauve for use in GenGraph for the identification of co-linear blocks
 	:param path_to_progressiveMauve: Absolute path to progressiveMauve executable
@@ -2757,13 +2825,28 @@ def progressiveMauve_alignment(path_to_progressiveMauve, fasta_path_list, out_al
 	:param out_aln_name: Name for alignment file, added to mauve output
 	:param scratch: scratch path for progressiveMauve
 	:param scratch2: second scratch path for progressiveMauve
+	:param custom_params: TODO
 	:return:
 
 	"""
 	# Maybe add --skip-gapped-alignment flag?
 
+	custom_params_list = create_call_list(custom_params)
+
+	if not os.path.isfile(path_to_progressiveMauve):
+		print('progressiveMauve not found in path')
+		quit()
+
+
+	# Check for white space in the file paths.
+	for a_seq_path in fasta_path_list:
+		if ' ' in a_seq_path:
+			print("WARNING, there are spaces in your file paths for the fasta files. This may cause errors")
+			print(a_seq_path)
+
 	logging.info(path_to_progressiveMauve)
-	progressiveMauve_call = [path_to_progressiveMauve, '--output=globalAlignment_' + out_aln_name, '--scratch-path-1=' + scratch, '--scratch-path-2=' + scratch2] + fasta_path_list
+
+	progressiveMauve_call = [path_to_progressiveMauve, '--output=globalAlignment_' + out_aln_name, '--scratch-path-1=' + scratch, '--scratch-path-2=' + scratch2] + custom_params_list + fasta_path_list
 
 	try:
 		run(progressiveMauve_call, stdout=open(os.devnull, 'wb'))
@@ -2788,6 +2871,10 @@ def progressiveMauve_alignment(path_to_progressiveMauve, fasta_path_list, out_al
 
 	except OSError:
 		logging.error('progressiveMauve_call error')
+		print('progressiveMauve error')
+
+		quit()
+
 		return 'progressiveMauve_call error'
 
 
