@@ -242,12 +242,22 @@ if __name__ == '__main__':
 		Requires:
 			--input_file < alignment.fa >
 			--out_file_name
-		
+			
+		Optional:
+			--block_aligner_params
+			--node_msa_tool
 		"""
 
 		fasta_object = input_parser(args.input_file)
 
 		print('Adding', len(fasta_object), 'sequences')
+
+		# Check if there is a parameter file for the MSA tool
+
+		if args.block_aligner_params:
+			block_aligner_params = parse_parameter_file(args.block_aligner_params)
+		else:
+			block_aligner_params = {}
 
 		seqStartDict = {}
 
